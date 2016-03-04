@@ -39,12 +39,13 @@ void main(void) {
 
 	/* Main processing loop */
   	while (1) {
-		debug_printf("LED Toggle %d\n\r", i);	//Print debug message
+		/*debug_printf("LED Toggle %d\n\r", i);	//Print debug message
 		if (counter value == 0) {
 			counter_value = 64;
 		} else {
 			counter_value--;	//Increment counter
-		}
+		}*/
+		s4353096_lightbar_write(0x1111111111111111);
 		/****************** Display counter. ***************/
 		/* First, turn off each LED light bar segment
 			write 0 to D0
@@ -56,7 +57,7 @@ void main(void) {
 
 			then call
 	*/
-			s4353096_lightbar_write(counter_value);
+			//s4353096_lightbar_write(counter_value);
 		//*/
 
 		/* Toggle 'Keep Alive Indicator' BLUE LED */
@@ -76,13 +77,12 @@ void Hardware_init(void) {
 
 	BRD_LEDInit();		//Initialise Blue LED
 	BRD_LEDOff();		//Turn off Blue LED
-
 	/* Initialise LEDBar
        Call
 	   sxxxxxx_ledbar_init();
 
 	*/
-
+	s4353096_lightbar_init();
 	/* Configure the GPIO_D1 pin
 
 	 	....

@@ -22,7 +22,7 @@
 /* Private variables ---------------------------------------------------------*/
 uint16_t counter_value = 64;
 uint16_t press_counter_val = 0;
-
+int counter_multiplier = 1;
 /* Private function prototypes -----------------------------------------------*/
 void Hardware_init(void);
 void exti_a2_interrupt_handler(void);
@@ -36,16 +36,21 @@ void main(void) {
 
 	BRD_init();	//Initalise NP2
 	Hardware_init();	//Initalise hardware modules
-
+	HAL_Delay(7000);
+	debug_printf("Timer Value: %d\n", counter_value);
+	s4353096_lightbar_write(counter_value);
+	HAL_Delay(counter_multiplier*1000);
 	/* Main processing loop */
   	while (1) {
-		/*debug_printf("LED Toggle %d\n\r", i);	//Print debug message
-		if (counter value == 0) {
+		//debug_printf("LED Toggle %d\n\r", i);	//Print debug message
+		if (counter_value == 0) {
 			counter_value = 64;
 		} else {
 			counter_value--;	//Increment counter
-		}*/
-		s4353096_lightbar_write(0x1111111111111111);
+		}
+		s4353096_lightbar_write(0);
+		s4353096_lightbar_write(counter_value);
+		debug_printf("Timer Value: %d\n", counter_value);
 		/****************** Display counter. ***************/
 		/* First, turn off each LED light bar segment
 			write 0 to D0
@@ -102,6 +107,7 @@ void exti_a2_interrupt_handler(void) {
 
 
 	HAL_GPIO_EXTI_IRQHandler(BRD_A2_PIN);				//Clear A2 pin external interrupt flag
-
+		debug_printf("Triggered - %d\n\r", press_count);
 	/* Speed up the counter by reducing the delay value */
+	press_count++;
 }

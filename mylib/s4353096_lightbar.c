@@ -102,10 +102,12 @@ extern void s4353096_lightbar_init(void) {
 		__BRD_D7_GPIO_CLK();
 		__BRD_D8_GPIO_CLK();
 		__BRD_D9_GPIO_CLK();
+		__BRD_A2_GPIO_CLK();
 		//Set up Pin behaviour
 		GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP; //Output Mode
 		GPIO_InitStructure.Pull = GPIO_PULLUP; //Pull down resistor
 		GPIO_InitStructure.Speed = GPIO_SPEED_FAST; //Pun latency
+
 		/*GPIO Pins D0-D9 are configured to the above specifications in the space
 		bellow*/
 		GPIO_InitStructure.Pin = BRD_D0_PIN;
@@ -128,7 +130,17 @@ extern void s4353096_lightbar_init(void) {
 		HAL_GPIO_Init(BRD_D8_GPIO_PORT, &GPIO_InitStructure);
 		GPIO_InitStructure.Pin = BRD_D9_PIN;
 		HAL_GPIO_Init(BRD_D9_GPIO_PORT, &GPIO_InitStructure);
+		//Initialise Interrupt, Priority set to 10
+		HAL_NVIC_SetPriority(BRD_A2_EXTI_IRQ, 10, 0);
+		//Enable external GPIO interrupt and interrupt vector for pin D0
+		NVIC_SetVector(BRD_A2_EXTI_IRQ), (uint32_t)&exti_a2_irqhandler);
+		NVIC_EnableIRQ(BRD_A2_EXTI_IRQ);
 
+		GPIO_InitStructure.Pin = BRD_A2_PIN;
+		GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING;
+		GPIO_InitStructure.Pull = GPIO_PULLUP;
+		GPIO_InitStructure.Speed = GPIO_SPEED_FAST;
+		HAL_GPIO_Init(BRD_A2_GPIO_PORT, &GPIO_InitStructure);
 }
 
 /**
@@ -149,12 +161,14 @@ extern void s4353096_lightbar_write(unsigned short value) {
 			}
 		*/
 	for (int i=0; i < 10; i++) {
+		//debug_printf("i %d\n", i);
 		if ((value & (1 << i)) == (1 << i)) {
 			//Turn on LED BAR Segment i
 			lightbar_seg_set(i, 1);
-			debug_printf("On Segment %d", i);
+			//debug_printf("On Segment %d\n\n", i);
 		} else if ((value & (1 << i)) == (0 << i)){
 			//Turn off LED BAR Segment i
+			//debug_printf("OK %d\n", i);
 			lightbar_seg_set(i, 0);
 		} else {
 

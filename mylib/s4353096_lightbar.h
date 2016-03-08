@@ -1,7 +1,7 @@
 /**
  ******************************************************************************
- * @file    mylib/sxxxxxx_ledbar.h
- * @author  MyName – MyStudent ID
+ * @file    mylib/s4353096_ledbar.h
+ * @author  Steffen Mitchell - 43530960
  * @date    03032015
  * @brief   LED Light Bar peripheral driver
  *	     REFERENCE: LEDLightBar_datasheet.pdf
@@ -10,8 +10,8 @@
  ******************************************************************************
  *     EXTERNAL FUNCTIONS
  ******************************************************************************
- * sxxxxxx_ledbar_init() – intialise LED Light BAR
- * sxxxxxx_ledbar_set() – set LED Light BAR value
+ * s4353096_ledbar_init() – intialise LED Light BAR
+ * s4353096_ledbar_set() – set LED Light BAR value
  ******************************************************************************
  */
 

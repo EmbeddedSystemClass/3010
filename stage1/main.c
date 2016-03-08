@@ -1,7 +1,7 @@
 /**
   ******************************************************************************
   * @file    stage1/main.c
-  * @author  MY_FIRST_NAME + SURNAME
+  * @author  Steffen Mitchell
   * @date    10-January-2015
   * @brief   Prac 1 Template C main file - BCD timer and press counter.
   *			 NOTE: THIS CODE IS PSEUDOCODE AND DOES NOT COMPILE.
@@ -22,7 +22,7 @@
 /* Private variables ---------------------------------------------------------*/
 uint16_t counter_value = 64;
 uint16_t press_counter_val = 0;
-int counter_multiplier = 1;
+int counter_divider = 1;
 /* Private function prototypes -----------------------------------------------*/
 void Hardware_init(void);
 void exti_a2_interrupt_handler(void);
@@ -39,7 +39,7 @@ void main(void) {
 	HAL_Delay(7000);
 	debug_printf("Timer Value: %d\n", counter_value);
 	s4353096_lightbar_write(counter_value);
-	HAL_Delay(counter_multiplier*1000);
+	HAL_Delay(1000/counter_divider);
 	/* Main processing loop */
   	while (1) {
 		//debug_printf("LED Toggle %d\n\r", i);	//Print debug message
@@ -66,7 +66,8 @@ void main(void) {
 		//*/
 
 		/* Toggle 'Keep Alive Indicator' BLUE LED */
-    	HAL_Delay(1000);		//Delay for 1s (1000ms)
+		BRD_LEDToggle();
+    HAL_Delay(1000/counter_divider);		//Delay for 1s (1000ms)
 
 	}
 }
@@ -95,6 +96,18 @@ void Hardware_init(void) {
 		Configure the GPIO_D9 pin */
 
 	/* Configure A2 interrupt for Prac 1, Task 2 or 3 only */
+	__BRD_A2_GPIO_CLK();
+	//Initialise Interrupt, Priority set to 10
+	HAL_NVIC_SetPriority(BRD_A2_EXTI_IRQ, 10, 0);
+	GPIO_InitStructure.Pin = BRD_A2_PIN;
+	GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING;
+	GPIO_InitStructure.Pull = GPIO_PULLUP;
+	GPIO_InitStructure.Speed = GPIO_SPEED_FAST;
+	HAL_GPIO_Init(BRD_A2_GPIO_PORT, &GPIO_InitStructure);
+	//Enable external GPIO interrupt and interrupt vector for pin D0
+	NVIC_SetVector(BRD_A2_EXTI_IRQ, (uint32_t)&exti_a2_interrupt_handler);
+	NVIC_EnableIRQ(BRD_A2_EXTI_IRQ);
+
 
 }
 
@@ -104,10 +117,15 @@ void Hardware_init(void) {
   * @retval None
   */
 void exti_a2_interrupt_handler(void) {
-
-
 	HAL_GPIO_EXTI_IRQHandler(BRD_A2_PIN);				//Clear A2 pin external interrupt flag
-		debug_printf("Triggered - %d\n\r", press_count);
+
 	/* Speed up the counter by reducing the delay value */
-	press_count++;
+	press_counter_val++;
+	if (press_counter_val == 1) {
+		counter_divider = counter_divider * 2;
+		//debug_printf("Triggered - %d\n\r", press_counter_val);
+	} else {
+		press_counter_val = 0;
+	}
+	HAL_Delay(100);
 }

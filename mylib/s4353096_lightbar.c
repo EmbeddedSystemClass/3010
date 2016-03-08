@@ -1,7 +1,7 @@
 /**
  ******************************************************************************
- * @file    mylib/sxxxxxx_ledbar.c
- * @author  MyName – MyStudent ID
+ * @file    mylib/s4353096_ledbar.c
+ * @author  Steffen Mitchell - 43530960
  * @date    03032016
  * @brief   LED Light Bar peripheral driver
  *	     REFERENCE: LEDLightBar_datasheet.pdf
@@ -9,8 +9,8 @@
  ******************************************************************************
  *     EXTERNAL FUNCTIONS
  ******************************************************************************
- * sxxxxxx_lightbar_init() – intialise LED Light BAR
- * sxxxxxx_lightbar_write() – set LED Light BAR value
+ * s4353096_lightbar_init() – intialise LED Light BAR
+ * s3242096_lightbar_write() – set LED Light BAR value
  ******************************************************************************
  */
 
@@ -34,7 +34,6 @@ void lightbar_seg_set(int segment, unsigned char segment_value) {
 		Turn segment on (segment_value = 1) or off (segment_value = 0)
 
      */
-		 /* Do we need to catch error's?*/
 		 if (segment_value == 1 || segment_value == 0) {
 		 	switch (segment) {
 			 	case 0:
@@ -102,7 +101,6 @@ extern void s4353096_lightbar_init(void) {
 		__BRD_D7_GPIO_CLK();
 		__BRD_D8_GPIO_CLK();
 		__BRD_D9_GPIO_CLK();
-		__BRD_A2_GPIO_CLK();
 		//Set up Pin behaviour
 		GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP; //Output Mode
 		GPIO_InitStructure.Pull = GPIO_PULLUP; //Pull down resistor
@@ -130,17 +128,7 @@ extern void s4353096_lightbar_init(void) {
 		HAL_GPIO_Init(BRD_D8_GPIO_PORT, &GPIO_InitStructure);
 		GPIO_InitStructure.Pin = BRD_D9_PIN;
 		HAL_GPIO_Init(BRD_D9_GPIO_PORT, &GPIO_InitStructure);
-		//Initialise Interrupt, Priority set to 10
-		HAL_NVIC_SetPriority(BRD_A2_EXTI_IRQ, 10, 0);
-		//Enable external GPIO interrupt and interrupt vector for pin D0
-		NVIC_SetVector(BRD_A2_EXTI_IRQ), (uint32_t)&exti_a2_irqhandler);
-		NVIC_EnableIRQ(BRD_A2_EXTI_IRQ);
 
-		GPIO_InitStructure.Pin = BRD_A2_PIN;
-		GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING;
-		GPIO_InitStructure.Pull = GPIO_PULLUP;
-		GPIO_InitStructure.Speed = GPIO_SPEED_FAST;
-		HAL_GPIO_Init(BRD_A2_GPIO_PORT, &GPIO_InitStructure);
 }
 
 /**

@@ -20,7 +20,8 @@
 #include "s4353096_joystick.h"
 /* Private typedef */
 GPIO_InitTypeDef  GPIO_InitStructure;
-ADC_HandleTypeDef AdcHandle;
+ADC_HandleTypeDef AdcHandle1;
+ADC_HandleTypeDef AdcHandle2;
 ADC_ChannelConfTypeDef AdcChanConfig;
 /*Initialise Joystick Pins*/
 extern void s4353096_joystick_init(void) {
@@ -37,47 +38,65 @@ extern void s4353096_joystick_init(void) {
   HAL_GPIO_Init(JOYSTICK_X_GPIO_PORT, &GPIO_InitStructure);
   GPIO_InitStructure.Pin = JOYSTICK_Y_PIN;
   HAL_GPIO_Init(JOYSTICK_Y_GPIO_PORT, &GPIO_InitStructure);
-  GPIO_InitStructure.Pin = JOYSTICK_Z_PIN;
-  HAL_GPIO_Init(JOYSTICK_Z_GPIO_PORT, &GPIO_InitStructure);
-  /* Configure ADC1 clock */
+  /* Configure ADC1 & ADC2 clock */
   __ADC1_CLK_ENABLE();
+  __ADC2_CLK_ENABLE();
   /* Configure ADC1 (Note ADC1 is the ADC not the pins)*/
-  AdcHandle.Instance = (ADC_TypeDef *)(ADC1_BASE);						//Use ADC1
-  AdcHandle.Init.ClockPrescaler        = ADC_CLOCKPRESCALER_PCLK_DIV2;	//Set clock prescaler
-  AdcHandle.Init.Resolution            = ADC_RESOLUTION12b;				//Set 12-bit data resolution
-  AdcHandle.Init.ScanConvMode          = DISABLE;
-  AdcHandle.Init.ContinuousConvMode    = DISABLE;
-  AdcHandle.Init.DiscontinuousConvMode = DISABLE;
-  AdcHandle.Init.NbrOfDiscConversion   = 0;
-  AdcHandle.Init.ExternalTrigConvEdge  = ADC_EXTERNALTRIGCONVEDGE_NONE;	//No Trigger
-  AdcHandle.Init.ExternalTrigConv      = ADC_EXTERNALTRIGCONV_T1_CC1;		//No Trigger
-  AdcHandle.Init.DataAlign             = ADC_DATAALIGN_RIGHT;				//Right align data
-  AdcHandle.Init.NbrOfConversion       = 1;
-  AdcHandle.Init.DMAContinuousRequests = DISABLE;
-  AdcHandle.Init.EOCSelection          = DISABLE;
+  AdcHandle1.Instance = (ADC_TypeDef *)(ADC1_BASE);						//Use ADC1
+  AdcHandle1.Init.ClockPrescaler        = ADC_CLOCKPRESCALER_PCLK_DIV2;	//Set clock prescaler
+  AdcHandle1.Init.Resolution            = ADC_RESOLUTION12b;				//Set 12-bit data resolution
+  AdcHandle1.Init.ScanConvMode          = DISABLE;
+  AdcHandle1.Init.ContinuousConvMode    = DISABLE;
+  AdcHandle1.Init.DiscontinuousConvMode = DISABLE;
+  AdcHandle1.Init.NbrOfDiscConversion   = 0;
+  AdcHandle1.Init.ExternalTrigConvEdge  = ADC_EXTERNALTRIGCONVEDGE_NONE;	//No Trigger
+  AdcHandle1.Init.ExternalTrigConv      = ADC_EXTERNALTRIGCONV_T1_CC1;		//No Trigger
+  AdcHandle1.Init.DataAlign             = ADC_DATAALIGN_RIGHT;				//Right align data
+  AdcHandle1.Init.NbrOfConversion       = 1;
+  AdcHandle1.Init.DMAContinuousRequests = DISABLE;
+  AdcHandle1.Init.EOCSelection          = DISABLE;
 
-  HAL_ADC_Init(&AdcHandle);		//Initialise ADC
-/* Configure ADC Channel for pin x */
-  AdcChanConfig.Channel = BRD_A5_ADC_CHAN;							//Use AO pin
+  HAL_ADC_Init(&AdcHandle1);		//Initialise ADC
+
+/* Configure ADC Channel */
 	AdcChanConfig.Rank         = 1;
   AdcChanConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
   AdcChanConfig.Offset       = 0;
-  HAL_ADC_ConfigChannel(&AdcHandle, &AdcChanConfig);
+
 }
 /*Read X value*/
-extern int s4353096_joystick_x_read(void) {
-  int adc_value;
-  HAL_ADC_Start(&AdcHandle); //Start ADC conversion
+extern unsigned int s4353096_joystick_x_read(void) {
+  int unsigned adc_value;
+  AdcChanConfig.Channel = JOYSTICK_X_ADC_CHAN;
+  HAL_ADC_ConfigChannel(&AdcHandle1, &AdcChanConfig);
+  HAL_ADC_Start(&AdcHandle1); //Start ADC conversion
   /*Wait for ADC Conversion to complete*/
-  while (HAL_ADCPollForConversion(&AdcHandle, 10) != HAL_OK);
-  adc_value = (uint16_t)(HAL_ADC_GetValue(&AdcHandle));
+  while (HAL_ADC_PollForConversion(&AdcHandle1, 10) != HAL_OK);
+  adc_value = (uint16_t)(HAL_ADC_GetValue(&AdcHandle1));
+  debug_printf("ADC Value: %u\n\r", adc_value);
   return adc_value;
 }
 /*Read Y value*/
-extern int s4353096_joystick_y_read(void) {
-
+extern unsigned int s4353096_joystick_y_read(void) {
+  int unsigned adc_value;
+  AdcChanConfig.Channel = JOYSTICK_Y_ADC_CHAN;
+  HAL_ADC_ConfigChannel(&AdcHandle1, &AdcChanConfig);
+  HAL_ADC_Start(&AdcHandle1); //Start ADC conversion
+  /*Wait for ADC Conversion to complete*/
+  while (HAL_ADC_PollForConversion(&AdcHandle1, 10) != HAL_OK);
+  adc_value = (uint16_t)(HAL_ADC_GetValue(&AdcHandle1));
+  debug_printf("ADC Value: %u\n\r", adc_value);
+  return adc_value;
 }
 /*Read Z value*/
-extern int s4353096_joystick_z_read(void) {
-
+extern unsigned int s4353096_joystick_z_read(void) {
+  int unsigned adc_value;
+  AdcChanConfig.Channel = JOYSTICK_Z_ADC_CHAN;
+  HAL_ADC_ConfigChannel(&AdcHandle1, &AdcChanConfig);
+  HAL_ADC_Start(&AdcHandle1); //Start ADC conversion
+  /*Wait for ADC Conversion to complete*/
+  while (HAL_ADC_PollForConversion(&AdcHandle1, 10) != HAL_OK);
+  adc_value = (uint16_t)(HAL_ADC_GetValue(&AdcHandle1));
+  debug_printf("Button Value: %d\n", adc_value);
+  return adc_value;
 }

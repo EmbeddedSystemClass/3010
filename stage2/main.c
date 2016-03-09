@@ -14,7 +14,8 @@
 #include "board.h"
 #include "stm32f4xx_hal_conf.h"
 #include "debug_printf.h"
-#include "s4353096_lightbar.h"		////////CHANGE THIS//////////
+#include "s4353096_lightbar.h"
+#include "s4353096_joystick.h"		////////CHANGE THIS//////////
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -25,7 +26,7 @@ uint16_t press_counter_val = 0;
 int counter_divider = 1;
 /* Private function prototypes -----------------------------------------------*/
 void Hardware_init(void);
-void exti_a2_interrupt_handler(void);
+void exti_joystick_z_interrupt_handler(void);
 
 /**
   * @brief  Main program - timer and press counter.
@@ -36,21 +37,22 @@ void main(void) {
 
 	BRD_init();	//Initalise NP2
 	Hardware_init();	//Initalise hardware modules
+	int unsigned adc_value_x;
 	HAL_Delay(7000);
-	debug_printf("Timer Value: %d\n", counter_value);
+	/*debug_printf("Timer Value: %d\n", counter_value);
 	s4353096_lightbar_write(counter_value);
-	HAL_Delay(1000/counter_divider);
+	HAL_Delay(1000/counter_divider);*/
 	/* Main processing loop */
   	while (1) {
 		//debug_printf("LED Toggle %d\n\r", i);	//Print debug message
-		if (counter_value == 0) {
+		/*if (counter_value == 0) {
 			counter_value = 64;
 		} else {
 			counter_value--;	//Increment counter
 		}
 		s4353096_lightbar_write(0);
 		s4353096_lightbar_write(counter_value);
-		debug_printf("Timer Value: %d\n", counter_value);
+		debug_printf("Timer Value: %d\n", counter_value);*/
 		/****************** Display counter. ***************/
 		/* First, turn off each LED light bar segment
 			write 0 to D0
@@ -66,6 +68,9 @@ void main(void) {
 		//*/
 
 		/* Toggle 'Keep Alive Indicator' BLUE LED */
+		s4353096_joystick_x_read();
+		s4353096_joystick_y_read();
+		s4353096_joystick_z_read();
 		BRD_LEDToggle();
     HAL_Delay(1000/counter_divider);		//Delay for 1s (1000ms)
 
@@ -80,6 +85,7 @@ void main(void) {
 void Hardware_init(void) {
 
 	GPIO_InitTypeDef  GPIO_InitStructure;
+	unsigned short PrescalerValue;
 
 	BRD_LEDInit();		//Initialise Blue LED
 	BRD_LEDOff();		//Turn off Blue LED
@@ -89,6 +95,13 @@ void Hardware_init(void) {
 
 	*/
 	s4353096_lightbar_init();
+	s4353096_joystick_init();
+	/* Timer 2 clock enable */
+	__TIM2_CLK_ENABLE();
+	/* Compute the prescaler value */
+  PrescalerValue = (uint16_t) ((SystemCoreClock /2)/50000) - 1;
+	//Set clock prescaler to 50kHz - SystemCoreClock is the system clock frequency.
+
 	/* Configure the GPIO_D1 pin
 
 	 	....
@@ -96,17 +109,8 @@ void Hardware_init(void) {
 		Configure the GPIO_D9 pin */
 
 	/* Configure A2 interrupt for Prac 1, Task 2 or 3 only */
-	__BRD_A2_GPIO_CLK();
 	//Initialise Interrupt, Priority set to 10
-	HAL_NVIC_SetPriority(BRD_A2_EXTI_IRQ, 10, 0);
-	GPIO_InitStructure.Pin = BRD_A2_PIN;
-	GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING;
-	GPIO_InitStructure.Pull = GPIO_PULLUP;
-	GPIO_InitStructure.Speed = GPIO_SPEED_FAST;
-	HAL_GPIO_Init(BRD_A2_GPIO_PORT, &GPIO_InitStructure);
-	//Enable external GPIO interrupt and interrupt vector for pin D0
-	NVIC_SetVector(BRD_A2_EXTI_IRQ, (uint32_t)&exti_a2_interrupt_handler);
-	NVIC_EnableIRQ(BRD_A2_EXTI_IRQ);
+
 
 
 }
@@ -116,16 +120,16 @@ void Hardware_init(void) {
   * @param  None.
   * @retval None
   */
-void exti_a2_interrupt_handler(void) {
-	HAL_GPIO_EXTI_IRQHandler(BRD_A2_PIN);				//Clear A2 pin external interrupt flag
+//void exti_joystick_z_interrupt_handler(void) {
+//	HAL_GPIO_EXTI_IRQHandler(JOYSTICK_Z_PIN);				//Clear A2 pin external interrupt flag
 
 	/* Speed up the counter by reducing the delay value */
-	press_counter_val++;
-	if (press_counter_val == 1) {
-		counter_divider = counter_divider * 2;
+//	press_counter_val++;
+//	if (press_counter_val == 1) {
+//		counter_divider = counter_divider * 2;
 		//debug_printf("Triggered - %d\n\r", press_counter_val);
-	} else {
-		press_counter_val = 0;
-	}
-	HAL_Delay(100);
-}
+//	} else {
+//		press_counter_val = 0;
+//	}
+//	HAL_Delay(100);
+//}

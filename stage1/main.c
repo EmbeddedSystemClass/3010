@@ -4,9 +4,7 @@
   * @author  Steffen Mitchell
   * @date    10-January-2015
   * @brief   Prac 1 Template C main file - BCD timer and press counter.
-  *			 NOTE: THIS CODE IS PSEUDOCODE AND DOES NOT COMPILE.
-  *				   GUIDELINES ARE GIVEN AS COMMENTS.
-  *			 REFERENCES: ex1_led, ex2_gpio, ex3_gpio, ex11_character
+  *	REFERENCES: ex1_led, ex2_gpio, ex3_gpio, ex11_character
   ******************************************************************************
   */
 

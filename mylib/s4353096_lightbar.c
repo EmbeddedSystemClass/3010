@@ -37,34 +37,34 @@ void lightbar_seg_set(int segment, unsigned char segment_value) {
 		 if (segment_value == 1 || segment_value == 0) {
 		 	switch (segment) {
 			 	case 0:
-					HAL_GPIO_WritePin(BRD_D0_GPIO_PORT, BRD_D0_PIN, segment_value);
+					HAL_GPIO_WritePin(LED_0_GPIO_PORT, LED_0_PIN, segment_value);
 					break;
 				case 1:
-					HAL_GPIO_WritePin(BRD_D1_GPIO_PORT, BRD_D1_PIN, segment_value);
+					HAL_GPIO_WritePin(LED_1_GPIO_PORT, LED_1_PIN, segment_value);
 					break;
 				case 2:
-					HAL_GPIO_WritePin(BRD_D2_GPIO_PORT, BRD_D2_PIN, segment_value);
+					HAL_GPIO_WritePin(LED_2_GPIO_PORT, LED_2_PIN, segment_value);
 					break;
 				case 3:
-					HAL_GPIO_WritePin(BRD_D3_GPIO_PORT, BRD_D3_PIN, segment_value);
+					HAL_GPIO_WritePin(LED_3_GPIO_PORT, LED_0_PIN, segment_value);
 					break;
 				case 4:
-					HAL_GPIO_WritePin(BRD_D4_GPIO_PORT, BRD_D4_PIN, segment_value);
+					HAL_GPIO_WritePin(LED_4_GPIO_PORT, LED_4_PIN, segment_value);
 					break;
 				case 5:
-					HAL_GPIO_WritePin(BRD_D5_GPIO_PORT, BRD_D5_PIN, segment_value);
+					HAL_GPIO_WritePin(LED_5_GPIO_PORT, LED_5_PIN, segment_value);
 					break;
 				case 6:
-					HAL_GPIO_WritePin(BRD_D6_GPIO_PORT, BRD_D6_PIN, segment_value);
+					HAL_GPIO_WritePin(LED_6_GPIO_PORT, LED_6_PIN, segment_value);
 					break;
 				case 7:
-					HAL_GPIO_WritePin(BRD_D7_GPIO_PORT, BRD_D7_PIN, segment_value);
+					HAL_GPIO_WritePin(LED_7_GPIO_PORT, LED_7_PIN, segment_value);
 					break;
 				case 8:
-					HAL_GPIO_WritePin(BRD_D8_GPIO_PORT, BRD_D8_PIN, segment_value);
+					HAL_GPIO_WritePin(LED_8_GPIO_PORT, LED_8_PIN, segment_value);
 					break;
 				case 9:
-					HAL_GPIO_WritePin(BRD_D9_GPIO_PORT, BRD_D9_PIN, segment_value);
+					HAL_GPIO_WritePin(LED_9_GPIO_PORT, LED_9_PIN, segment_value);
 					break;
 			 default:
 			 		break;
@@ -91,16 +91,16 @@ extern void s4353096_lightbar_init(void) {
 
 
 		//int GPIO_Port[10];
-		__BRD_D0_GPIO_CLK();
-		__BRD_D1_GPIO_CLK();
-		__BRD_D2_GPIO_CLK();
-		__BRD_D3_GPIO_CLK();
-		__BRD_D4_GPIO_CLK();
-		__BRD_D5_GPIO_CLK();
-		__BRD_D6_GPIO_CLK();
-		__BRD_D7_GPIO_CLK();
-		__BRD_D8_GPIO_CLK();
-		__BRD_D9_GPIO_CLK();
+		__LED_0_GPIO_CLK();
+		__LED_1_GPIO_CLK();
+		__LED_2_GPIO_CLK();
+		__LED_3_GPIO_CLK();
+		__LED_4_GPIO_CLK();
+		__LED_5_GPIO_CLK();
+		__LED_6_GPIO_CLK();
+		__LED_7_GPIO_CLK();
+		__LED_8_GPIO_CLK();
+		__LED_9_GPIO_CLK();
 		//Set up Pin behaviour
 		GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP; //Output Mode
 		GPIO_InitStructure.Pull = GPIO_PULLUP; //Pull down resistor
@@ -108,26 +108,26 @@ extern void s4353096_lightbar_init(void) {
 
 		/*GPIO Pins D0-D9 are configured to the above specifications in the space
 		bellow*/
-		GPIO_InitStructure.Pin = BRD_D0_PIN;
-		HAL_GPIO_Init(BRD_D0_GPIO_PORT, &GPIO_InitStructure);
-		GPIO_InitStructure.Pin = BRD_D1_PIN;
-		HAL_GPIO_Init(BRD_D1_GPIO_PORT, &GPIO_InitStructure);
-		GPIO_InitStructure.Pin = BRD_D2_PIN;
-		HAL_GPIO_Init(BRD_D2_GPIO_PORT, &GPIO_InitStructure);
-		GPIO_InitStructure.Pin = BRD_D3_PIN;
-		HAL_GPIO_Init(BRD_D3_GPIO_PORT, &GPIO_InitStructure);
-		GPIO_InitStructure.Pin = BRD_D4_PIN;
-		HAL_GPIO_Init(BRD_D4_GPIO_PORT, &GPIO_InitStructure);
-		GPIO_InitStructure.Pin = BRD_D5_PIN;
-		HAL_GPIO_Init(BRD_D5_GPIO_PORT, &GPIO_InitStructure);
-		GPIO_InitStructure.Pin = BRD_D6_PIN;
-		HAL_GPIO_Init(BRD_D6_GPIO_PORT, &GPIO_InitStructure);
-		GPIO_InitStructure.Pin = BRD_D7_PIN;
-		HAL_GPIO_Init(BRD_D7_GPIO_PORT, &GPIO_InitStructure);
-		GPIO_InitStructure.Pin = BRD_D8_PIN;
-		HAL_GPIO_Init(BRD_D8_GPIO_PORT, &GPIO_InitStructure);
-		GPIO_InitStructure.Pin = BRD_D9_PIN;
-		HAL_GPIO_Init(BRD_D9_GPIO_PORT, &GPIO_InitStructure);
+		GPIO_InitStructure.Pin = LED_0_PIN;
+		HAL_GPIO_Init(LED_0_GPIO_PORT, &GPIO_InitStructure);
+		GPIO_InitStructure.Pin = LED_1_PIN;
+		HAL_GPIO_Init(LED_1_GPIO_PORT, &GPIO_InitStructure);
+		GPIO_InitStructure.Pin = LED_2_PIN;
+		HAL_GPIO_Init(LED_2_GPIO_PORT, &GPIO_InitStructure);
+		GPIO_InitStructure.Pin = LED_3_PIN;
+		HAL_GPIO_Init(LED_3_GPIO_PORT, &GPIO_InitStructure);
+		GPIO_InitStructure.Pin = LED_4_PIN;
+		HAL_GPIO_Init(LED_4_GPIO_PORT, &GPIO_InitStructure);
+		GPIO_InitStructure.Pin = LED_5_PIN;
+		HAL_GPIO_Init(LED_5_GPIO_PORT, &GPIO_InitStructure);
+		GPIO_InitStructure.Pin = LED_6_PIN;
+		HAL_GPIO_Init(LED_6_GPIO_PORT, &GPIO_InitStructure);
+		GPIO_InitStructure.Pin = LED_7_PIN;
+		HAL_GPIO_Init(LED_7_GPIO_PORT, &GPIO_InitStructure);
+		GPIO_InitStructure.Pin = LED_8_PIN;
+		HAL_GPIO_Init(LED_8_GPIO_PORT, &GPIO_InitStructure);
+		GPIO_InitStructure.Pin = LED_9_PIN;
+		HAL_GPIO_Init(LED_9_GPIO_PORT, &GPIO_InitStructure);
 
 }
 

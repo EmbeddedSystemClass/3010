@@ -46,7 +46,7 @@ void lightbar_seg_set(int segment, unsigned char segment_value) {
 					HAL_GPIO_WritePin(LED_2_GPIO_PORT, LED_2_PIN, segment_value);
 					break;
 				case 3:
-					HAL_GPIO_WritePin(LED_3_GPIO_PORT, LED_0_PIN, segment_value);
+					HAL_GPIO_WritePin(LED_3_GPIO_PORT, LED_3_PIN, segment_value);
 					break;
 				case 4:
 					HAL_GPIO_WritePin(LED_4_GPIO_PORT, LED_4_PIN, segment_value);
@@ -103,7 +103,7 @@ extern void s4353096_lightbar_init(void) {
 		__LED_9_GPIO_CLK();
 		//Set up Pin behaviour
 		GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP; //Output Mode
-		GPIO_InitStructure.Pull = GPIO_PULLUP; //Pull down resistor
+		GPIO_InitStructure.Pull = GPIO_PULLUP; //Pull up resistor
 		GPIO_InitStructure.Speed = GPIO_SPEED_FAST; //Pun latency
 
 		/*GPIO Pins D0-D9 are configured to the above specifications in the space

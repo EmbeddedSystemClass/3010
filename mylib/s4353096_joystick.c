@@ -73,7 +73,7 @@ extern unsigned int s4353096_joystick_x_read(void) {
   /*Wait for ADC Conversion to complete*/
   while (HAL_ADC_PollForConversion(&AdcHandle1, 10) != HAL_OK);
   adc_value = (uint16_t)(HAL_ADC_GetValue(&AdcHandle1));
-  debug_printf("ADC Value: %u\n\r", adc_value);
+  //debug_printf("ADC Value: %u\n\r", adc_value);
   return adc_value;
 }
 /*Read Y value*/
@@ -85,7 +85,7 @@ extern unsigned int s4353096_joystick_y_read(void) {
   /*Wait for ADC Conversion to complete*/
   while (HAL_ADC_PollForConversion(&AdcHandle1, 10) != HAL_OK);
   adc_value = (uint16_t)(HAL_ADC_GetValue(&AdcHandle1));
-  debug_printf("ADC Value: %u\n\r", adc_value);
+  //debug_printf("ADC Value: %u\n\r", adc_value);
   return adc_value;
 }
 /*Read Z value*/
@@ -97,6 +97,6 @@ extern unsigned int s4353096_joystick_z_read(void) {
   /*Wait for ADC Conversion to complete*/
   while (HAL_ADC_PollForConversion(&AdcHandle1, 10) != HAL_OK);
   adc_value = (uint16_t)(HAL_ADC_GetValue(&AdcHandle1));
-  debug_printf("Button Value: %d\n", adc_value);
+  //debug_printf("Button Value: %d\n", adc_value);
   return adc_value;
 }

@@ -28,7 +28,7 @@
 TIM_HandleTypeDef TIM_Init;
 uint16_t counter_value = 64;
 uint16_t press_counter_val = 0;
-int count_interrupt = 99;
+int count_interrupt = 199;
 float x_value;
 int duty_cycle;
 int led_value;
@@ -85,11 +85,11 @@ void Hardware_init(void) {
 	/* Timer 2 clock enable */
 	__TIM2_CLK_ENABLE();
 	/* Compute the prescaler value for 50Khz */
-  PrescalerValue = (uint16_t) ((SystemCoreClock /2)/50000) - 1;
+  PrescalerValue = (uint16_t) ((SystemCoreClock /2)/500000) - 1;
 	/* Time base configuration */
 	TIM_Init.Instance = TIM2;				//Enable Timer 2
 	//Set period count to be 1ms, so timer interrupt occurs every (1ms)*0.2.
-  TIM_Init.Init.Period = (50000/1000)*0.18;
+  TIM_Init.Init.Period = (50000/1000)*0.98;//*0.18;
   TIM_Init.Init.Prescaler = PrescalerValue;	//Set presale value
   TIM_Init.Init.ClockDivision = 0;			//Set clock division
 	TIM_Init.Init.RepetitionCounter = 0;	// Set Reload Value
@@ -111,7 +111,7 @@ void Hardware_init(void) {
 }
 void lightbar_percentage(void) {
 	for(int i = 0; i <= 10; i++) {
-		if (i == (duty_cycle/10)) {
+		if (i == (duty_cycle/20)) {
 			led_value = ~(((1023 << i) & 1023));
 			s4353096_lightbar_write(led_value);
 		}
@@ -134,8 +134,8 @@ void tim2_irqhandler (void) {
 	__HAL_TIM_CLEAR_IT(&TIM_Init, TIM_IT_UPDATE);
 
 	//Check whether to read joystick values (Every 20ms)
-	if (count_interrupt == 100) {
-		duty_cycle = x_value * 100;
+	if (count_interrupt == 200) {
+		duty_cycle = x_value * 200;
 		count_interrupt = 0;
 	}
 

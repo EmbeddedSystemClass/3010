@@ -4,8 +4,7 @@
   * @author  Steffen Mitchell
   * @date    10-January-2015
   * @brief   Prac 1 Template C main file - BCD timer and press counter.
-  *			 NOTE: THIS CODE IS PSEUDOCODE AND DOES NOT COMPILE.
-  *				   GUIDELINES ARE GIVEN AS COMMENTS.
+  *
   *			 REFERENCES: ex1_led, ex2_gpio, ex3_gpio, ex11_character
   ******************************************************************************
   */
@@ -48,9 +47,6 @@ void main(void) {
 	HAL_Delay(7000);
 	/* Main processing loop */
   while (1) {
-		//s4353096_joystick_x_read();
-		//s4353096_joystick_y_read();
-		//s4353096_joystick_z_read();
 		x_value = (s4353096_joystick_x_read() / 4095.00);
 		lightbar_percentage();
 	}
@@ -68,11 +64,7 @@ void Hardware_init(void) {
 
 	BRD_LEDInit();		//Initialise Blue LED
 	BRD_LEDOff();		//Turn off Blue LED
-	/* Initialise LEDBar
-       Call
-	   sxxxxxx_ledbar_init();
-
-	*/
+	/* Initialise LEDBar and Joystick */
 	s4353096_lightbar_init();
 	s4353096_joystick_init();
 	/* Configure D1 for output of square wave signal */
@@ -116,17 +108,6 @@ void lightbar_percentage(void) {
 			s4353096_lightbar_write(led_value);
 		}
 	}
-	/*switch (duty_cycle/10) {
-		case 0:
-			s4353096_lightbar_write(1023 >> 10);
-			break;
-		case 1:
-			s4353096_lightbar_write(1023 >> 9);
-			break;
-			case 2:
-				s4353096_lightbar_write(1023 >> 8);
-				break;
-	}*/
 }
 void tim2_irqhandler (void) {
 
@@ -145,34 +126,4 @@ void tim2_irqhandler (void) {
 		HAL_GPIO_WritePin(SQR_WAVE_GEN_1_GPIO_PORT, SQR_WAVE_GEN_1_PIN, 0);
 	}
 	count_interrupt++;
-	/*
-	//Geneate Signal on D1 (Every 1ms)
-	if (count_interrupt <= 10) {
-		HAL_GPIO_WritePin(SQR_WAVE_GEN_1_GPIO_PORT, SQR_WAVE_GEN_1_PIN, 1);
-		count_interrupt++;
-	} else if (count_interrupt == 20) {
-		HAL_GPIO_WritePin(SQR_WAVE_GEN_1_GPIO_PORT, SQR_WAVE_GEN_1_PIN, 0);
-		count_interrupt = 0;
-	} else {
-		HAL_GPIO_WritePin(SQR_WAVE_GEN_1_GPIO_PORT, SQR_WAVE_GEN_1_PIN, 0);
-		count_interrupt++;
-	}*/
 }
-/**
-  * @brief  exti_a2 GPIO Interrupt handler
-  * @param  None.
-  * @retval None
-  */
-//void exti_joystick_z_interrupt_handler(void) {
-//	HAL_GPIO_EXTI_IRQHandler(JOYSTICK_Z_PIN);				//Clear A2 pin external interrupt flag
-
-	/* Speed up the counter by reducing the delay value */
-//	press_counter_val++;
-//	if (press_counter_val == 1) {
-//		counter_divider = counter_divider * 2;
-		//debug_printf("Triggered - %d\n\r", press_counter_val);
-//	} else {
-//		press_counter_val = 0;
-//	}
-//	HAL_Delay(100);
-//}

@@ -8,8 +8,10 @@
  ******************************************************************************
  * EXTERNAL FUNCTIONS
  ******************************************************************************
- * sxxxxxx_ledbar_init() – intialise LED Light BAR
- * sxxxxxx_ledbar_set() – set LED Light BAR value
+ * s4353096_joystick_init() - Initialise ADC for Joystick
+ * s4353096_joystick_x_read() - Read X Joystick value
+ * s4353096_joystick_y_read() - Read Y Joystick value
+ * s4353096_joystick_z_read() - Read Z Joystick   value
  ******************************************************************************
 */
 #ifndef S4353096_JOYSTICK_H

@@ -11,8 +11,8 @@
  * s4353096_pantilt_angle(type, angle) - Write the pan or tilt servo to an angle
  ******************************************************************************
  */
- #ifndef S4353096_PANTILT_H
- #define S4353096_PANTILT_H
+// #ifndef S4353096_PANTILT_H
+// #define S4353096_PANTILT_H
 
  #define PWM_PAN_TIM TIM2
  #define PWM_PAN_PIN BRD_D2_PIN

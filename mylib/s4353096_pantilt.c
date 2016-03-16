@@ -69,7 +69,7 @@ extern void s4353096_pantilt_init(void) {
   HAL_TIM_PWM_Start(&TIM_Init, PWM_PAN_TIM_CHANNEL);
 
   /* Configure Timer setting for PWM Tilt */
-  TIM_Init.Instance = PWM_TILT_TIM_CHANNEL;
+  TIM_Init.Instance = PWM_TILT_TIM;
   /* Enable PWM for PWM Tilt Timer */
   HAL_TIM_PWM_Init(&TIM_Init);
   HAL_TIM_PWM_ConfigChannel(&TIM_Init, &PWMConfig, PWM_TILT_TIM_CHANNEL);

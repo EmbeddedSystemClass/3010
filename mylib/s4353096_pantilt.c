@@ -42,11 +42,11 @@ extern void s4353096_pantilt_init(void) {
   GPIO_InitStructure.Alternate = PWM_TILT_GPIO_AF_TIM;	//Set alternate function to be timer tilt
   HAL_GPIO_Init(PWM_TILT_GPIO_PORT, &GPIO_InitStructure);
   /* Compute the prescaler value. SystemCoreClock = 168000000 - set for 50Khz clock */
-  PrescalerValue = (uint16_t) ((SystemCoreClock /2) / 50000) - 1;
+  PrescalerValue = (uint16_t) ((SystemCoreClock /2) / 500000) - 1;
 
   /* Configure Timer settings */
   TIM_Init.Instance = PWM_PAN_TIM;					//Enable Timer 2
-  TIM_Init.Init.Period = 2*50000/10;			//Set for 200ms (5Hz) period
+  TIM_Init.Init.Period = (500000/1000)*20;			//Set for 200ms (5Hz) period
   TIM_Init.Init.Prescaler = PrescalerValue;	//Set presale value
   TIM_Init.Init.ClockDivision = 0;			//Set clock division
   TIM_Init.Init.RepetitionCounter = 0; 		// Set Reload Value
@@ -54,7 +54,7 @@ extern void s4353096_pantilt_init(void) {
 
   /* PWM Mode configuration for Channel 2 - set pulse width*/
   PWMConfig.OCMode			 = TIM_OCMODE_PWM1;	//Set PWM MODE (1 or 2 - NOT CHANNEL)
-  PWMConfig.Pulse				= 2*50000/100;		//1ms pulse width to 10ms
+  PWMConfig.Pulse				= ((2*500000)/10000);		//1ms pulse width to 10ms
   PWMConfig.OCPolarity	 = TIM_OCPOLARITY_HIGH;
   PWMConfig.OCNPolarity	= TIM_OCNPOLARITY_HIGH;
   PWMConfig.OCFastMode	 = TIM_OCFAST_DISABLE;
@@ -77,4 +77,32 @@ extern void s4353096_pantilt_init(void) {
   /* Start PWM for Tilt*/
   HAL_TIM_PWM_Start(&TIM_Init, PWM_TILT_TIM_CHANNEL);
 
+}
+
+extern void s4353096_pantilt_angle_write(int type, int angle) {
+  float pwm_pulse_period_percentage;
+  float pwm_multiplier = 4.723 * (angle/85.000);
+  /*If negative*/
+  if (angle < 0) {
+    pwm_pulse_period_percentage = (7.25 - (-1*pwm_multiplier));
+    //debug_printf("YESYESYES\n");
+  } else if (angle >= 0) {
+    pwm_pulse_period_percentage = ((7.25 + pwm_multiplier));
+  }
+  PWMConfig.Pulse				= (((2*500000)/10000) * pwm_pulse_period_percentage);
+  /*Type 1 == Pan */
+  if (type == 1) {
+    TIM_Init.Instance = PWM_PAN_TIM;
+    /* Enable PWM for PWM Pan Timer */
+    HAL_TIM_PWM_Init(&TIM_Init);
+    HAL_TIM_PWM_ConfigChannel(&TIM_Init, &PWMConfig, PWM_PAN_TIM_CHANNEL);
+    HAL_TIM_PWM_Start(&TIM_Init, PWM_PAN_TIM_CHANNEL);
+  } else if (type == 0) { /*If Type 0 == Tilt */
+    TIM_Init.Instance = PWM_TILT_TIM;
+    HAL_TIM_PWM_Init(&TIM_Init);
+    HAL_TIM_PWM_ConfigChannel(&TIM_Init, &PWMConfig, PWM_TILT_TIM_CHANNEL);
+    HAL_TIM_PWM_Start(&TIM_Init, PWM_TILT_TIM_CHANNEL);
+  } else {
+
+  }
 }

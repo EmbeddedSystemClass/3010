@@ -45,8 +45,22 @@ void main(void) {
   while (1) {
 		//x_value = (s4353096_joystick_x_read() / 4095.00);
 		//lightbar_percentage();
-		BRD_LEDToggle();	//Toggle 'Alive' LED on/off
-		HAL_Delay(1000);	//Delay for 1s
+		//BRD_LEDToggle();	//Toggle 'Alive' LED on/off
+		//HAL_Delay(1000);	//Delay for 1s
+		//BRD_LEDToggle();
+		//s4353096_pantilt_angle_write(1, 90);
+		HAL_Delay(500);
+		BRD_LEDToggle();
+		s4353096_pantilt_angle_write(1, 85);
+		HAL_Delay(500);
+		BRD_LEDToggle();
+		s4353096_pantilt_angle_write(1, (-85));
+		HAL_Delay(500);
+		BRD_LEDToggle();
+		s4353096_pantilt_angle_write(1, 60);
+		HAL_Delay(500);
+		BRD_LEDToggle();
+		BRD_LEDToggle();
 	}
 }
 

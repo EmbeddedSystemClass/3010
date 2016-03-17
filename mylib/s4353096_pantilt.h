@@ -31,3 +31,4 @@
  #define PWM_TILT_TIM_CHANNEL TIM_CHANNEL_2
 
  extern void s4353096_pantilt_init(void);
+ extern void s4353096_pantilt_angle_write(int type, int angle);

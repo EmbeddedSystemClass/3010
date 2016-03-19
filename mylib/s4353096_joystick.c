@@ -25,6 +25,8 @@ GPIO_InitTypeDef  GPIO_InitStructure;
 ADC_HandleTypeDef AdcHandle1;
 ADC_HandleTypeDef AdcHandle2;
 ADC_ChannelConfTypeDef AdcChanConfig;
+int count = 0;
+int joystick_position = 0;
 /*Initialise Joystick Pins*/
 extern void s4353096_joystick_init(void) {
   /*Configure GPIO pins A5-A3 for joystick*/
@@ -60,11 +62,22 @@ extern void s4353096_joystick_init(void) {
 
   HAL_ADC_Init(&AdcHandle1);		//Initialise ADC
 
-/* Configure ADC Channel */
+  /* Configure ADC Channel */
 	AdcChanConfig.Rank         = 1;
   AdcChanConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
   AdcChanConfig.Offset       = 0;
 
+  __JOYSTICK_Z_GPIO_CLK();
+	//Initialise Interrupt, Priority set to 10
+	HAL_NVIC_SetPriority(JOYSTICK_Z_EXTI_IRQ, 10, 0);
+	GPIO_InitStructure.Pin = JOYSTICK_Z_PIN;
+	GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING;
+	GPIO_InitStructure.Pull = GPIO_PULLUP;
+	GPIO_InitStructure.Speed = GPIO_SPEED_FAST;
+	HAL_GPIO_Init(JOYSTICK_Z_GPIO_PORT, &GPIO_InitStructure);
+	//Enable external GPIO interrupt and interrupt vector for pin D0
+	NVIC_SetVector(JOYSTICK_Z_EXTI_IRQ, (uint32_t)&s4353096_joystick_z_read);
+	NVIC_EnableIRQ(JOYSTICK_Z_EXTI_IRQ);
 }
 /*Read X value*/
 extern unsigned int s4353096_joystick_x_read(void) {
@@ -91,14 +104,14 @@ extern unsigned int s4353096_joystick_y_read(void) {
   return adc_value;
 }
 /*Read Z value*/
-extern unsigned int s4353096_joystick_z_read(void) {
-  int unsigned adc_value;
-  AdcChanConfig.Channel = JOYSTICK_Z_ADC_CHAN;
-  HAL_ADC_ConfigChannel(&AdcHandle1, &AdcChanConfig);
-  HAL_ADC_Start(&AdcHandle1); //Start ADC conversion
-  /*Wait for ADC Conversion to complete*/
-  while (HAL_ADC_PollForConversion(&AdcHandle1, 10) != HAL_OK);
-  adc_value = (uint16_t)(HAL_ADC_GetValue(&AdcHandle1));
-  //debug_printf("Button Value: %d\n", adc_value);
-  return adc_value;
+void s4353096_joystick_z_read(void) {
+  HAL_GPIO_EXTI_IRQHandler(BRD_A2_PIN);				//Clear A2 pin external interrupt flag
+  count++;
+  debug_printf("Count %d\n",count);
+  if (count == 1) {
+    joystick_position++;
+    debug_printf("Joystick %d\n",joystick_position);
+  } else if (count == 4) {
+    count = 0;
+  }
 }

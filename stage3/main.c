@@ -40,7 +40,7 @@ void main(void) {
 
 	BRD_init();	//Initalise NP2
 	Hardware_init();	//Initalise hardware modules
-	HAL_Delay(7000);
+	HAL_Delay(3000);
 	/* Main processing loop */
   while (1) {
 		//x_value = (s4353096_joystick_x_read() / 4095.00);
@@ -49,16 +49,7 @@ void main(void) {
 		//HAL_Delay(1000);	//Delay for 1s
 		//BRD_LEDToggle();
 		//s4353096_pantilt_angle_write(1, 90);
-		HAL_Delay(500);
-		BRD_LEDToggle();
-		s4353096_pantilt_angle_write(1, 85);
-		HAL_Delay(500);
-		BRD_LEDToggle();
-		s4353096_pantilt_angle_write(1, (-85));
-		HAL_Delay(500);
-		BRD_LEDToggle();
-		s4353096_pantilt_angle_write(1, 60);
-		HAL_Delay(500);
+	
 		BRD_LEDToggle();
 		BRD_LEDToggle();
 	}

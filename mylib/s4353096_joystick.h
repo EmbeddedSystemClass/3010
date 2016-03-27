@@ -38,5 +38,5 @@ extern void s4353096_joystick_init(void);
 extern unsigned int s4353096_joystick_x_read(void);
 extern unsigned int s4353096_joystick_y_read(void);
 void s4353096_joystick_z_read(void);
-//void exti_joystick_z_interrupt_handler(void);
+//void exti_a2_interrupt_handler(void);
 #endif

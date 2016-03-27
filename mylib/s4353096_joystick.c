@@ -26,7 +26,12 @@ ADC_HandleTypeDef AdcHandle1;
 ADC_HandleTypeDef AdcHandle2;
 ADC_ChannelConfTypeDef AdcChanConfig;
 int count = 0;
-int joystick_position = 0;
+int interrupts = 0;
+int state = 0;
+int pressed_time = 0;
+int last_button_state = 0;
+int button_state;
+int last_Debounce_Time = 0;
 /*Initialise Joystick Pins*/
 extern void s4353096_joystick_init(void) {
   /*Configure GPIO pins A5-A3 for joystick*/
@@ -71,8 +76,8 @@ extern void s4353096_joystick_init(void) {
 	//Initialise Interrupt, Priority set to 10
 	HAL_NVIC_SetPriority(JOYSTICK_Z_EXTI_IRQ, 10, 0);
 	GPIO_InitStructure.Pin = JOYSTICK_Z_PIN;
-	GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING;
-	GPIO_InitStructure.Pull = GPIO_PULLUP;
+	GPIO_InitStructure.Mode = GPIO_MODE_IT_FALLING;
+	GPIO_InitStructure.Pull = GPIO_PULLDOWN;
 	GPIO_InitStructure.Speed = GPIO_SPEED_FAST;
 	HAL_GPIO_Init(JOYSTICK_Z_GPIO_PORT, &GPIO_InitStructure);
 	//Enable external GPIO interrupt and interrupt vector for pin D0
@@ -105,13 +110,63 @@ extern unsigned int s4353096_joystick_y_read(void) {
 }
 /*Read Z value*/
 void s4353096_joystick_z_read(void) {
-  HAL_GPIO_EXTI_IRQHandler(BRD_A2_PIN);				//Clear A2 pin external interrupt flag
-  count++;
-  debug_printf("Count %d\n",count);
-  if (count == 1) {
-    joystick_position++;
-    debug_printf("Joystick %d\n",joystick_position);
-  } else if (count == 4) {
-    count = 0;
+  //HAL_GPIO_EXTI_IRQHandler(BRD_A2_PIN);
+
+  int reading = HAL_GPIO_ReadPin(JOYSTICK_Z_GPIO_PORT, JOYSTICK_Z_PIN);
+  if (reading != last_button_state) {
+    last_Debounce_Time = HAL_GetTick()/1000;
   }
+  if ((HAL_GetTick()/1000 - last_Debounce_Time) > 10) {
+    if (reading != button_state) {
+      button_state = reading;
+      if (button_state == 1) {
+        HAL_GPIO_EXTI_IRQHandler(BRD_A2_PIN);
+        debug_printf("Interrupts:\n");
+      }
+    }
+  } else {
+    HAL_GPIO_EXTI_IRQHandler(BRD_A2_PIN);
+  }
+  last_button_state = reading;
 }
+
+  //if ((HAL_GetTick()/1000 - last_Debounce_Time) >= 10) {
+    //if (reading != button_state) {
+      //button_state = reading;
+      //interrupts++;
+      //debug_printf("Interrupts: %d\n", interrupts);
+      //}
+    //}
+    //state = 0;
+  //}
+
+  /*interrupts++;
+  if (interrupts == 1) {
+  int delay = 10; //Delay Time
+  int delay_counter = HAL_GetTick()/1000;
+  while (state == 0) {
+    while (HAL_GetTick() <= (delay_counter + delay)) {
+
+    }
+    if (HAL_GPIO_ReadPin(JOYSTICK_Z_GPIO_PORT, JOYSTICK_Z_PIN) == 1) {
+      state++;
+      debug_printf("Interrupts: %d\n", interrupts);
+    }
+  }
+  state = 0;
+  interrupts = 0;
+} else {
+
+}*/
+  //interrupts = 0;
+  //} else {
+
+  //}
+
+  //debug_printf("Count %d\n",count);
+  //if (count == 1) {
+  //  joystick_position++;
+    //debug_printf("Joystick %d\n",joystick_position);
+  //} else if (count == 4) {
+  //  count = 0;
+  //}

@@ -44,14 +44,14 @@
  #include "board.h"
  #include "stm32f4xx_hal_conf.h"
  #include "debug_printf.h"
- #include "radio_fsm_init.h"
+ #include "radio_fsm.h"
  #include "nrf24l01plus.h"
  /* Private typedef -----------------------------------------------------------*/
  /* Private define ------------------------------------------------------------*/
- #define S4353096_IDLE_STATE 0;
- #define S4353096_RX_STATE 1;
- #define S4353096_TX_STATE 2;
- #define S4353096_WAITING_STATE 3;
+ #define S4353096_IDLE_STATE 0
+ #define S4353096_RX_STATE 1
+ #define S4353096_TX_STATE 2
+ #define S4353096_WAITING_STATE 3
 
  int s4353096_radio_fsmcurrentstate;
  int s4353096_radio_rxstatus;

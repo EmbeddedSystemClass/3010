@@ -13,6 +13,7 @@
 #include "board.h"
 #include "stm32f4xx_hal_conf.h"
 #include "debug_printf.h"
+#include "s4353096_radio.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -35,7 +36,19 @@ void main(void) {
 	HAL_Delay(3000);
 	/* Main processing loop */
   while (1) {
-
+		unsigned char c = 51 + '0';
+		s4353096_radio_getchan();
+		s4353096_radio_setchan(c);
+		HAL_Delay(1000);
+		s4353096_radio_getchan();
+		s4353096_radio_setchan(c);
+		HAL_Delay(1000);
+		s4353096_radio_getchan();
+		s4353096_radio_setchan(c);
+		HAL_Delay(1000);
+		s4353096_radio_getchan();
+		s4353096_radio_setchan(c);
+		HAL_Delay(1000);
 		BRD_LEDToggle();
 	}
 }
@@ -48,8 +61,7 @@ void main(void) {
 void Hardware_init(void) {
 
 	GPIO_InitTypeDef  GPIO_InitStructure;
-	unsigned short PrescalerValue;
-
 	BRD_LEDInit();		//Initialise Blue LED
 	BRD_LEDOff();		//Turn off Blue LED
+	s4353096_radio_init();
 }

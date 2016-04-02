@@ -46,97 +46,96 @@ static SPI_HandleTypeDef SpiHandle;
 
 extern void s4353096_radio_init(void) {
   GPIO_InitTypeDef GPIO_spi;
-	/* Set SPI clock */
-	__BRD_SPI_CLK();
 
-	/* Enable GPIO Pin clocks */
-	__BRD_SPI_SCK_GPIO_CLK();
-	__BRD_SPI_MISO_GPIO_CLK();
-	__BRD_SPI_MOSI_GPIO_CLK();
-	__BRD_SPI_CS_GPIO_CLK();
-
-	/* Initialise SPI and Pin clocks*/
-	/* SPI SCK pin configuration */
-  	GPIO_spi.Pin = BRD_SPI_SCK_PIN;
-  	GPIO_spi.Mode = GPIO_MODE_AF_PP;
-  	GPIO_spi.Speed = GPIO_SPEED_HIGH;
-	GPIO_spi.Pull = GPIO_PULLDOWN;
-	GPIO_spi.Alternate = BRD_SPI_SCK_AF;
-  	HAL_GPIO_Init(BRD_SPI_SCK_GPIO_PORT, &GPIO_spi);
-
-  	/* SPI MISO pin configuration */
-  	GPIO_spi.Pin = BRD_SPI_MISO_PIN;
-	GPIO_spi.Mode = GPIO_MODE_AF_PP;
-	GPIO_spi.Speed = GPIO_SPEED_FAST;
-	GPIO_spi.Pull = GPIO_PULLUP;		//Must be set as pull up
-	GPIO_spi.Alternate = BRD_SPI_MISO_AF;
-  	HAL_GPIO_Init(BRD_SPI_MISO_GPIO_PORT, &GPIO_spi);
-
-	/* SPI  MOSI pin configuration */
-	GPIO_spi.Pin =  BRD_SPI_MOSI_PIN;
-	GPIO_spi.Mode = GPIO_MODE_AF_PP;
-	GPIO_spi.Pull = GPIO_PULLDOWN;
-	GPIO_spi.Alternate = BRD_SPI_MOSI_AF;
-  	HAL_GPIO_Init(BRD_SPI_MOSI_GPIO_PORT, &GPIO_spi);
-
-
-	/* SPI configuration */
-	SpiHandle.Instance = (SPI_TypeDef *)(BRD_SPI);
-
-	 __HAL_SPI_DISABLE(&SpiHandle);
-
-    SpiHandle.Init.Mode              = SPI_MODE_MASTER;
-    SpiHandle.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16; //56;
-    SpiHandle.Init.Direction         = SPI_DIRECTION_2LINES;
-    SpiHandle.Init.CLKPhase          = SPI_PHASE_1EDGE;
-    SpiHandle.Init.CLKPolarity       = SPI_POLARITY_LOW;
-    SpiHandle.Init.CRCCalculation    = SPI_CRCCALCULATION_DISABLED;
-    SpiHandle.Init.CRCPolynomial     = 0; //7;
-    SpiHandle.Init.DataSize          = SPI_DATASIZE_8BIT;
-    SpiHandle.Init.FirstBit          = SPI_FIRSTBIT_MSB;
-    SpiHandle.Init.NSS               = SPI_NSS_SOFT;
-    SpiHandle.Init.TIMode            = SPI_TIMODE_DISABLED;
-
-    HAL_SPI_Init(&SpiHandle);
-
-   __HAL_SPI_ENABLE(&SpiHandle);
-
-
-	/* Configure GPIO PIN for SPI Chip select, TFT CS, TFT DC */
-  	GPIO_spi.Pin = BRD_SPI_CS_PIN;				//Pin
-  	GPIO_spi.Mode = GPIO_MODE_OUTPUT_PP;		//Output Mode
-  	GPIO_spi.Pull = GPIO_PULLUP;			//Enable Pull up, down or no pull resister
-  	GPIO_spi.Speed = GPIO_SPEED_FAST;			//Pin latency
-  	HAL_GPIO_Init(BRD_SPI_CS_GPIO_PORT, &GPIO_spi);	//Initialise Pin
-
-	/* Configure GPIO PIN for  Chip select */
-
-	/* Set chip select high */
-	HAL_GPIO_WritePin(BRD_SPI_CS_GPIO_PORT, BRD_SPI_CS_PIN, 1);
   /*Initialise radio FSM*/
   radio_fsm_init();
   /*Set radio FSM sate to IDLE*/
   radio_fsm_setstate(S4353096_IDLE_STATE);
-  s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
+  s4353096_radio_fsmcurrentstate = radio_fsm_getstate();
 }
-/*extern void s4353096_radio_fsmprocessing(void) {
-  while(1) {
+extern void s4353096_radio_fsmprocessing(void) {
+  //Receiving FSM
+  switch(s4353096_radio_fsmcurrentstate) {
 
-  }
-}*/
+    case S4353096_IDLE_STATE:	//Idle state for reading current channel
+
+      /* Get current channel , if radio FSM is in IDLE State */
+      if (radio_fsm_getstate() == RADIO_FSM_IDLE_STATE) {
+
+        //s4353096_radio_fsmcurrentstate = S4353096_TX_STATE;	//Set next state as TX state.
+
+      } else {
+
+          /* if error occurs, set state back to IDLE state */
+          debug_printf("ERROR: Radio FSM not in Idle state\n\r");
+          radio_fsm_setstate(RADIO_FSM_IDLE_STATE);
+      }
+
+      break;
+
+      case S4353096_TX_STATE:	//TX state for writing packet to be sent.
+
+        /* Put radio FSM in TX state, if radio FSM is in IDLE state */
+        if (radio_fsm_getstate() == RADIO_FSM_IDLE_STATE) {
+
+          if (radio_fsm_setstate(RADIO_FSM_TX_STATE) == RADIO_FSM_ERROR) {
+            debug_printf("ERROR: Cannot set Radio FSM RX state\n\r");
+            HAL_Delay(100);
+          } else {
+
+            /*Send packet*/
+            }
+          //s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;		//set next state as IDLE state for after TX is completed
+        } else {
+
+            /* if error occurs, set state back to IDLE state */
+            debug_printf("ERROR: Radio FSM not in Idle state\n\r");
+            radio_fsm_setstate(RADIO_FSM_IDLE_STATE);
+        }
+
+        break;
+
+    }
+}
+extern void s4353096_radio_sendpacket(char	chan,	unsigned char *addr,
+  unsigned char *txpacket) {
+    unsigned char s4353096_student_number[] = {0x60, 0x09, 0x53, 0x43};
+    unsigned char s4353096_payload[] = {'s','t','e','f','f','e','n'};
+    for (int i = 0; i < 16; i++) {
+      if (i == 0) {
+        txpacket[i] = 0x20;
+      } else if (i < 5) {
+        txpacket[i] = addr[(i-1)];
+      } else if (i < 9) {
+        txpacket[i] = s4353096_student_number[(i-5)];
+      } else if (i < 16) {
+        txpacket[i] = s4353096_payload[(i-9)];
+      } else {
+        debug_printf("ERROR with Packaging\n");
+      }
+    }
+    radio_fsm_write(txpacket);
+    s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
+    radio_fsm_setstate(RADIO_FSM_IDLE_STATE);
+    s4353096_radio_fsmprocessing();
+    for (int j = 0; j < 16; j++) {
+      debug_printf("%x",txpacket[j]);
+    }
+    debug_printf("\n");
+}
 extern unsigned char s4353096_radio_getchan(void) {
   unsigned char radio_channel;
-  radio_fsm_register_read(NRF24L01P_RF_CH, radio_channel);
-  debug_printf("The Radio Channel is: %c\n",radio_channel);
+  radio_fsm_register_read(NRF24L01P_RF_CH, &radio_channel);
+  //debug_printf("The Radio Channel is: %d\n",radio_channel);
   return radio_channel;
 }
 extern void s4353096_radio_setchan(unsigned char chan) {
-  radio_fsm_register_write(NRF24L01P_RF_CH, chan);
+  radio_fsm_register_write(NRF24L01P_RF_CH, &chan);
 }
 
 extern void s4353096_radio_gettxaddress(unsigned char *addr) {
-  radio_fsm_buffer_read(NRF24L01P_TX_ADDR, addr, 40);
+  radio_fsm_buffer_read(NRF24L01P_TX_ADDR, addr, 5);
 }
 extern void s4353096_radio_settxaddress(unsigned char *addr) {
-  radio_fsm_buffer_write(NRF24L01P_TX_ADDR, addr, 40);
+  radio_fsm_buffer_write(NRF24L01P_TX_ADDR, addr, 5);
 }

@@ -33,22 +33,33 @@ void main(void) {
 
 	BRD_init();	//Initalise NP2
 	Hardware_init();	//Initalise hardware modules
-	HAL_Delay(3000);
+	HAL_Delay(5000);
 	/* Main processing loop */
   while (1) {
-		unsigned char c = 51 + '0';
-		s4353096_radio_getchan();
-		s4353096_radio_setchan(c);
-		HAL_Delay(1000);
-		s4353096_radio_getchan();
-		s4353096_radio_setchan(c);
-		HAL_Delay(1000);
-		s4353096_radio_getchan();
-		s4353096_radio_setchan(c);
-		HAL_Delay(1000);
-		s4353096_radio_getchan();
-		s4353096_radio_setchan(c);
-		HAL_Delay(1000);
+		unsigned char s4353096_addr[] = {0x78, 0x56, 0x34, 0x12};
+		s4353096_chan = 51;
+		switch(s4353096_radio_fsmcurrentstate) {
+			case S4353096_IDLE_STATE:
+				s4353096_radio_setchan(s4353096_chan);
+				s4353096_radio_settxaddress(s4353096_addr);
+				if (((HAL_GetTick()/100000) % 50) == 0) {
+					//debug_printf("%d",HAL_GetTick()/100000);
+					s4353096_radio_fsmcurrentstate = S4353096_TX_STATE;
+					s4353096_radio_fsmprocessing();
+				}
+				break;
+			case S4353096_TX_STATE:
+				BRD_LEDToggle();
+				s4353096_radio_sendpacket(s4353096_radio_getchan(), s4353096_addr, s4353096_rx_buffer);
+				break;
+			case S4353096_RX_STATE:
+
+				break;
+			case S4353096_WAITING_STATE:
+
+				break;
+		}
+		//HAL_Delay(1000);
 		BRD_LEDToggle();
 	}
 }

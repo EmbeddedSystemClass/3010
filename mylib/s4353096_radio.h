@@ -57,6 +57,13 @@
  int s4353096_radio_rxstatus;
  unsigned char s4353096_rx_buffer[32];
  uint8_t current_channel;
+ unsigned char s4353096_chan;
 
 extern void s4353096_radio_init(void);
 extern void s4353096_radio_fsmprocessing();
+extern void s4353096_radio_sendpacket(char	chan,	unsigned char *addr,
+  unsigned char *txpacket);
+extern unsigned char s4353096_radio_getchan(void);
+extern void s4353096_radio_setchan(unsigned char chan);
+extern void s4353096_radio_gettxaddress(unsigned char *addr);
+extern void s4353096_radio_settxaddress(unsigned char *addr);

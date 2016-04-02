@@ -63,6 +63,7 @@ extern void s4353096_radio_fsmprocessing(void) {
       if (radio_fsm_getstate() == RADIO_FSM_IDLE_STATE) {
         if (((HAL_GetTick()/100000) % 50) == 0) {
 					//debug_printf("%d\n",HAL_GetTick()/10000);
+          s4353096_radio_rxstatus = 0;
 					s4353096_radio_fsmcurrentstate = S4353096_TX_STATE;
         }
       } else {
@@ -91,7 +92,30 @@ extern void s4353096_radio_fsmprocessing(void) {
         }
 
         break;
+        case S4353096_RX_STATE:
+        /* Put radio FSM in RX state, if radio FSM is in IDLE or in waiting state */
+        if ((radio_fsm_getstate() == RADIO_FSM_IDLE_STATE) || (radio_fsm_getstate() == RADIO_FSM_WAIT_STATE)) {
 
+          if (radio_fsm_setstate(RADIO_FSM_RX_STATE) == RADIO_FSM_ERROR) {
+            debug_printf("ERROR: Cannot set Radio FSM RX state\n\r");
+            HAL_Delay(100);
+          } else {
+            radio_fsm_setstate(RADIO_FSM_RX_STATE);
+            s4353096_radio_fsmcurrentstate = S4353096_WAITING_STATE;		//set next state as Waiting state
+          }
+        } else {
+
+            /* if error occurs, set state back to IDLE state */
+            debug_printf("ERROR: Radio FSM not in Idle state\n\r");
+            radio_fsm_setstate(RADIO_FSM_IDLE_STATE);
+        }
+        break;
+        case S4353096_WAITING_STATE:	//Waiting state for reading received packet.
+
+        /* Check if radio FSM is in WAITING STATE */
+        if (radio_fsm_getstate() == RADIO_FSM_WAIT_STATE) {
+
+        }
     }
 }
 extern void s4353096_radio_sendpacket(char	chan,	unsigned char *addr,
@@ -137,4 +161,24 @@ extern void s4353096_radio_gettxaddress(unsigned char *addr) {
 }
 extern void s4353096_radio_settxaddress(unsigned char *addr) {
   radio_fsm_buffer_write(NRF24L01P_TX_ADDR, addr, 5);
+}
+extern void s4353096_radio_setfsmrx(void) {
+  s4353096_radio_fsmcurrentstate = S4353096_RX_STATE;
+  radio_fsm_setstate(RADIO_FSM_RX_STATE);
+}
+extern int s4353096_radio_getrxstatus(void) {
+  if (s4353096_radio_fsmcurrentstate == S4353096_WAITING_STATE) {
+    if (radio_fsm_read(s4353096_rx_buffer) == RADIO_FSM_DONE) {
+      s4353096_radio_rxstatus = 1;
+    } else {
+      s4353096_radio_rxstatus = 0;
+    }
+  }
+  HAL_Delay(10);
+  return s4353096_radio_rxstatus;
+}
+extern void s4353096_radio_getpacket(unsigned char *rxpacket) {
+        //Printing Procedure
+        s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
+
 }

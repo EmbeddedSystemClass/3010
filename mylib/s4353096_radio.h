@@ -67,3 +67,6 @@ extern unsigned char s4353096_radio_getchan(void);
 extern void s4353096_radio_setchan(unsigned char chan);
 extern void s4353096_radio_gettxaddress(unsigned char *addr);
 extern void s4353096_radio_settxaddress(unsigned char *addr);
+extern void s4353096_radio_setfsmrx(void);
+extern int s4353096_radio_getrxstatus(void);
+extern void s4353096_radio_getpacket(unsigned char *rxpacket);

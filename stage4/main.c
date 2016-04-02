@@ -40,9 +40,13 @@ void main(void) {
 	s4353096_radio_settxaddress(s4353096_addr);
 	/* Main processing loop */
   while (1) {
+		s4353096_radio_setfsmrx();
 		s4353096_radio_fsmprocessing();
-		HAL_Delay(100);
-		s4353096_radio_sendpacket(s4353096_radio_getchan(), s4353096_addr, s4353096_rx_buffer);
+		if (s4353096_radio_getrxstatus() == 1) {
+			s4353096_radio_getpacket(s4353096_rx_buffer);
+		}
+		//HAL_Delay(100);
+		//s4353096_radio_sendpacket(s4353096_radio_getchan(), s4353096_addr, s4353096_rx_buffer);
 	}
 }
 

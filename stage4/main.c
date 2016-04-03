@@ -46,7 +46,7 @@ void main(void) {
 			s4353096_radio_getpacket(s4353096_rx_buffer);
 		}
 		//HAL_Delay(100);
-		//s4353096_radio_sendpacket(s4353096_radio_getchan(), s4353096_addr_get, s4353096_tx_buffer);
+		s4353096_radio_sendpacket(s4353096_radio_getchan(), s4353096_addr_get, s4353096_payload_buffer);
 	}
 }
 

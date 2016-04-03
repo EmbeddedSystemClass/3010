@@ -78,7 +78,6 @@ extern void s4353096_radio_fsmprocessing(void) {
           for (int j = s4353096_payload_length; j < 7; j++) {
             s4353096_payload_buffer[j] = '-';
           }
-          //s4353096_payload_buffer[7] = '\0';
           break;
         } else if (RxChar != '\0') {
           s4353096_payload_buffer[s4353096_payload_length] = RxChar;
@@ -223,7 +222,7 @@ extern int s4353096_radio_getrxstatus(void) {
 }
 extern void s4353096_radio_getpacket(unsigned char *rxpacket) {
         //Printing Procedure
-        debug_printf("RECV:");
+        debug_printf("\nRECV:");
         for (int j = 5; j < 9; j++) {
           debug_printf("%x", rxpacket[j]);
         }

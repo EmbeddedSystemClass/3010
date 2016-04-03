@@ -34,19 +34,19 @@ void main(void) {
 	BRD_init();	//Initalise NP2
 	Hardware_init();	//Initalise hardware modules
 	HAL_Delay(3000);
-	unsigned char s4353096_addr[] = {0x78, 0x56, 0x34, 0x12};
-	s4353096_chan = 51;
-	s4353096_radio_setchan(s4353096_chan);
-	s4353096_radio_settxaddress(s4353096_addr);
+	//memset(s4353096_addr, 0, 32);
+	//s4353096_radio_gettxaddress(s4353096_addr);
+
 	/* Main processing loop */
   while (1) {
-		s4353096_radio_setfsmrx();
+		//s4353096_radio_setfsmrx();
+		//debug_printf("%x%x\n",s4353096_addr[0],s4353096_addr[1]);
 		s4353096_radio_fsmprocessing();
-		if (s4353096_radio_getrxstatus() == 1) {
+		/*if (s4353096_radio_getrxstatus() == 1) {
 			s4353096_radio_getpacket(s4353096_rx_buffer);
-		}
+		}*/
 		//HAL_Delay(100);
-		//s4353096_radio_sendpacket(s4353096_radio_getchan(), s4353096_addr, s4353096_rx_buffer);
+		s4353096_radio_sendpacket(s4353096_radio_getchan(), s4353096_addr_get, s4353096_tx_buffer);
 	}
 }
 

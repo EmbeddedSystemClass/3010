@@ -56,8 +56,10 @@
  int s4353096_radio_fsmcurrentstate;
  int s4353096_radio_rxstatus;
  unsigned char s4353096_rx_buffer[32];
+ unsigned char s4353096_tx_buffer[32];
  uint8_t current_channel;
- unsigned char s4353096_chan;
+ unsigned char s4353096_addr_get[4];
+ 
 
 extern void s4353096_radio_init(void);
 extern void s4353096_radio_fsmprocessing();

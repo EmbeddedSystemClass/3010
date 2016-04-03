@@ -43,6 +43,8 @@
  /* Includes ------------------------------------------------------------------*/
 #include "s4353096_radio.h"
 static SPI_HandleTypeDef SpiHandle;
+unsigned char s4353096_chan = 50;
+unsigned char s4353096_addr[] = {0x7B, 0x56, 0x34, 0x12, 0x00};
 
 extern void s4353096_radio_init(void) {
   GPIO_InitTypeDef GPIO_spi;
@@ -50,22 +52,33 @@ extern void s4353096_radio_init(void) {
   /*Initialise radio FSM*/
   radio_fsm_init();
   /*Set radio FSM sate to IDLE*/
-  radio_fsm_setstate(S4353096_IDLE_STATE);
-  s4353096_radio_fsmcurrentstate = radio_fsm_getstate();
+  radio_fsm_setstate(RADIO_FSM_IDLE_STATE);
+  s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
 }
 extern void s4353096_radio_fsmprocessing(void) {
   //Receiving FSM
+  int chan;
   switch(s4353096_radio_fsmcurrentstate) {
 
     case S4353096_IDLE_STATE:	//Idle state for reading current channel
 
       /* Get current channel , if radio FSM is in IDLE State */
       if (radio_fsm_getstate() == RADIO_FSM_IDLE_STATE) {
+        /*Every 5 seconds move into the TX_STATE*/
         if (((HAL_GetTick()/100000) % 50) == 0) {
 					//debug_printf("%d\n",HAL_GetTick()/10000);
+          chan = s4353096_radio_getchan();
+          s4353096_radio_gettxaddress(s4353096_addr_get);
+          debug_printf("Chan : %d\nTX :",chan);
+          for (int j = 0; j < 16; j++) {
+            debug_printf("%x",s4353096_addr_get[j]);
+          }
+          debug_printf("\n");
           s4353096_radio_rxstatus = 0;
 					s4353096_radio_fsmcurrentstate = S4353096_TX_STATE;
         }
+        s4353096_radio_setchan(s4353096_chan);
+        s4353096_radio_settxaddress(s4353096_addr);
       } else {
           /* if error occurs, set state back to IDLE state */
           debug_printf("ERROR: Radio FSM not in Idle state\n\r");
@@ -81,7 +94,9 @@ extern void s4353096_radio_fsmprocessing(void) {
             HAL_Delay(100);
           } else {
             //Has just been put into TX State and has yet to transmit the packet
-            radio_fsm_setstate(RADIO_FSM_TX_STATE);
+            //radio_fsm_setstate(RADIO_FSM_TX_STATE);
+            //radio_fsm_write(s4353096_tx_buffer);
+            //s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
             BRD_LEDToggle();
           }
         } else {
@@ -121,7 +136,7 @@ extern void s4353096_radio_fsmprocessing(void) {
 extern void s4353096_radio_sendpacket(char	chan,	unsigned char *addr,
   unsigned char *txpacket) {
     unsigned char s4353096_student_number[] = {0x60, 0x09, 0x53, 0x43};
-    unsigned char s4353096_payload[] = {'s','t','e','f','f','e','n'};
+    unsigned char s4353096_payload[] = {'n','i','c','e','a','m','y'};
     for (int i = 0; i < 16; i++) {
       if (i == 0) {
         txpacket[i] = 0x20;
@@ -137,6 +152,7 @@ extern void s4353096_radio_sendpacket(char	chan,	unsigned char *addr,
     }
     /*Only Sends the Packet if the FSM is in TX State*/
     if (s4353096_radio_fsmcurrentstate == S4353096_TX_STATE) {
+      s4353096_radio_fsmprocessing();
       radio_fsm_write(txpacket); //This function moves FSM back to IDLE STATE
       BRD_LEDToggle();
       s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;

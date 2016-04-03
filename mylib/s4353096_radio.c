@@ -74,11 +74,13 @@ extern void s4353096_radio_fsmprocessing(void) {
             debug_printf("%x",s4353096_addr_get[j]);
           }
           debug_printf("\n");
-          s4353096_radio_rxstatus = 0;
-					s4353096_radio_fsmcurrentstate = S4353096_TX_STATE;
+          /*s4353096_radio_rxstatus = 0;
+					s4353096_radio_fsmcurrentstate = S4353096_RX_STATE;*/
         }
         s4353096_radio_setchan(s4353096_chan);
         s4353096_radio_settxaddress(s4353096_addr);
+        s4353096_radio_rxstatus = 0;
+        s4353096_radio_fsmcurrentstate = S4353096_RX_STATE;
       } else {
           /* if error occurs, set state back to IDLE state */
           debug_printf("ERROR: Radio FSM not in Idle state\n\r");
@@ -195,6 +197,15 @@ extern int s4353096_radio_getrxstatus(void) {
 }
 extern void s4353096_radio_getpacket(unsigned char *rxpacket) {
         //Printing Procedure
+        debug_printf("RECV:");
+        for (int j = 5; j < 9; j++) {
+          debug_printf("%x", rxpacket[j]);
+        }
+        debug_printf(">");
+        for (int i = 9; i < 16; i++) {
+          debug_printf("%c", rxpacket[i]);
+        }
+        debug_printf("\n");
         s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
-
+        s4353096_radio_fsmprocessing();
 }

@@ -62,6 +62,7 @@ extern void s4353096_radio_init(void) {
   s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
 }
 
+/*Processes the current state*/
 extern void s4353096_radio_fsmprocessing(void) {
   //Receiving FSM
   switch(s4353096_radio_fsmcurrentstate) {
@@ -163,10 +164,13 @@ extern void s4353096_radio_fsmprocessing(void) {
   }
 }
 
+/*Constructs the transmission packet and transmits it if the FSM's are in the
+  TX state*/
 extern void s4353096_radio_sendpacket(char	chan,	unsigned char *addr,
   unsigned char *txpacket) {
     unsigned char s4353096_student_number[] = {0x43, 0x53, 0x09, 0x60};
     unsigned char s4353096_txpacket[32];
+    /*Construction of transmittion packet*/
     for (int i = 0; i < 16; i++) {
       if (i == 0) {
         s4353096_txpacket[i] = 0x20;
@@ -196,27 +200,40 @@ extern void s4353096_radio_sendpacket(char	chan,	unsigned char *addr,
         }
         debug_printf("\n");
       #endif
+    } else {
+
     }
 }
+
+/*Retrieves the channel from the RF_CHAN Register on the Transciever*/
 extern unsigned char s4353096_radio_getchan(void) {
   unsigned char radio_channel;
   radio_fsm_register_read(NRF24L01P_RF_CH, &radio_channel);
   return radio_channel;
 }
+
+/*Writes the channel to the RF_CHAN Register on the Transciever*/
 extern void s4353096_radio_setchan(unsigned char chan) {
   radio_fsm_register_write(NRF24L01P_RF_CH, &chan);
 }
 
+/*Retrieves the tx address from the TX_ADDR Register on the Transciever*/
 extern void s4353096_radio_gettxaddress(unsigned char *addr) {
   radio_fsm_buffer_read(NRF24L01P_TX_ADDR, addr, 5);
 }
+
+/*Writes the tx address to the TX_ADDR Register on the Transciever*/
 extern void s4353096_radio_settxaddress(unsigned char *addr) {
   radio_fsm_buffer_write(NRF24L01P_TX_ADDR, addr, 5);
 }
+
+/*Sets s4353096_fsm and RADIO_FSM to rx state*/
 extern void s4353096_radio_setfsmrx(void) {
   s4353096_radio_fsmcurrentstate = S4353096_RX_STATE;
   radio_fsm_setstate(RADIO_FSM_RX_STATE);
 }
+/*Check if a packet has been recieved and if it has put it in the rx_buffer.
+  Returns 1 for recieved and 0 for not recieved.*/
 extern int s4353096_radio_getrxstatus(void) {
   if (s4353096_radio_fsmcurrentstate == S4353096_WAITING_STATE) {
     if (radio_fsm_read(s4353096_rx_buffer) == RADIO_FSM_DONE) {
@@ -228,6 +245,8 @@ extern int s4353096_radio_getrxstatus(void) {
   HAL_Delay(10);
   return s4353096_radio_rxstatus;
 }
+
+/*Prints the recieved packet to the console*/
 extern void s4353096_radio_getpacket(unsigned char *rxpacket) {
   debug_printf("\nRECV:");
   for (int j = 5; j < 9; j++) {

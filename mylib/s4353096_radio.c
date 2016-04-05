@@ -48,6 +48,7 @@ unsigned char s4353096_chan = 50;
 /*Transmit Address the radio is set to*/
 unsigned char s4353096_addr[] = {0x7B, 0x56, 0x34, 0x12, 0x00};
 int s4353096_payload_length = 0;
+int s4353096_keystroke = 0;
 char RxChar;
 
 /*Initialises Relevent GPIO/SPI Ports and sets both FSM states to IDLE*/
@@ -72,24 +73,36 @@ extern void s4353096_radio_fsmprocessing(void) {
         s4353096_radio_settxaddress(s4353096_addr);
         s4353096_radio_rxstatus = 0;
         /* Check if character is not Null */
-        while(1){
-          RxChar = debug_getc();
-          if (RxChar == '\r' || s4353096_payload_length == 7) {
-            for (int j = s4353096_payload_length; j < 7; j++) {
-              s4353096_payload_buffer[j] = '-';
+        if (s4353096_keystroke == 1) {
+          while(1){
+            if (s4353096_payload_length != 0) {
+              RxChar = debug_getc();
+            } else {
+
             }
-            break;
-          } else if (RxChar != '\0') {
-            s4353096_payload_buffer[s4353096_payload_length] = RxChar;
-            s4353096_payload_length++;
-            debug_putc(RxChar);				//reflect byte using putc - puts character into buffer
-    			  debug_flush();					//Must call flush, to send character		//reflect byte using printf - must delay before calling printf again.
+            if (RxChar == '\r' || s4353096_payload_length == 7) {
+              for (int j = s4353096_payload_length; j < 7; j++) {
+                s4353096_payload_buffer[j] = '-';
+              }
+              s4353096_payload_length = 0;
+              s4353096_keystroke = 0;
+              s4353096_radio_fsmcurrentstate = S4353096_TX_STATE;
+              break;
+            } else if (RxChar != '\0') {
+              s4353096_payload_buffer[s4353096_payload_length] = RxChar;
+              s4353096_payload_length++;
+              debug_putc(RxChar);				//reflect byte using putc - puts character into buffer
+    			    debug_flush();					//Must call flush, to send character		//reflect byte using printf - must delay before calling printf again.
+            } else {
+
+            }
+            HAL_Delay(125);
           }
-          HAL_Delay(125);
+        } else {
+          s4353096_radio_gettxaddress(s4353096_addr_get);
+          s4353096_radio_setfsmrx();
+          s4353096_radio_fsmprocessing();
         }
-        s4353096_radio_fsmcurrentstate = S4353096_TX_STATE;
-        s4353096_payload_length = 0;
-        s4353096_radio_gettxaddress(s4353096_addr_get);
       } else {
           /* if error occurs, set state back to IDLE state */
           debug_printf("ERROR: Radio FSM not in Idle state\n\r");
@@ -135,6 +148,16 @@ extern void s4353096_radio_fsmprocessing(void) {
     case S4353096_WAITING_STATE:	//Waiting state for reading received packet.
       /* Check if radio FSM is in WAITING STATE */
       if (radio_fsm_getstate() == RADIO_FSM_WAIT_STATE) {
+        RxChar = debug_getc();
+        if (RxChar != '\0') {
+          s4353096_keystroke = 1;
+          s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
+          radio_fsm_setstate(RADIO_FSM_IDLE_STATE);
+          s4353096_radio_fsmprocessing();
+        } else {
+
+        }
+      } else {
 
       }
   }
@@ -164,8 +187,8 @@ extern void s4353096_radio_sendpacket(char	chan,	unsigned char *addr,
       /*Toggle LED to indicate transmission has been sent*/
       BRD_LEDToggle();
       s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
-      s4353096_radio_setfsmrx();
-      s4353096_radio_fsmprocessing();
+      //s4353096_radio_setfsmrx();
+      //s4353096_radio_fsmprocessing();
       /*Debug Statement to check format of packet sent*/
       #ifdef DEBUG
         for (int j = 0; j < 16; j++) {

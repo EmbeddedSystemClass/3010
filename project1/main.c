@@ -57,17 +57,17 @@ void main(void) {
 
 			y_value = s4353096_joystick_y_read();
 			if ((y_value > 2100) && (set_angle_pan < 80)) {
-				set_angle_pan += 2;
+				set_angle_pan += 1;
 			} else if ((y_value < 1950) && (set_angle_pan > -80)) {
-				set_angle_pan -= 2;
+				set_angle_pan -= 1;
 			} else { //Joystick is stationary, no input
 
 			}
 			x_value = s4353096_joystick_x_read();
-			if ((x_value > 2100) && (set_angle_tilt < 70)) {
-				set_angle_tilt += 2;
-			} else if ((x_value < 1950) && (set_angle_tilt > -70)) {
-				set_angle_tilt -= 2;
+			if ((x_value > 2100) && (set_angle_tilt < 76)) {
+				set_angle_tilt += 1;
+			} else if ((x_value < 1950) && (set_angle_tilt > -76)) {
+				set_angle_tilt -= 1;
 			} else {
 
 			}

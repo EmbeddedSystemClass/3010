@@ -74,7 +74,7 @@ extern void s4353096_joystick_init(void) {
 
   __JOYSTICK_Z_GPIO_CLK();
 	//Initialise Interrupt, Priority set to 10
-	HAL_NVIC_SetPriority(JOYSTICK_Z_EXTI_IRQ, 10, 0);
+	/*HAL_NVIC_SetPriority(JOYSTICK_Z_EXTI_IRQ, 10, 0);
 	GPIO_InitStructure.Pin = JOYSTICK_Z_PIN;
 	GPIO_InitStructure.Mode = GPIO_MODE_IT_FALLING;
 	GPIO_InitStructure.Pull = GPIO_PULLDOWN;
@@ -82,7 +82,7 @@ extern void s4353096_joystick_init(void) {
 	HAL_GPIO_Init(JOYSTICK_Z_GPIO_PORT, &GPIO_InitStructure);
 	//Enable external GPIO interrupt and interrupt vector for pin D0
 	NVIC_SetVector(JOYSTICK_Z_EXTI_IRQ, (uint32_t)&s4353096_joystick_z_read);
-	NVIC_EnableIRQ(JOYSTICK_Z_EXTI_IRQ);
+	NVIC_EnableIRQ(JOYSTICK_Z_EXTI_IRQ);*/
 }
 /*Read X value*/
 extern unsigned int s4353096_joystick_x_read(void) {
@@ -93,7 +93,7 @@ extern unsigned int s4353096_joystick_x_read(void) {
   /*Wait for ADC Conversion to complete*/
   while (HAL_ADC_PollForConversion(&AdcHandle1, 10) != HAL_OK);
   adc_value = (uint16_t)(HAL_ADC_GetValue(&AdcHandle1));
-  debug_printf("ADC Value: %u\n\r", adc_value);
+  //debug_printf("ADC Value: %u\n\r", adc_value);
   return adc_value;
 }
 /*Read Y value*/
@@ -105,14 +105,14 @@ extern unsigned int s4353096_joystick_y_read(void) {
   /*Wait for ADC Conversion to complete*/
   while (HAL_ADC_PollForConversion(&AdcHandle1, 10) != HAL_OK);
   adc_value = (uint16_t)(HAL_ADC_GetValue(&AdcHandle1));
-  //debug_printf("ADC Value: %u\n\r", adc_value);
+  //debug_printf("ADC Value y: %u\n\r", adc_value);
   return adc_value;
 }
 /*Read Z value*/
 void s4353096_joystick_z_read(void) {
   //HAL_GPIO_EXTI_IRQHandler(BRD_A2_PIN);
 
-  int reading = HAL_GPIO_ReadPin(JOYSTICK_Z_GPIO_PORT, JOYSTICK_Z_PIN);
+  /*int reading = HAL_GPIO_ReadPin(JOYSTICK_Z_GPIO_PORT, JOYSTICK_Z_PIN);
   if (reading != last_button_state) {
     last_Debounce_Time = HAL_GetTick()/1000;
   }
@@ -127,7 +127,7 @@ void s4353096_joystick_z_read(void) {
   } else {
     HAL_GPIO_EXTI_IRQHandler(BRD_A2_PIN);
   }
-  last_button_state = reading;
+  last_button_state = reading;*/
 }
 
   //if ((HAL_GetTick()/1000 - last_Debounce_Time) >= 10) {

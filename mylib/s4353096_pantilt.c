@@ -83,10 +83,11 @@ extern void s4353096_pantilt_angle_write(int type, int angle) {
   float pwm_pulse_period_percentage;
   float pwm_multiplier = 4.723 * (angle/85.000);
   /*If negative*/
-  if ((angle < 0) && (angle > -85)) {
+  if ((angle < 0) && (angle > -81)) {
     pwm_pulse_period_percentage = (7.25 - (-1*pwm_multiplier));
     PWMConfig.Pulse				= (((2*500000)/10000) * pwm_pulse_period_percentage);
-  } else if ((angle >= 0) && (angle < 85)) {
+                            //(((2*500000)/10000) * 7.25)
+  } else if ((angle >= 0) && (angle < 81)) {
     pwm_pulse_period_percentage = ((7.25 + pwm_multiplier));
     PWMConfig.Pulse				= (((2*500000)/10000) * pwm_pulse_period_percentage);
   } else {
@@ -96,12 +97,12 @@ extern void s4353096_pantilt_angle_write(int type, int angle) {
   if (type == 1) {
     TIM_Init.Instance = PWM_PAN_TIM;
     /* Enable PWM for PWM Pan Timer */
-    HAL_TIM_PWM_Init(&TIM_Init);
+    //HAL_TIM_PWM_Init(&TIM_Init);
     HAL_TIM_PWM_ConfigChannel(&TIM_Init, &PWMConfig, PWM_PAN_TIM_CHANNEL);
     HAL_TIM_PWM_Start(&TIM_Init, PWM_PAN_TIM_CHANNEL);
   } else if (type == 0) { /*If Type 0 == Tilt */
     TIM_Init.Instance = PWM_TILT_TIM;
-    HAL_TIM_PWM_Init(&TIM_Init);
+    //HAL_TIM_PWM_Init(&TIM_Init);
     HAL_TIM_PWM_ConfigChannel(&TIM_Init, &PWMConfig, PWM_TILT_TIM_CHANNEL);
     HAL_TIM_PWM_Start(&TIM_Init, PWM_TILT_TIM_CHANNEL);
   } else {

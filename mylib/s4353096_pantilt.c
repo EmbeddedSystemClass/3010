@@ -54,7 +54,7 @@ extern void s4353096_pantilt_init(void) {
 
   /* PWM Mode configuration for Channel 2 - set pulse width*/
   PWMConfig.OCMode			 = TIM_OCMODE_PWM1;	//Set PWM MODE (1 or 2 - NOT CHANNEL)
-  PWMConfig.Pulse				= (((2*500000)/10000) * 7.25);		//1ms pulse width to 10ms
+  PWMConfig.Pulse				= (((2*500000)/10000) * 7.25); //Sets initial servo position to 0 degrees
   PWMConfig.OCPolarity	 = TIM_OCPOLARITY_HIGH;
   PWMConfig.OCNPolarity	= TIM_OCNPOLARITY_HIGH;
   PWMConfig.OCFastMode	 = TIM_OCFAST_DISABLE;
@@ -83,10 +83,10 @@ extern void s4353096_pantilt_angle_write(int type, int angle) {
   float pwm_pulse_period_percentage;
   float pwm_multiplier = 4.723 * (angle/85.000);
   /*If negative*/
-  if ((angle < 0) && (angle > -86)) {
+  if ((angle < 0) && (angle > -85)) {
     pwm_pulse_period_percentage = (7.25 - (-1*pwm_multiplier));
     PWMConfig.Pulse				= (((2*500000)/10000) * pwm_pulse_period_percentage);
-  } else if ((angle >= 0) && (angle < 86)) {
+  } else if ((angle >= 0) && (angle < 85)) {
     pwm_pulse_period_percentage = ((7.25 + pwm_multiplier));
     PWMConfig.Pulse				= (((2*500000)/10000) * pwm_pulse_period_percentage);
   } else {

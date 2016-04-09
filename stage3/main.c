@@ -1,13 +1,13 @@
 /**
-  ******************************************************************************
-  * @file    stage3/main.c
-  * @author  Steffen Mitchell
-  * @date    10-January-2015
-  * @brief   Prac 1 Template C main file - BCD timer and press counter.
-  *
-  *			 REFERENCES: ex1_led, ex2_gpio, ex3_gpio, ex11_character
-  ******************************************************************************
-  */
+******************************************************************************
+* @file    stage3/main.c
+* @author  Steffen Mitchell
+* @date    10-January-2015
+* @brief   Prac 1 Template C main file - BCD timer and press counter.
+*
+*			 REFERENCES: ex1_led, ex2_gpio, ex3_gpio, ex11_character
+******************************************************************************
+*/
 
 /* Includes ------------------------------------------------------------------*/
 #include "board.h"
@@ -24,9 +24,8 @@ TIM_HandleTypeDef TIM_Init;
 uint16_t counter_value = 64;
 uint16_t press_counter_val = 0;
 int count_interrupt = 199;
-float x_value;
+float y_value;
 int duty_cycle;
-int led_value;
 char RxChar;
 int last_button_state = 0;
 int button_state;
@@ -38,11 +37,6 @@ int q = 0;
 void Hardware_init(void);
 void tim2_irqhandler (void);
 
-/**
-  * @brief  Main program - timer and press counter.
-  * @param  None
-  * @retval None
-  */
 void main(void) {
 
 	BRD_init();	//Initalise NP2
@@ -57,18 +51,17 @@ void main(void) {
 		//BRD_LEDToggle();
 		//s4353096_pantilt_angle_write(1, 90);
 		//s4353096_joystick_z_read();
-		s4353096_pantilt_angle_write(1, set_angle);
-		//debug_printf("%d\n", set_angle);
-		RxChar = debug_getc();
-		/* Check if character is not Null */
-		if (RxChar != '\0') {
-			if (RxChar == 'r') {
-				direction_multiplier = 1;
-			} else if (RxChar == 'l') {
-				direction_multiplier = -1;
+		if ((HAL_GetTick()/10000) % 20) == 0) { /*Delay for 1 second or setup to delay for 0.2 seconds and set angle to += or -= 1 each time*/)
+			if (/*If Joystick pushed right, +input*/) {
+				set_angle += 1;
+			} else if (/*Joystick pushed left, -input*/) {
+				set_angle -= 1;
+			} else { //Joystick is stationary, no input
+
 			}
+			s4353096_pantilt_angle_write(1, set_angle);
+			BRD_LEDToggle();
 		}
-		BRD_LEDToggle();
 	}
 }
 

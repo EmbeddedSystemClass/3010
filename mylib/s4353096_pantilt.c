@@ -83,11 +83,11 @@ extern void s4353096_pantilt_angle_write(int type, int angle) {
   float pwm_pulse_period_percentage;
   float pwm_multiplier = 4.723 * (angle/85.000);
   /*If negative*/
-  if ((angle < 0) && (angle > -81)) {
+  if ((angle < 0) && (angle > -77)) {
     pwm_pulse_period_percentage = (7.25 - (-1*pwm_multiplier));
     PWMConfig.Pulse				= (((2*500000)/10000) * pwm_pulse_period_percentage);
                             //(((2*500000)/10000) * 7.25)
-  } else if ((angle >= 0) && (angle < 81)) {
+  } else if ((angle >= 0) && (angle < 77)) {
     pwm_pulse_period_percentage = ((7.25 + pwm_multiplier));
     PWMConfig.Pulse				= (((2*500000)/10000) * pwm_pulse_period_percentage);
   } else {

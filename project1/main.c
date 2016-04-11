@@ -14,8 +14,8 @@
 #include "stm32f4xx_hal_conf.h"
 #include "debug_printf.h"
 #include "s4353096_pantilt.h"
-#include "s4353096_joystick.h"		////////CHANGE THIS//////////
-
+#include "s4353096_joystick.h"
+#include "s4353096_radio.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -51,27 +51,21 @@ void main(void) {
 	HAL_Delay(3000);
 	/* Main processing loop */
   while (1) {
-		//x_value = (s4353096_joystick_x_read() / 4095.00);
-		//lightbar_percentage();
-		//BRD_LEDToggle();	//Toggle 'Alive' LED on/off
-		//HAL_Delay(1000);	//Delay for 1s
-		//BRD_LEDToggle();
-		//s4353096_pantilt_angle_write(1, 85);
-		//s4353096_joystick_z_read();
-		if (((HAL_GetTick()/10000) % 5) == 0) { /*Delay for 1 second or setup to delay for 0.2 seconds and set angle to += or -= 1 each time*/
+
+		if (((HAL_GetTick()/1000) % 20) == 0) { /*Delay for 1 second or setup to delay for 0.2 seconds and set angle to += or -= 1 each time*/
 			if (mode == S4353096_JOYSTICK) {
 				y_value = s4353096_joystick_y_read();
-				if ((y_value > 2150) && (set_angle_pan < 80)) {
+				if ((y_value > 2300) && (set_angle_pan < 76)) {
 					set_angle_pan += 1;
-				} else if ((y_value < 1900) && (set_angle_pan > -80)) {
+				} else if ((y_value < 1750) && (set_angle_pan > -76)) {
 					set_angle_pan -= 1;
 				} else { //Joystick is stationary, no input
 
 				}
 				x_value = s4353096_joystick_x_read();
-				if ((x_value > 2150) && (set_angle_tilt < 76)) {
+				if ((x_value > 2300) && (set_angle_tilt < 76)) {
 					set_angle_tilt += 1;
-				} else if ((x_value < 1900) && (set_angle_tilt > -76)) {
+				} else if ((x_value < 1750) && (set_angle_tilt > -76)) {
 					set_angle_tilt -= 1;
 				} else {
 
@@ -97,8 +91,7 @@ void main(void) {
 						default:
 							break;
 					}
-						//debug_putc(RxChar);				//reflect byte using putc - puts character into buffer
-						debug_flush();
+					debug_flush();
 				}
 				switch (set_angle_pan) {
 					case 77:
@@ -123,8 +116,12 @@ void main(void) {
 			}
 			s4353096_pantilt_angle_write(1, set_angle_pan);
 			s4353096_pantilt_angle_write(0, set_angle_tilt);
-			debug_printf("Pan: %d Tlit: %d\n", set_angle_pan, set_angle_tilt);
+			//HAL_Delay(20);
+			if (((HAL_GetTick()/10000) % 100) == 0) {
+				debug_printf("Pan: %d Tlit: %d\n", set_angle_pan, set_angle_tilt);
 				//BRD_LEDToggle();
+			}//
+			BRD_LEDToggle();
 		}
 
 

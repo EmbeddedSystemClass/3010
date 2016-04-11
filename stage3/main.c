@@ -53,27 +53,28 @@ void main(void) {
 		//BRD_LEDToggle();
 		//s4353096_pantilt_angle_write(1, 85);
 		//s4353096_joystick_z_read();
-		if (((HAL_GetTick()/10000) % 5) == 0) { /*Delay for 1 second or setup to delay for 0.2 seconds and set angle to += or -= 1 each time*/
+		if (((HAL_GetTick()/1000) % 5) == 0) { /*Delay for 1 second or setup to delay for 0.2 seconds and set angle to += or -= 1 each time*/
 
 			y_value = s4353096_joystick_y_read();
-			if ((y_value > 2100) && (set_angle_pan < 80)) {
-				set_angle_pan += 2;
-			} else if ((y_value < 1950) && (set_angle_pan > -80)) {
-				set_angle_pan -= 2;
+			if ((y_value > 2300) && (set_angle_pan < 76)) {
+				set_angle_pan += 1;
+			} else if ((y_value < 1750) && (set_angle_pan > -76)) {
+				set_angle_pan -= 1;
 			} else { //Joystick is stationary, no input
 
 			}
 			x_value = s4353096_joystick_x_read();
-			if ((x_value > 2100) && (set_angle_tilt < 70)) {
-				set_angle_tilt += 2;
-			} else if ((x_value < 1950) && (set_angle_tilt > -70)) {
-				set_angle_tilt -= 2;
+			if ((x_value > 2300) && (set_angle_tilt < 70)) {
+				set_angle_tilt += 1;
+			} else if ((x_value < 1750) && (set_angle_tilt > -70)) {
+				set_angle_tilt -= 1;
 			} else {
 
 			}
 			s4353096_pantilt_angle_write(1, set_angle_pan);
 			s4353096_pantilt_angle_write(0, set_angle_tilt);
-			debug_printf("Pan: %d Tlit: %d\n", set_angle_pan, set_angle_tilt);
+			HAL_Delay(20);
+			//debug_printf("Pan: %d Tlit: %d\n", set_angle_pan, set_angle_tilt);
 			BRD_LEDToggle();
 		}
 		//BRD_LEDToggle();

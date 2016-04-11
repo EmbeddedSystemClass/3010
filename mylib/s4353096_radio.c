@@ -63,7 +63,6 @@ extern void s4353096_radio_fsmprocessing(void) {
       radio_fsm_setstate(RADIO_FSM_IDLE_STATE);
       /* Get current channel , if radio FSM is in IDLE State */
       if (radio_fsm_getstate() == RADIO_FSM_IDLE_STATE) {
-        /*Every 5 seconds move into the TX_STATE*/
         s4353096_radio_rxstatus = 0;
       } else {
           /* if error occurs, set state back to IDLE state */

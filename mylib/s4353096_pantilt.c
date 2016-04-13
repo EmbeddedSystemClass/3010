@@ -83,7 +83,7 @@ extern void s4353096_pantilt_init(void) {
 	/* Time base configuration */
 	TIM_Init.Instance = PANTILT_IR_TIM;				//Enable Timer 2
 	//Set period count to be 1ms, so timer interrupt occurs every (1ms)*0.2.
-  TIM_Init.Init.Period = (50000/1000)*20;//*0.18;
+  TIM_Init.Init.Period = (50000/1000)*1;//*0.18;
   TIM_Init.Init.Prescaler = PrescalerValue;	//Set presale value
   TIM_Init.Init.ClockDivision = 0;			//Set clock division
 	TIM_Init.Init.RepetitionCounter = 0;	// Set Reload Value

@@ -25,7 +25,7 @@ GPIO_InitTypeDef  GPIO_InitStructure;
 ADC_HandleTypeDef AdcHandle1;
 ADC_HandleTypeDef AdcHandle2;
 ADC_ChannelConfTypeDef AdcChanConfig;
-int count = 0;
+//int count = 0;
 int interrupts = 0;
 int state = 0;
 int pressed_time = 0;
@@ -86,7 +86,7 @@ extern void s4353096_joystick_init(void) {
 }
 /*Read X value*/
 extern unsigned int s4353096_joystick_x_read(void) {
-  int unsigned adc_value;
+  unsigned int adc_value;
   AdcChanConfig.Channel = JOYSTICK_X_ADC_CHAN;
   HAL_ADC_ConfigChannel(&AdcHandle1, &AdcChanConfig);
   HAL_ADC_Start(&AdcHandle1); //Start ADC conversion
@@ -98,7 +98,7 @@ extern unsigned int s4353096_joystick_x_read(void) {
 }
 /*Read Y value*/
 extern unsigned int s4353096_joystick_y_read(void) {
-  int unsigned adc_value;
+  unsigned int adc_value;
   AdcChanConfig.Channel = JOYSTICK_Y_ADC_CHAN;
   HAL_ADC_ConfigChannel(&AdcHandle1, &AdcChanConfig);
   HAL_ADC_Start(&AdcHandle1); //Start ADC conversion

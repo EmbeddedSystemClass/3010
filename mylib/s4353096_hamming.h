@@ -12,4 +12,5 @@
  ******************************************************************************
  */
 
-uint16_t hamming_byte_encoder(uint8_t input);
+extern uint16_t hamming_byte_encoder(uint8_t input);
+uint8_t hamming_hbyte_encoder(uint8_t in);

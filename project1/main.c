@@ -15,6 +15,7 @@
 #include "debug_printf.h"
 #include "s4353096_pantilt.h"
 #include "s4353096_joystick.h"
+#include "s4353096_hamming.h"
 //#include "s4353096_radio.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -22,37 +23,39 @@
 /* Private variables ---------------------------------------------------------*/
 #define S4353096_JOYSTICK 1
 #define S4353096_TERMINAL 0
+#define S4353096_LASER_TRANSMIT 2
+#define LASER_WAVE_GEN_1_PIN BRD_D1_PIN
+#define LASER_WAVE_GEN_1_GPIO_PORT BRD_D1_GPIO_PORT
+#define __LASER_WAVE_GEN_1_GPIO_CLK() __BRD_D1_GPIO_CLK()
+#define LASER_WAVE_GEN_1_EXTI_IRQ BRD_D1_EXTI_IRQ
+
 TIM_HandleTypeDef TIM_Init;
 uint16_t counter_value = 64;
 uint16_t press_counter_val = 0;
+static uint16_t PrescalerValue = 0;
 int count_interrupt = 199;
 int duty_cycle;
 char RxChar;
-int mode = S4353096_TERMINAL;
-//int last_button_state = 0;
-//int button_state;
-//int last_Debounce_Time = 0;
-/*struct Variables {
-	int write_angles;
-	int read_angles;
-};*/
+int mode = S4353096_LASER_TRANSMIT;
 struct Variables {
 	int count;
+	int bit_half;
+	int bit_count;
+	int encoded_bit;
+	int encoded_bit_count;
+	uint16_t encoded_char;
 };
 struct Variables *vars;
-int set_angle_pan = 0;
-int set_angle_tilt = 0;
 unsigned int x_value;
 unsigned int y_value;
-int count = 0;
-
 int direction_multiplier = 1;
-//int q = 0;
 /* Private function prototypes -----------------------------------------------*/
 void Hardware_init(void);
 void s4353096_pantilt_irqhandler(void);
 void Pb_init(void);
 void exti_pb_irqhandler(void);
+void s4353096_general_irqhandler(void);
+void s4353096_laser_transmit_bit(int bit);
 
 void main(void) {
 
@@ -64,36 +67,44 @@ void main(void) {
 	pantilt = &pantiltvars;
 	pantilt->write_angles = 0;
 	pantilt->read_angles = 0;
+	pantilt->set_angle_pan = 0;
+	pantilt->set_angle_tilt = 0;
 	struct Variables variables;
-	vars = &vars;
+	vars = &variables;
+	vars->count = 0;
+	vars->bit_half = 1;
+	vars->bit_count = 0;
+	vars->encoded_bit_count = -1;
+	vars->encoded_bit = 0;
+	vars->encoded_char = hamming_byte_encoder('<');
+	for(int i=0; i<16; i++) {
+		debug_printf("%d", !!((vars->encoded_char >> i) & 0x1));
+	}
   while (1) {
 		if (pantilt->write_angles == 1) {
-			s4353096_pantilt_angle_write(1, set_angle_pan);
-			s4353096_pantilt_angle_write(0, set_angle_tilt);
+			s4353096_pantilt_angle_write(1, pantilt->set_angle_pan);
+			s4353096_pantilt_angle_write(0, pantilt->set_angle_tilt);
 			pantilt->write_angles = 0;
 		}
 		if (((HAL_GetTick()/10000) % 100) == 0) {
-			debug_printf("Pan: %d Tlit: %d Count: %d\n", set_angle_pan, set_angle_tilt, count);
+			debug_printf("\nPan: %d Tlit: %d\n", pantilt->set_angle_pan, pantilt->set_angle_tilt);
 			//BRD_LEDToggle();
 		}//
 		if (pantilt->read_angles == 1) { /*Delay for 1 second or setup to delay for 0.2 seconds and set angle to += or -= 1 each time*/
-			count += 1;
 			if (mode == S4353096_JOYSTICK) {
 				y_value = s4353096_joystick_y_read();
-				if ((y_value > 2500) && (set_angle_pan < 76)) {
-					set_angle_pan += 1;
-				} else if ((y_value < 1550) && (set_angle_pan > -76)) {
-					set_angle_pan -= 1;
+				if ((y_value > 2500) && (pantilt->set_angle_pan < 76)) {
+					pantilt->set_angle_pan += 1;
+				} else if ((y_value < 1550) && (pantilt->set_angle_pan > -76)) {
+					pantilt->set_angle_pan -= 1;
 				} else { //Joystick is stationary, no input
-
 				}
 				x_value = s4353096_joystick_x_read();
-				if ((x_value > 2500) && (set_angle_tilt < 76)) {
-					set_angle_tilt += 1;
-				} else if ((x_value < 1550) && (set_angle_tilt > -76)) {
-					set_angle_tilt -= 1;
+				if ((x_value > 2500) && (pantilt->set_angle_tilt < 76)) {
+					pantilt->set_angle_tilt += 1;
+				} else if ((x_value < 1550) && (pantilt->set_angle_tilt > -76)) {
+					pantilt->set_angle_tilt -= 1;
 				} else {
-
 				}
 			} else if (mode == S4353096_TERMINAL) {
 				/* Receive characters using getc */
@@ -102,50 +113,30 @@ void main(void) {
 				if (RxChar != '\0') {
 					switch (RxChar) {
 						case 'w':
-							set_angle_tilt += 1;
+							pantilt->set_angle_tilt += 1;
 							break;
 						case 's':
-							set_angle_tilt -= 1;
+							pantilt->set_angle_tilt -= 1;
 							break;
 						case 'a':
-							set_angle_pan += 1;
+							pantilt->set_angle_pan += 1;
 							break;
 						case 'd':
-							set_angle_pan -= 1;
+							pantilt->set_angle_pan -= 1;
+							break;
+						case 't':
+							mode = S4353096_LASER_TRANSMIT;
 							break;
 						default:
 							break;
 					}
 					debug_flush();
 				}
-				switch (set_angle_pan) {
-					case 77:
-						set_angle_pan = 76;
-						break;
-					case -77:
-						set_angle_pan = -76;
-						break;
-					default:
-						break;
-				}
-				switch (set_angle_tilt) {
-					case 77:
-						set_angle_tilt = 76;
-						break;
-					case -77:
-						set_angle_tilt = -76;
-						break;
-					default:
-						break;
-				}
+				s4353096_terminal_angle_check();
+
 			}
-			//HAL_Delay(20);
 			pantilt->read_angles = 0;
-			//BRD_LEDToggle();
 		}
-
-
-		//BRD_LEDToggle();
 	}
 }
 
@@ -185,6 +176,37 @@ void Pb_init(void) {
 		GPIO_InitStructure.Pull = GPIO_PULLUP;			//Enable Pull up, down or no pull resister
 		GPIO_InitStructure.Speed = GPIO_SPEED_FAST;			//Pin latency
 		HAL_GPIO_Init(BRD_PB_GPIO_PORT, &GPIO_InitStructure);	//Initialise Pin
+		/*Set up Interrupt timer*/
+	  __PANTILT_IR_TIMER_CLK();
+		/* Compute the prescaler value for 50Khz */
+	  PrescalerValue = (uint16_t) ((SystemCoreClock /2)/50000) - 1;
+		/* Time base configuration */
+		TIM_Init.Instance = PANTILT_IR_TIM;				//Enable Timer 2
+		//Set period count to be 1ms, so timer interrupt occurs every (1ms)*0.2.
+	  TIM_Init.Init.Period = (50000/1000)*0.5;//*0.18;
+	  TIM_Init.Init.Prescaler = PrescalerValue;	//Set presale value
+	  TIM_Init.Init.ClockDivision = 0;			//Set clock division
+		TIM_Init.Init.RepetitionCounter = 0;	// Set Reload Value
+	  TIM_Init.Init.CounterMode = TIM_COUNTERMODE_UP;	//Set timer to count up.
+		/* Initialise Timer */
+		HAL_TIM_Base_Init(&TIM_Init);
+
+		/* Set priority of Timer 2 update Interrupt [0 (HIGH priority) to 15(LOW priority)] */
+		/* 	DO NOT SET INTERRUPT PRIORITY HIGHER THAN 3 */
+		HAL_NVIC_SetPriority(PANTILT_TIM_IRQn, 10, 0);		//Set Main priority ot 10 and sub-priority ot 0.
+
+		/* Enable timer update interrupt and interrupt vector for Timer  */
+		NVIC_SetVector(PANTILT_TIM_IRQn, (uint32_t)&s4353096_general_irqhandler);
+		NVIC_EnableIRQ(PANTILT_TIM_IRQn);
+		/*Start the timer*/
+		HAL_TIM_Base_Start_IT(&TIM_Init);
+		/*Set up Laser transmit pins*/
+		__LASER_WAVE_GEN_1_GPIO_CLK();
+		GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+		GPIO_InitStructure.Pull = GPIO_PULLUP;
+		GPIO_InitStructure.Speed = GPIO_SPEED_FAST;
+		GPIO_InitStructure.Pin = LASER_WAVE_GEN_1_PIN;
+		HAL_GPIO_Init(LASER_WAVE_GEN_1_GPIO_PORT, &GPIO_InitStructure);
 }
 void exti_pb_irqhandler(void) {
 	//debug_printf("Hey\n");
@@ -192,6 +214,48 @@ void exti_pb_irqhandler(void) {
 	mode = !mode;
 }
 
+void s4353096_general_irqhandler(void) {
+  TIM_Init.Instance = PANTILT_IR_TIM;
+  __HAL_TIM_CLEAR_IT(&TIM_Init, TIM_IT_UPDATE);
+	vars->count++;
+	if (mode == S4353096_LASER_TRANSMIT) {
+		if (vars->bit_count == 0 || vars->bit_count == 1 || vars->bit_count == 11 ||
+			vars->bit_count == 12) {
+			s4353096_laser_transmit_bit(1);
+		} else if (vars->bit_count == 10 || vars->bit_count == 21) {
+			s4353096_laser_transmit_bit(0);
+			if ((vars->bit_count == 22) && (vars->bit_half == 1)) {
+				//Stop transmitting and reset values
+				vars->bit_count = 0;
+				vars->encoded_bit_count = -1;
+
+				//mode = S4353096_TERMINAL;
+			}
+			//HAL_Delay(10);
+		} else {
+			if (vars->bit_half == 1) {
+				vars->encoded_bit_count++;
+				vars->encoded_bit = !!((vars->encoded_char >> vars->encoded_bit_count) & 0x1);
+			}
+			s4353096_laser_transmit_bit(vars->encoded_bit);
+		}
+	}
+	if (vars->count == 20) {
+		pantilt->read_angles = 1;
+  	pantilt->write_angles = 1;
+		vars->count = 0;
+	}
+}
+void s4353096_laser_transmit_bit(int bit) {
+  if (vars->bit_half == 1) {
+		HAL_GPIO_WritePin(LASER_WAVE_GEN_1_GPIO_PORT, LASER_WAVE_GEN_1_PIN, !(bit));
+		vars->bit_half++;
+	} else if (vars->bit_half == 2) {
+		HAL_GPIO_WritePin(LASER_WAVE_GEN_1_GPIO_PORT, LASER_WAVE_GEN_1_PIN, bit);
+		vars->bit_count++;
+		vars->bit_half--;
+	}
+}
 /*void s4353096_pantilt_irqhandler(void) {
   TIM_Init.Instance = PANTILT_IR_TIM;
   __HAL_TIM_CLEAR_IT(&TIM_Init, TIM_IT_UPDATE);

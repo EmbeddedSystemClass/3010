@@ -21,7 +21,7 @@
 GPIO_InitTypeDef  GPIO_InitStructure;
 TIM_OC_InitTypeDef PWMConfig;
 TIM_HandleTypeDef TIM_Init;
-uint16_t PrescalerValue = 0;
+static uint16_t PrescalerValue = 0;
 /*Initialise pantilt GPIO, Timer, PWM */
 extern void s4353096_pantilt_init(void) {
   /* Enable the PWM Pin Clocks */
@@ -76,30 +76,6 @@ extern void s4353096_pantilt_init(void) {
 
   /* Start PWM for Tilt*/
   HAL_TIM_PWM_Start(&TIM_Init, PWM_TILT_TIM_CHANNEL);
-  /*Set up Interrupt timer*/
-  __PANTILT_IR_TIMER_CLK();
-	/* Compute the prescaler value for 50Khz */
-  PrescalerValue = (uint16_t) ((SystemCoreClock /2)/50000) - 1;
-	/* Time base configuration */
-	TIM_Init.Instance = PANTILT_IR_TIM;				//Enable Timer 2
-	//Set period count to be 1ms, so timer interrupt occurs every (1ms)*0.2.
-  TIM_Init.Init.Period = (50000/1000)*1;//*0.18;
-  TIM_Init.Init.Prescaler = PrescalerValue;	//Set presale value
-  TIM_Init.Init.ClockDivision = 0;			//Set clock division
-	TIM_Init.Init.RepetitionCounter = 0;	// Set Reload Value
-  TIM_Init.Init.CounterMode = TIM_COUNTERMODE_UP;	//Set timer to count up.
-	/* Initialise Timer */
-	HAL_TIM_Base_Init(&TIM_Init);
-
-	/* Set priority of Timer 2 update Interrupt [0 (HIGH priority) to 15(LOW priority)] */
-	/* 	DO NOT SET INTERRUPT PRIORITY HIGHER THAN 3 */
-	HAL_NVIC_SetPriority(PANTILT_TIM_IRQn, 10, 0);		//Set Main priority ot 10 and sub-priority ot 0.
-
-	/* Enable timer update interrupt and interrupt vector for Timer  */
-	NVIC_SetVector(PANTILT_TIM_IRQn, (uint32_t)&s4353096_pantilt_irqhandler);
-	NVIC_EnableIRQ(PANTILT_TIM_IRQn);
-	/*Start the timer*/
-	HAL_TIM_Base_Start_IT(&TIM_Init);
 }
 
 extern void s4353096_pantilt_angle_write(int type, int angle) {
@@ -132,10 +108,26 @@ extern void s4353096_pantilt_angle_write(int type, int angle) {
 
   }
 }
-void s4353096_general_irqhandler(void) {
-  TIM_Init.Instance = PANTILT_IR_TIM;
-  __HAL_TIM_CLEAR_IT(&TIM_Init, TIM_IT_UPDATE);
-	//interrupt_time = HAL_GetTick();
-	pantilt->read_angles = 1;
-  pantilt->write_angles = 1;
+
+extern void s4353096_terminal_angle_check (void) {
+  switch (pantilt->set_angle_pan) {
+    case 77:
+      pantilt->set_angle_pan = 76;
+      break;
+    case -77:
+      pantilt->set_angle_pan = -76;
+      break;
+    default:
+      break;
+  }
+  switch (pantilt->set_angle_tilt) {
+    case 77:
+      pantilt->set_angle_tilt = 76;
+      break;
+    case -77:
+      pantilt->set_angle_tilt = -76;
+      break;
+    default:
+      break;
+  }
 }

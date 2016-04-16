@@ -17,6 +17,8 @@
 struct PanTilt {
 	int write_angles;
 	int read_angles;
+  int set_angle_pan;
+  int set_angle_tilt;
 };
 struct PanTilt *pantilt;
  #define PWM_PAN_TIM TIM4
@@ -42,3 +44,4 @@ struct PanTilt *pantilt;
  extern void s4353096_pantilt_init(void);
  extern void s4353096_pantilt_angle_write(int type, int angle);
  void s4353096_pantilt_irqhandler(void);
+extern void s4353096_terminal_angle_check (void);

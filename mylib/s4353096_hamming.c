@@ -21,6 +21,19 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* Private function prototypes -----------------------------------------------*/
+extern uint16_t hamming_byte_encoder(uint8_t input) {
+
+	uint16_t out;
+
+	/* first encode D0..D3 (first 4 bits),
+	 * then D4..D7 (second 4 bits).
+	 */
+	out = hamming_hbyte_encoder(input & 0xF) |
+		(hamming_hbyte_encoder(input >> 4) << 8);
+
+	return(out);
+
+}
 uint8_t hamming_hbyte_encoder(uint8_t in) {
 
 	uint8_t d0, d1, d2, d3;
@@ -50,5 +63,4 @@ uint8_t hamming_hbyte_encoder(uint8_t in) {
 	out |= p0;
 
 	return(out);
-
 }

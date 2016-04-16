@@ -65,20 +65,4 @@ extern void s4353096_laser_start(void) {
 extern void s4353096_laser_stop(void) {
 
 }
-
-extern void s4353096_laser_transmitt(uint16_t message) {
-
-}
-extern void s4353096_laser_transmitt_irqhandler(void) {*/
-  //Clear Update Flag
-  //__HAL_TIM_CLEAR_IT(&TIM_Init, TIM_IT_UPDATE);
-  /*Check if currently transmitting*/
-  //if ()
-  /*Check what needs to be transmitted*/
-  /*if (count_interrupt < (duty_cycle - 1)) {
-    HAL_GPIO_WritePin(SQR_WAVE_GEN_1_GPIO_PORT, SQR_WAVE_GEN_1_PIN, 1);
-  } else {
-    HAL_GPIO_WritePin(SQR_WAVE_GEN_1_GPIO_PORT, SQR_WAVE_GEN_1_PIN, 0);
-  }
-  count_interrupt++;
-}*/
+*/

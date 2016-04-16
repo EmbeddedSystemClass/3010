@@ -14,6 +14,11 @@
 // #ifndef S4353096_PANTILT_H
 // #define S4353096_PANTILT_H
 
+struct PanTilt {
+	int write_angles;
+	int read_angles;
+};
+struct PanTilt *pantilt;
  #define PWM_PAN_TIM TIM4
  #define PWM_PAN_PIN BRD_D6_PIN
  #define PWM_PAN_GPIO_PORT BRD_D6_GPIO_PORT

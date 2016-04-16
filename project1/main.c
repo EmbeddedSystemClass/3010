@@ -32,16 +32,20 @@ int mode = S4353096_TERMINAL;
 //int last_button_state = 0;
 //int button_state;
 //int last_Debounce_Time = 0;
-struct Variables {
+/*struct Variables {
 	int write_angles;
 	int read_angles;
+};*/
+struct Variables {
+	int count;
 };
+struct Variables *vars;
 int set_angle_pan = 0;
 int set_angle_tilt = 0;
 unsigned int x_value;
 unsigned int y_value;
 int count = 0;
-struct Variables *vars;
+
 int direction_multiplier = 1;
 //int q = 0;
 /* Private function prototypes -----------------------------------------------*/
@@ -56,35 +60,37 @@ void main(void) {
 	Hardware_init();	//Initalise hardware modules
 	HAL_Delay(3000);
 	/* Main processing loop */
+	struct PanTilt pantiltvars;
+	pantilt = &pantiltvars;
+	pantilt->write_angles = 0;
+	pantilt->read_angles = 0;
 	struct Variables variables;
-	vars = &variables;
-	vars->write_angles = 0;
-	vars->read_angles = 0;
+	vars = &vars;
   while (1) {
-		if (vars->write_angles == 1) {
+		if (pantilt->write_angles == 1) {
 			s4353096_pantilt_angle_write(1, set_angle_pan);
 			s4353096_pantilt_angle_write(0, set_angle_tilt);
-			vars->write_angles = 0;
+			pantilt->write_angles = 0;
 		}
 		if (((HAL_GetTick()/10000) % 100) == 0) {
 			debug_printf("Pan: %d Tlit: %d Count: %d\n", set_angle_pan, set_angle_tilt, count);
 			//BRD_LEDToggle();
 		}//
-		if (vars->read_angles == 1) { /*Delay for 1 second or setup to delay for 0.2 seconds and set angle to += or -= 1 each time*/
+		if (pantilt->read_angles == 1) { /*Delay for 1 second or setup to delay for 0.2 seconds and set angle to += or -= 1 each time*/
 			count += 1;
 			if (mode == S4353096_JOYSTICK) {
 				y_value = s4353096_joystick_y_read();
-				if ((y_value > 2300) && (set_angle_pan < 76)) {
+				if ((y_value > 2500) && (set_angle_pan < 76)) {
 					set_angle_pan += 1;
-				} else if ((y_value < 1750) && (set_angle_pan > -76)) {
+				} else if ((y_value < 1550) && (set_angle_pan > -76)) {
 					set_angle_pan -= 1;
 				} else { //Joystick is stationary, no input
 
 				}
 				x_value = s4353096_joystick_x_read();
-				if ((x_value > 2300) && (set_angle_tilt < 76)) {
+				if ((x_value > 2500) && (set_angle_tilt < 76)) {
 					set_angle_tilt += 1;
-				} else if ((x_value < 1750) && (set_angle_tilt > -76)) {
+				} else if ((x_value < 1550) && (set_angle_tilt > -76)) {
 					set_angle_tilt -= 1;
 				} else {
 
@@ -134,7 +140,7 @@ void main(void) {
 				}
 			}
 			//HAL_Delay(20);
-			vars->read_angles = 0;
+			pantilt->read_angles = 0;
 			//BRD_LEDToggle();
 		}
 
@@ -186,13 +192,13 @@ void exti_pb_irqhandler(void) {
 	mode = !mode;
 }
 
-void s4353096_pantilt_irqhandler(void) {
+/*void s4353096_pantilt_irqhandler(void) {
   TIM_Init.Instance = PANTILT_IR_TIM;
   __HAL_TIM_CLEAR_IT(&TIM_Init, TIM_IT_UPDATE);
 	//interrupt_time = HAL_GetTick();
-	vars->read_angles = 1;
-  vars->write_angles = 1;
-}
+	pantilt->read_angles = 1;
+  pantilt->write_angles = 1;
+}*/
 /*void exti_a2_interrupt_handler(void) {
 	HAL_GPIO_EXTI_IRQHandler(BRD_A2_PIN);
 }*/

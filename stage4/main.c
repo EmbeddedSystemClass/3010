@@ -23,8 +23,9 @@ TIM_HandleTypeDef TIM_Init;
 char RxChar;
 int s4353096_keystroke = 0;
 int s4353096_payload_length = 0;
-unsigned char s4353096_addr[] = {0x78, 0x56, 0x34, 0x12, 0x00};
-unsigned char s4353096_chan = 43;
+unsigned char s4353096_tx_addr[] = {0x64, 0x07, 0x53, 0x43, 0x00};
+unsigned char s4353096_rx_addr[] = {0x04, 0x19, 0x52, 0x43, 0x00};
+unsigned char s4353096_chan = 47;
 /* Private function prototypes -----------------------------------------------*/
 void Hardware_init(void);
 
@@ -35,7 +36,8 @@ void main(void) {
 	HAL_Delay(3000); //Delay Mainprogram start
 	/* Main processing loop */
 	s4353096_radio_setchan(s4353096_chan);
-	s4353096_radio_settxaddress(s4353096_addr);
+	s4353096_radio_settxaddress(s4353096_tx_addr);
+	s4353096_radio_setrxaddress(s4353096_rx_addr);
   while (1) {
 		s4353096_radio_setfsmrx();
 		s4353096_radio_fsmprocessing();
@@ -51,6 +53,7 @@ void main(void) {
 					s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
 					s4353096_radio_fsmprocessing();
 					s4353096_radio_fsmcurrentstate = S4353096_TX_STATE;
+					debug_printf("\n");
 					/*Compiles the transmit packet. Transmits packet if in TX state*/
 					s4353096_radio_sendpacket(s4353096_radio_getchan(), s4353096_addr_get, s4353096_payload_buffer);
 					s4353096_radio_fsmprocessing();

@@ -171,6 +171,10 @@ extern void s4353096_radio_settxaddress(unsigned char *addr) {
   radio_fsm_buffer_write(NRF24L01P_TX_ADDR, addr, 5);
 }
 
+/*Writes the rx address to the RX_ADDR Register on the Transciever*/
+extern void s4353096_radio_setrxaddress(unsigned char *addr) {
+  radio_fsm_buffer_write(NRF24L01P_RX_ADDR_P0, addr, 5);
+}
 /*Sets s4353096_fsm and RADIO_FSM to rx state*/
 extern void s4353096_radio_setfsmrx(void) {
   s4353096_radio_fsmcurrentstate = S4353096_RX_STATE;
@@ -184,7 +188,7 @@ extern int s4353096_radio_getrxstatus(void) {
 
 /*Prints the recieved packet to the console*/
 extern void s4353096_radio_getpacket(unsigned char *rxpacket) {
-  debug_printf("\nRECV:");
+  debug_printf("RECV:");
   for (int j = 5; j < 9; j++) {
     debug_printf("%x", rxpacket[j]);
   }

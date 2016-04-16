@@ -25,13 +25,6 @@ GPIO_InitTypeDef  GPIO_InitStructure;
 ADC_HandleTypeDef AdcHandle1;
 ADC_HandleTypeDef AdcHandle2;
 ADC_ChannelConfTypeDef AdcChanConfig;
-//int count = 0;
-int interrupts = 0;
-int state = 0;
-int pressed_time = 0;
-int last_button_state = 0;
-int button_state;
-int last_Debounce_Time = 0;
 /*Initialise Joystick Pins*/
 extern void s4353096_joystick_init(void) {
   /*Configure GPIO pins A5-A3 for joystick*/

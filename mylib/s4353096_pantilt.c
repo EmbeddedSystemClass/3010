@@ -132,3 +132,10 @@ extern void s4353096_pantilt_angle_write(int type, int angle) {
 
   }
 }
+void s4353096_general_irqhandler(void) {
+  TIM_Init.Instance = PANTILT_IR_TIM;
+  __HAL_TIM_CLEAR_IT(&TIM_Init, TIM_IT_UPDATE);
+	//interrupt_time = HAL_GetTick();
+	pantilt->read_angles = 1;
+  pantilt->write_angles = 1;
+}

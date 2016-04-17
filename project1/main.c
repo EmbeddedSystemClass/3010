@@ -44,6 +44,8 @@ struct Variables {
 	int encoded_bit;
 	int encoded_bit_count;
 	uint16_t encoded_char;
+	int transmit_frequency;
+	int period_multiplyer;
 };
 struct Variables *vars;
 unsigned int x_value;
@@ -149,13 +151,15 @@ void Hardware_init(void) {
 
 	GPIO_InitTypeDef  GPIO_InitStructure;
 	unsigned short PrescalerValue;
-
 	BRD_LEDInit();		//Initialise Blue LED
 	BRD_LEDOff();		//Turn off Blue LED
 	/* Initialise Joystick */
 	s4353096_joystick_init();
 	/* Configure D1 for output of square wave signal */
 	s4353096_pantilt_init();
+	vars->transmit_frequency = 1000;
+	vars->period_multiplyer = 0.5;//(1./vars->transmit_frequency)*500;
+	debug_printf("\n%d\n", vars->period_multiplyer);
 	Pb_init();
 }
 void Pb_init(void) {
@@ -179,11 +183,11 @@ void Pb_init(void) {
 		/*Set up Interrupt timer*/
 	  __PANTILT_IR_TIMER_CLK();
 		/* Compute the prescaler value for 50Khz */
-	  PrescalerValue = (uint16_t) ((SystemCoreClock /2)/50000) - 1;
+	  PrescalerValue = (uint16_t) ((SystemCoreClock /2)/1000000) - 1;
 		/* Time base configuration */
 		TIM_Init.Instance = PANTILT_IR_TIM;				//Enable Timer 2
 		//Set period count to be 1ms, so timer interrupt occurs every (1ms)*0.2.
-	  TIM_Init.Init.Period = (50000/1000)*0.5;//*0.18;
+	  TIM_Init.Init.Period = (1000000/1000)*(vars->period_multiplyer); //10 = 1ms; 5 = 0.5ms 1khz half bit period for 100khz
 	  TIM_Init.Init.Prescaler = PrescalerValue;	//Set presale value
 	  TIM_Init.Init.ClockDivision = 0;			//Set clock division
 		TIM_Init.Init.RepetitionCounter = 0;	// Set Reload Value

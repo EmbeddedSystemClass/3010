@@ -45,7 +45,7 @@ struct Variables {
 	int encoded_bit_count;
 	uint16_t encoded_char;
 	int transmit_frequency;
-	int period_multiplyer;
+	float period_multiplyer;
 };
 struct Variables *vars;
 unsigned int x_value;
@@ -62,8 +62,10 @@ void s4353096_laser_transmit_bit(int bit);
 void main(void) {
 
 	BRD_init();	//Initalise NP2
-	Hardware_init();	//Initalise hardware modules
+	Hardware_init();
 	HAL_Delay(3000);
+		//Initalise hardware modules
+
 	/* Main processing loop */
 	struct PanTilt pantiltvars;
 	pantilt = &pantiltvars;
@@ -79,6 +81,10 @@ void main(void) {
 	vars->encoded_bit_count = -1;
 	vars->encoded_bit = 0;
 	vars->encoded_char = hamming_byte_encoder('<');
+	vars->transmit_frequency = 2000;
+	vars->period_multiplyer = ((1.000000/vars->transmit_frequency)*500)*0.998;
+	debug_printf("\n%f\n", variables.period_multiplyer);
+	Pb_init();
 	for(int i=0; i<16; i++) {
 		debug_printf("%d", !!((vars->encoded_char >> i) & 0x1));
 	}
@@ -157,10 +163,8 @@ void Hardware_init(void) {
 	s4353096_joystick_init();
 	/* Configure D1 for output of square wave signal */
 	s4353096_pantilt_init();
-	vars->transmit_frequency = 1000;
-	vars->period_multiplyer = 0.5;//(1./vars->transmit_frequency)*500;
-	debug_printf("\n%d\n", vars->period_multiplyer);
-	Pb_init();
+	//
+	//Pb_init();
 }
 void Pb_init(void) {
 	GPIO_InitTypeDef GPIO_InitStructure;
@@ -180,6 +184,7 @@ void Pb_init(void) {
 		GPIO_InitStructure.Pull = GPIO_PULLUP;			//Enable Pull up, down or no pull resister
 		GPIO_InitStructure.Speed = GPIO_SPEED_FAST;			//Pin latency
 		HAL_GPIO_Init(BRD_PB_GPIO_PORT, &GPIO_InitStructure);	//Initialise Pin
+
 		/*Set up Interrupt timer*/
 	  __PANTILT_IR_TIMER_CLK();
 		/* Compute the prescaler value for 50Khz */

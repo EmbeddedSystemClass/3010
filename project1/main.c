@@ -107,9 +107,9 @@ void main(void) {
 		}
 		if (((HAL_GetTick()/10000) % 100) == 0) {
 			debug_printf("\nPan: %d Tlit: %d\n", pantilt->set_angle_pan, pantilt->set_angle_tilt);
-			for (int i = 0; i < vars->recieve_element; i++) {
+			/*for (int i = 0; i < vars->recieve_element; i++) {
 				debug_printf("Recieve edge %d : %d\n", i, vars->recieve[i]);
-			}
+			}*/
 			manchester_decode();
 			//BRD_LEDToggle();
 		}//
@@ -215,7 +215,7 @@ void Pb_init(void) {
 
 		__LASER_WAVE_GEN_1_GPIO_CLK();
 		GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-		GPIO_InitStructure.Pull = GPIO_PULLDOWN;
+		GPIO_InitStructure.Pull = GPIO_PULLUP;
 		GPIO_InitStructure.Speed = GPIO_SPEED_FAST;
 		GPIO_InitStructure.Pin = LASER_WAVE_GEN_1_PIN;
 		HAL_GPIO_Init(LASER_WAVE_GEN_1_GPIO_PORT, &GPIO_InitStructure);
@@ -284,7 +284,6 @@ void Pb_init(void) {
 
 	/* Start Input Capture */
 	HAL_TIM_IC_Start_IT(&TIM_Init, TIM_CHANNEL_2);
-	//HAL_GPIO_WritePin(LASER_WAVE_GEN_1_GPIO_PORT, LASER_WAVE_GEN_1_PIN, 0);
 }
 void exti_pb_irqhandler(void) {
 	//debug_printf("Hey\n");
@@ -301,16 +300,14 @@ void s4353096_general_irqhandler(void) {
 			vars->bit_count == 12) {
 			s4353096_laser_transmit_bit(1);
 		} else if (vars->bit_count == 10 || vars->bit_count == 21) {
-			s4353096_laser_transmit_bit(0);
-			if ((vars->bit_count == 22) && (vars->bit_half == 1)) {
-				//Stop transmitting and reset values
-				vars->bit_count = 0;
-				vars->encoded_bit_count = -1;
-				mode = S4353096_TERMINAL;
-			} else {
-				//s4353096_laser_transmit_bit(0);
-			}
+				s4353096_laser_transmit_bit(0);
 			//HAL_Delay(10);
+		} else if ((vars->bit_count == 22) && (vars->bit_half == 1)) {
+			//Stop transmitting and reset values
+			HAL_GPIO_WritePin(LASER_WAVE_GEN_1_GPIO_PORT, LASER_WAVE_GEN_1_PIN, 1);
+			vars->bit_count = 0;
+			vars->encoded_bit_count = -1;
+			mode = S4353096_TERMINAL;
 		} else {
 			if (vars->bit_half == 1) {
 				vars->encoded_bit_count++;
@@ -384,32 +381,32 @@ void manchester_decode(void) {
 	for (int i = 0; i < 22; i++) {
 		if (i == 0) {
 			vars->recieve_decoded[0] = 1;
-			debug_printf("A %d %d\n", vars->recieve_decoded[0],i);
+			debug_printf("%d", vars->recieve_decoded[0]);
 		} else if ((vars->current_bit == 1) && (approximately_equal(vars->recieve[j], (vars->recieve_period)*0.75) == 1)) {
 			/*The bit is !current bit, set current bit to !current bit*/
 			vars->recieve_decoded[i] = !vars->current_bit;
-			debug_printf("B %d %d\n", vars->recieve_decoded[i],i);
+			debug_printf("%d", vars->recieve_decoded[i]);
 			vars->current_bit = !vars->current_bit;
 		} else if ((vars->current_bit == 0) && (approximately_equal(vars->recieve[j], (vars->recieve_period)*0.75) == 1)) {
 			/*The bit is current bit + !current_bit, set current bit to !current bit*/
 			vars->recieve_decoded[i] = vars->current_bit;
-			debug_printf("C %d %d\n", vars->recieve_decoded[i],i);
+			debug_printf("%d", vars->recieve_decoded[i]);
 			i++;
 			vars->recieve_decoded[i] = !vars->current_bit;
-			debug_printf("D %d %d\n", vars->recieve_decoded[i],i);
+			debug_printf("%d", vars->recieve_decoded[i]);
 			vars->current_bit = !vars->current_bit;
 
 		} else if (approximately_equal(vars->recieve[j], (vars->recieve_period)*0.5) == 1) {
 			/*The bit is current bit*/
 			vars->recieve_decoded[i] = vars->current_bit;
-			debug_printf("E %d %d\n", vars->recieve_decoded[i],i);
+			debug_printf("%d", vars->recieve_decoded[i]);
 		} else if (approximately_equal(vars->recieve[j], (vars->recieve_period)) == 1) {
 			/*The bit is !current bit + current bit*/
 			vars->recieve_decoded[i] = !vars->current_bit;
-			debug_printf("F %d %d\n", vars->recieve_decoded[i],i);
+			debug_printf("%d", vars->recieve_decoded[i]);
 			i++;
 			vars->recieve_decoded[i] = vars->current_bit;
-			debug_printf("G %d %d\n", vars->recieve_decoded[i],i);
+			debug_printf("%d", vars->recieve_decoded[i]);
 		}
 		j++;
 	}

@@ -102,64 +102,7 @@ extern unsigned int s4353096_joystick_y_read(void) {
   return adc_value;
 }
 /*Read Z value*/
-void s4353096_joystick_z_read(void) {
-  //HAL_GPIO_EXTI_IRQHandler(BRD_A2_PIN);
-
-  /*int reading = HAL_GPIO_ReadPin(JOYSTICK_Z_GPIO_PORT, JOYSTICK_Z_PIN);
-  if (reading != last_button_state) {
-    last_Debounce_Time = HAL_GetTick()/1000;
-  }
-  if ((HAL_GetTick()/1000 - last_Debounce_Time) > 10) {
-    if (reading != button_state) {
-      button_state = reading;
-      if (button_state == 1) {
-        HAL_GPIO_EXTI_IRQHandler(BRD_A2_PIN);
-        debug_printf("Interrupts:\n");
-      }
-    }
-  } else {
-    HAL_GPIO_EXTI_IRQHandler(BRD_A2_PIN);
-  }
-  last_button_state = reading;*/
+extern unsigned int s4353096_joystick_z_read(void) {
+  unsigned int reading = HAL_GPIO_ReadPin(JOYSTICK_Z_GPIO_PORT, JOYSTICK_Z_PIN);
+  return reading;
 }
-
-  //if ((HAL_GetTick()/1000 - last_Debounce_Time) >= 10) {
-    //if (reading != button_state) {
-      //button_state = reading;
-      //interrupts++;
-      //debug_printf("Interrupts: %d\n", interrupts);
-      //}
-    //}
-    //state = 0;
-  //}
-
-  /*interrupts++;
-  if (interrupts == 1) {
-  int delay = 10; //Delay Time
-  int delay_counter = HAL_GetTick()/1000;
-  while (state == 0) {
-    while (HAL_GetTick() <= (delay_counter + delay)) {
-
-    }
-    if (HAL_GPIO_ReadPin(JOYSTICK_Z_GPIO_PORT, JOYSTICK_Z_PIN) == 1) {
-      state++;
-      debug_printf("Interrupts: %d\n", interrupts);
-    }
-  }
-  state = 0;
-  interrupts = 0;
-} else {
-
-}*/
-  //interrupts = 0;
-  //} else {
-
-  //}
-
-  //debug_printf("Count %d\n",count);
-  //if (count == 1) {
-  //  joystick_position++;
-    //debug_printf("Joystick %d\n",joystick_position);
-  //} else if (count == 4) {
-  //  count = 0;
-  //}

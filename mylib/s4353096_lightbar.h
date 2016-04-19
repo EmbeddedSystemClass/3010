@@ -1,6 +1,6 @@
 /**
  ******************************************************************************
- * @file    mylib/s4353096_ledbar.h
+ * @file    mylib/s4353096_lightbar.h
  * @author  Steffen Mitchell - 43530960
  * @date    03032015
  * @brief   LED Light Bar peripheral driver

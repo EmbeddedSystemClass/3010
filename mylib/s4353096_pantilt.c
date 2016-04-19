@@ -10,6 +10,8 @@
  ******************************************************************************
  * s4353096_pantilt_init() - Initialise servo (GPIO, PWM, Timer, etc)
  * s4353096_pantilt_angle(type, angle) - Write the pan or tilt servo to an angle
+ * s4353096_terminal_angle_check () - Checks  angle setting values and adjusts
+ * their values accordingly.
  ******************************************************************************
 */
 /* Includes */
@@ -40,7 +42,6 @@ extern void s4353096_pantilt_init(void) {
   HAL_GPIO_Init(PWM_TILT_GPIO_PORT, &GPIO_InitStructure);
   /* Enable clock for pan and tilt timer's  */
   __PWM_PAN_TIMER_CLK();
-  //__PWM_TILT_TIMER_CLK();
   /* Compute the prescaler value. SystemCoreClock = 168000000 - set for 50Khz clock */
   PrescalerValue = (uint16_t) ((SystemCoreClock /2) / 500000) - 1;
 
@@ -77,7 +78,7 @@ extern void s4353096_pantilt_init(void) {
   /* Start PWM for Tilt*/
   HAL_TIM_PWM_Start(&TIM_Init, PWM_TILT_TIM_CHANNEL);
 }
-
+/*Sets the angle of pan or tilt through pwm with type 1 = pan and type 0 = tilt*/
 extern void s4353096_pantilt_angle_write(int type, int angle) {
   float pwm_pulse_period_percentage;
   float pwm_multiplier = 4.723 * (angle/85.000);
@@ -85,7 +86,6 @@ extern void s4353096_pantilt_angle_write(int type, int angle) {
   if ((angle < 0) && (angle > -77)) {
     pwm_pulse_period_percentage = (7.25 - (-1*pwm_multiplier));
     PWMConfig.Pulse				= (((2*500000)/10000) * pwm_pulse_period_percentage);
-                            //(((2*500000)/10000) * 7.25)
   } else if ((angle >= 0) && (angle < 77)) {
     pwm_pulse_period_percentage = ((7.25 + pwm_multiplier));
     PWMConfig.Pulse				= (((2*500000)/10000) * pwm_pulse_period_percentage);
@@ -96,19 +96,17 @@ extern void s4353096_pantilt_angle_write(int type, int angle) {
   if (type == 1) {
     TIM_Init.Instance = PWM_PAN_TIM;
     /* Enable PWM for PWM Pan Timer */
-    //HAL_TIM_PWM_Init(&TIM_Init);
     HAL_TIM_PWM_ConfigChannel(&TIM_Init, &PWMConfig, PWM_PAN_TIM_CHANNEL);
     HAL_TIM_PWM_Start(&TIM_Init, PWM_PAN_TIM_CHANNEL);
   } else if (type == 0) { /*If Type 0 == Tilt */
     TIM_Init.Instance = PWM_TILT_TIM;
-    //HAL_TIM_PWM_Init(&TIM_Init);
     HAL_TIM_PWM_ConfigChannel(&TIM_Init, &PWMConfig, PWM_TILT_TIM_CHANNEL);
     HAL_TIM_PWM_Start(&TIM_Init, PWM_TILT_TIM_CHANNEL);
   } else {
 
   }
 }
-
+/*Checks the angle to see if the setting value has passed the allowed value*/
 extern void s4353096_terminal_angle_check (void) {
   switch (pantilt->set_angle_pan) {
     case 77:

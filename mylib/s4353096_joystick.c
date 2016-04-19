@@ -64,20 +64,9 @@ extern void s4353096_joystick_init(void) {
 	AdcChanConfig.Rank         = 1;
   AdcChanConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
   AdcChanConfig.Offset       = 0;
-
   __JOYSTICK_Z_GPIO_CLK();
-	//Initialise Interrupt, Priority set to 10
-	/*HAL_NVIC_SetPriority(JOYSTICK_Z_EXTI_IRQ, 10, 0);
-	GPIO_InitStructure.Pin = JOYSTICK_Z_PIN;
-	GPIO_InitStructure.Mode = GPIO_MODE_IT_FALLING;
-	GPIO_InitStructure.Pull = GPIO_PULLDOWN;
-	GPIO_InitStructure.Speed = GPIO_SPEED_FAST;
-	HAL_GPIO_Init(JOYSTICK_Z_GPIO_PORT, &GPIO_InitStructure);
-	//Enable external GPIO interrupt and interrupt vector for pin D0
-	NVIC_SetVector(JOYSTICK_Z_EXTI_IRQ, (uint32_t)&s4353096_joystick_z_read);
-	NVIC_EnableIRQ(JOYSTICK_Z_EXTI_IRQ);*/
 }
-/*Read X value*/
+/*Read X value. Returns ADC Value*/
 extern unsigned int s4353096_joystick_x_read(void) {
   unsigned int adc_value;
   AdcChanConfig.Channel = JOYSTICK_X_ADC_CHAN;
@@ -86,10 +75,9 @@ extern unsigned int s4353096_joystick_x_read(void) {
   /*Wait for ADC Conversion to complete*/
   while (HAL_ADC_PollForConversion(&AdcHandle1, 10) != HAL_OK);
   adc_value = (uint16_t)(HAL_ADC_GetValue(&AdcHandle1));
-  //debug_printf("ADC Value: %u\n\r", adc_value);
   return adc_value;
 }
-/*Read Y value*/
+/*Read Y value. Returns ADC Value*/
 extern unsigned int s4353096_joystick_y_read(void) {
   unsigned int adc_value;
   AdcChanConfig.Channel = JOYSTICK_Y_ADC_CHAN;
@@ -98,10 +86,9 @@ extern unsigned int s4353096_joystick_y_read(void) {
   /*Wait for ADC Conversion to complete*/
   while (HAL_ADC_PollForConversion(&AdcHandle1, 10) != HAL_OK);
   adc_value = (uint16_t)(HAL_ADC_GetValue(&AdcHandle1));
-  //debug_printf("ADC Value y: %u\n\r", adc_value);
   return adc_value;
 }
-/*Read Z value*/
+/*Read Z value. Returns button state*/
 extern unsigned int s4353096_joystick_z_read(void) {
   unsigned int reading = HAL_GPIO_ReadPin(JOYSTICK_Z_GPIO_PORT, JOYSTICK_Z_PIN);
   return reading;

@@ -103,4 +103,4 @@ uint8_t hamming_byte_decoder(uint8_t lower, uint8_t upper) {
 		}
 	}
 }
-uint8_t hamming_hbyte_encoder(uint8_t in)
+//uint8_t hamming_hbyte_encoder(uint8_t in)

@@ -93,7 +93,7 @@ void main(void) {
 	vars->transmit_frequency = 1000;
 	vars->period_multiplyer = ((1.000000/vars->transmit_frequency)*500)*0.998;
 	vars->recieve_element = 0;
-	debug_printf("\n%f\n", variables.period_multiplyer);
+	//debug_printf("\n%f\n", variables.period_multiplyer);
 	Pb_init();
 	//HAL_Delay(1000);
 	for(int i=0; i<16; i++) {
@@ -108,7 +108,7 @@ void main(void) {
 		if (((HAL_GetTick()/10000) % 100) == 0) {
 			debug_printf("\nPan: %d Tlit: %d\n", pantilt->set_angle_pan, pantilt->set_angle_tilt);
 			/*for (int i = 0; i < vars->recieve_element; i++) {
-				debug_printf("Recieve edge %d : %d\n", i, vars->recieve[i]);
+				debug_printf("Recieve edge %d : %d\n", i, vars->recieve[(i+l)]);
 			}*/
 			manchester_decode();
 			//BRD_LEDToggle();
@@ -377,52 +377,81 @@ void manchester_decode(void) {
 	int j = 0;
 	vars->current_bit = 1;
 	vars->recieve_period = (vars->recieve[0])*4;
+	uint8_t upper_byte = 0x00;
+	uint8_t lower_byte = 0x00;
 	/*If the first bit doesn't have an input capture of approximately_equal to any other input capture then first bit was not one and an error occured*/
-	if (approximately_equal(vars->recieve[1], vars->period*0.5) == 1) {
-		for (int i = 0; i < 22; i++) {
-			if (i == 0) {
-				vars->recieve_decoded[0] = 1;
-				debug_printf("%d", vars->recieve_decoded[0]);
-			} else if ((vars->current_bit == 1) && (approximately_equal(vars->recieve[j], (vars->recieve_period)*0.75) == 1)) {
-				/*The bit is !current bit, set current bit to !current bit*/
-				vars->recieve_decoded[i] = !vars->current_bit;
-				debug_printf("%d", vars->recieve_decoded[i]);
-				vars->current_bit = !vars->current_bit;
-			} else if ((vars->current_bit == 0) && (approximately_equal(vars->recieve[j], (vars->recieve_period)*0.75) == 1)) {
-				/*The bit is current bit + !current_bit, set current bit to !current bit*/
-				vars->recieve_decoded[i] = vars->current_bit;
-				debug_printf("%d", vars->recieve_decoded[i]);
-				i++;
-				vars->recieve_decoded[i] = !vars->current_bit;
-				debug_printf("%d", vars->recieve_decoded[i]);
-				vars->current_bit = !vars->current_bit;
-
-			} else if (approximately_equal(vars->recieve[j], (vars->recieve_period)*0.5) == 1) {
-				/*The bit is current bit*/
-				vars->recieve_decoded[i] = vars->current_bit;
-				debug_printf("%d", vars->recieve_decoded[i]);
-			} else if (approximately_equal(vars->recieve[j], (vars->recieve_period)) == 1) {
-				/*The bit is !current bit + current bit*/
-				vars->recieve_decoded[i] = !vars->current_bit;
-				debug_printf("%d", vars->recieve_decoded[i]);
-				i++;
-				vars->recieve_decoded[i] = vars->current_bit;
-				debug_printf("%d", vars->recieve_decoded[i]);
+	if (approximately_equal(vars->recieve[1], vars->recieve_period*0.5) == 1) {
+		for (int l = 0; l < 21; l += 11) {
+			for (int i = 0; i < 22; i++) {
+				if ((i == 0) && (l==0)) {
+					vars->recieve_decoded[i] = 1;
+					debug_printf("%d", vars->recieve_decoded[i]);
+				} else if ((vars->current_bit == 1) && (approximately_equal(vars->recieve[j], (vars->recieve_period)*0.75) == 1)) {
+					/*The bit is !current bit, set current bit to !current bit*/
+					vars->recieve_decoded[(i+l)] = !vars->current_bit;
+					debug_printf("%d", vars->recieve_decoded[(i+l)]);
+					vars->current_bit = !vars->current_bit;
+				} else if ((vars->current_bit == 0) && (approximately_equal(vars->recieve[j], (vars->recieve_period)*0.75) == 1)) {
+					/*The bit is current bit + !current_bit, set current bit to !current bit*/
+					vars->recieve_decoded[(i+l)] = vars->current_bit;
+					debug_printf("%d", vars->recieve_decoded[(i+l)]);
+					i++;
+					vars->recieve_decoded[(i+l)] = !vars->current_bit;
+					debug_printf("%d", vars->recieve_decoded[(i+l)]);
+					vars->current_bit = !vars->current_bit;
+				} else if (approximately_equal(vars->recieve[j], (vars->recieve_period)*0.5) == 1) {
+					/*The bit is current bit*/
+					vars->recieve_decoded[(i+l)] = vars->current_bit;
+					debug_printf("%d", vars->recieve_decoded[(i+l)]);
+				} else if (approximately_equal(vars->recieve[j], (vars->recieve_period)) == 1) {
+					/*The bit is !current bit + current bit*/
+					vars->recieve_decoded[(i+l)] = !vars->current_bit;
+					debug_printf("%d", vars->recieve_decoded[(i+l)]);
+					i++;
+					vars->recieve_decoded[(i+l)] = vars->current_bit;
+					debug_printf("%d", vars->recieve_decoded[(i+l)]);
+				}
+				j++;
 			}
-			j++;
-		}
-		debug_printf("\n");
-		if (vars->recieve_decoded[21] != 0) {
-			/*There is no stop bit, send error back to radio and cancel current recieve*/
-		} else {
-			/*Convert recieve_decoded to MSB and remove start and stop bits*/
-			for (int k = 0; k < 22; k++) {
-				if (k != )
+			debug_printf("\n");
+			if (vars->recieve_decoded[10+l] != 0) {
+				/*There is no stop bit, send error back to radio and cancel current recieve*/
+				debug_printf("ERROR\n");
 			}
 		}
 	} else {
 	/*Start bits are not equal to 1, send error back to radio and cancel current recieve*/
-
+	debug_printf("ERROR\n");
+	}
+	/*lower half byte*/
+			/*Convert recieved_decoded to MSB and remove start and stop bits*/
+	for (int k = 0; k < 8; k++) {
+		if (k == 7) {
+			lower_byte = (lower_byte ^ vars->recieve_decoded[9-k]);
+		} else {
+			lower_byte = (lower_byte ^ vars->recieve_decoded[9-k]) << 1;
+		}
+	}
+	if ((vars->recieve_decoded[11] == 1) && (vars->recieve_decoded[12] == 1)) {//Then start bits for upper are present
+		/*Convert recieved_decoded to MSB and remove start and stop bits*/
+		for (int m = 0; m < 8; m++) {
+			if (m == 7) {
+				upper_byte = (upper_byte ^ vars->recieve_decoded[20-m]);
+			} else {
+				upper_byte = (upper_byte ^ vars->recieve_decoded[20-m]) << 1;
+			}
+		}
+	} else {
+		debug_printf("ERROR\n");
+		//ERROR No start bits recieved
+	}	/*Convert recieve_decoded to MSB and remove start and stop bits*/
+	debug_printf("Upper is ");
+	for(int i=0; i<8; i++) {
+		debug_printf("%d", !!((upper_byte << i) & 0x80));
+	}
+	debug_printf("\nLower is ");
+	for(int i=0; i<8; i++) {
+		debug_printf("%d", !!((lower_byte << i) & 0x80));
 	}
 }
 /*void s4353096_pantilt_irqhandler(void) {

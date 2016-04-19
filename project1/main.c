@@ -16,6 +16,7 @@
 #include "s4353096_pantilt.h"
 #include "s4353096_joystick.h"
 #include "s4353096_hamming.h"
+#include "s4353096_radio.h"
 //#include "s4353096_radio.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -57,6 +58,12 @@ struct Variables *vars;
 unsigned int x_value;
 unsigned int y_value;
 int direction_multiplier = 1;
+char RxChar;
+int s4353096_keystroke = 0;
+int s4353096_payload_length = 0;
+unsigned char s4353096_tx_addr[] = {0x22, 0x91, 0x54, 0x43, 0x00};
+unsigned char s4353096_rx_addr[] = {0x98, 0x74, 0x56, 0x43, 0x00};;
+unsigned char s4353096_chan = 47;
 /* Private function prototypes -----------------------------------------------*/
 void Hardware_init(void);
 void s4353096_pantilt_irqhandler(void);
@@ -99,7 +106,53 @@ void main(void) {
 	for(int i=0; i<16; i++) {
 		debug_printf("%d", !!((vars->encoded_char >> i) & 0x1));
 	}
+	s4353096_radio_setchan(s4353096_chan);
+	s4353096_radio_settxaddress(s4353096_tx_addr);
+	s4353096_radio_setrxaddress(s4353096_rx_addr);
   while (1) {
+		s4353096_radio_setfsmrx();
+		s4353096_radio_fsmprocessing();
+		/*Processes the current fsm state*/
+		RxChar = debug_getc();
+		if (RxChar != '\0') {
+			s4353096_keystroke = 1;
+			while(s4353096_keystroke == 1){
+				if (RxChar == '\r' || s4353096_payload_length == 7) {
+					for (int j = s4353096_payload_length; j < 7; j++) {
+						s4353096_payload_buffer[j] = '-';
+					}
+					s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
+					s4353096_radio_fsmprocessing();
+					s4353096_radio_fsmcurrentstate = S4353096_TX_STATE;
+					debug_printf("\n");
+					/*Compiles the transmit packet. Transmits packet if in TX state*/
+					s4353096_radio_sendpacket(s4353096_radio_getchan(), s4353096_addr_get, s4353096_payload_buffer);
+					s4353096_radio_fsmprocessing();
+					s4353096_radio_setfsmrx();
+					s4353096_radio_fsmprocessing();
+					s4353096_payload_length = 0;
+					s4353096_keystroke = 0;
+				} else if (RxChar != '\0') {
+					s4353096_payload_buffer[s4353096_payload_length] = RxChar;
+					s4353096_payload_length++;
+					debug_putc(RxChar);				//reflect byte using putc - puts character into buffer
+					debug_flush();					//Must call flush, to send character		//reflect byte using printf - must delay before calling printf again.
+				} else {
+
+				}
+				HAL_Delay(125);
+				RxChar = debug_getc();
+			}
+		} else {
+
+		}
+		s4353096_radio_fsmprocessing();
+		if (s4353096_radio_getrxstatus() == 1) { //Checks if packet has been recieved
+				/*Prints recieved packet to console*/
+			s4353096_radio_getpacket(s4353096_rx_buffer);
+		} else {
+
+		}
 		if (pantilt->write_angles == 1) {
 			s4353096_pantilt_angle_write(1, pantilt->set_angle_pan);
 			s4353096_pantilt_angle_write(0, pantilt->set_angle_tilt);
@@ -178,6 +231,7 @@ void Hardware_init(void) {
 	s4353096_joystick_init();
 	/* Configure D1 for output of square wave signal */
 	s4353096_pantilt_init();
+	s4353096_radio_init();
 	//
 	//Pb_init();
 }

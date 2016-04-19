@@ -24,7 +24,7 @@ char RxChar;
 int s4353096_keystroke = 0;
 int s4353096_payload_length = 0;
 unsigned char s4353096_tx_addr[] = {0x22, 0x91, 0x54, 0x43, 0x00};
-unsigned char s4353096_rx_addr[] = {0x04, 0x19, 0x52, 0x43, 0x00};
+unsigned char s4353096_rx_addr[] = {0x98, 0x74, 0x56, 0x43, 0x00};
 unsigned char s4353096_chan = 47;
 /* Private function prototypes -----------------------------------------------*/
 void Hardware_init(void);

@@ -215,11 +215,11 @@ void Pb_init(void) {
 
 		__LASER_WAVE_GEN_1_GPIO_CLK();
 		GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-		GPIO_InitStructure.Pull = GPIO_PULLUP;
+		GPIO_InitStructure.Pull = GPIO_PULLDOWN;
 		GPIO_InitStructure.Speed = GPIO_SPEED_FAST;
 		GPIO_InitStructure.Pin = LASER_WAVE_GEN_1_PIN;
 		HAL_GPIO_Init(LASER_WAVE_GEN_1_GPIO_PORT, &GPIO_InitStructure);
-		//HAL_Delay(1000);
+		HAL_Delay(1000);
 		/* Initialise Timer */
 		HAL_TIM_Base_Init(&TIM_Init);
 
@@ -304,7 +304,7 @@ void s4353096_general_irqhandler(void) {
 			//HAL_Delay(10);
 		} else if ((vars->bit_count == 22) && (vars->bit_half == 1)) {
 			//Stop transmitting and reset values
-			HAL_GPIO_WritePin(LASER_WAVE_GEN_1_GPIO_PORT, LASER_WAVE_GEN_1_PIN, 1);
+			HAL_GPIO_WritePin(LASER_WAVE_GEN_1_GPIO_PORT, LASER_WAVE_GEN_1_PIN, 0);
 			vars->bit_count = 0;
 			vars->encoded_bit_count = -1;
 			mode = S4353096_TERMINAL;

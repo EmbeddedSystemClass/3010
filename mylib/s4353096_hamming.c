@@ -61,13 +61,14 @@ uint8_t hamming_hbyte_encoder(uint8_t in) {
 		p0 = p0 ^ !!(out & (1 << z));
 
 	out |= p0;
-
+	/*Insert error here, i.e possibly wait for terminal input and insert given hex value, Do this for both*/
+	/*Enter a certain value maybe to skip error input*/
 	return(out);
 }
 /*Convert to MSB*/
 
 /*Enter lower and upper in MSB form*/
-uint8_t hamming_byte_decoder(uint8_t lower, uint8_t upper) {
+extern uint8_t hamming_byte_decoder(uint8_t lower, uint8_t upper) {
 	uint8_t d0, d1, d2, d3;
 	uint8_t p0 = 0, h0, h1, h2;
 	uint8_t b0, b1, b2, b3;
@@ -88,19 +89,41 @@ uint8_t hamming_byte_decoder(uint8_t lower, uint8_t upper) {
 		h0 = !!(decode_byte & 0x2);
 		h1 = !!(decode_byte & 0x4);
 		h2 = !!(decode_byte & 0x8);
-		d0 = !!(decode_byte & 0x16);
+		d0 = !!(decode_byte & 0xF);
 		d1 = !!(decode_byte & 0x32);
 		d2 = !!(decode_byte & 0x64);
-		d3 = !!(decode_byte & 0x128);
+		d3 = !!(decode_byte & 0x80);
 		/*Construct Syndrome*/
 		s0 = d3 ^ d1 ^ d0 ^ h0;
 		s1 = d3 ^ d2 ^ d0 ^ h1;
 		s2 = d3 ^ d2 ^ d1 ^ h2;
 		S = (s0 << 0) | (s1 << 1) | (s2 << 2);
+		b0 = (1 << 0) | (1 << 1) | (0 << 2);
+		b1 = (1 << 0) | (0 << 1) | (1 << 2);
+		b2 = (0 << 0) | (1 << 1) | (1 << 2);
+		b3 = (1 << 0) | (1 << 1) | (1 << 2);
 		if (S == 0) {
 			/*No hamming Error*/
-			debug_printf("No error");
+			debug_printf("No error\n");
+		} else if (S == b3) {
+			/*Error in D3*/
+
+			debug_printf("Error in D3");
+		} else if (S == b2) {
+			/*Error in D2*/
+			debug_printf("Error in D2");
+		} else if (S == b1) {
+			/*Error in D1*/
+			debug_printf("Error in D1");
+		} else if (S == b0) {
+			/*Error in D0*/
+			debug_printf("Error in D0");
 		}
 	}
+}
+/*Inserts an error into the given hex bit on the given transmit value, and returns the new error including output*/
+uint16_t hamming_error_insertion(uint8_t error_bit, uint16_t output) {
+	/*skip error insertion value*/
+	/*else insert error*/
 }
 //uint8_t hamming_hbyte_encoder(uint8_t in)

@@ -64,3 +64,43 @@ uint8_t hamming_hbyte_encoder(uint8_t in) {
 
 	return(out);
 }
+/*Convert to MSB*/
+
+/*Enter lower and upper in MSB form*/
+uint8_t hamming_byte_decoder(uint8_t lower, uint8_t upper) {
+	uint8_t d0, d1, d2, d3;
+	uint8_t p0 = 0, h0, h1, h2;
+	uint8_t b0, b1, b2, b3;
+	uint8_t s0, s1, s2, S;
+	uint8_t e_low, e_up, E;
+	uint8_t decode_byte;
+	/*Start by decoding upper*/
+	for (int i =0; i < 2; i++) {
+		if (i == 0) {
+			decode_byte = upper;
+		} else if (i == 1) {
+			decode_byte = lower;
+		} else {
+
+		}
+		/*Extract bits from MSB byte*/
+		p0 = !!(decode_byte & 0x1);
+		h0 = !!(decode_byte & 0x2);
+		h1 = !!(decode_byte & 0x4);
+		h2 = !!(decode_byte & 0x8);
+		d0 = !!(decode_byte & 0x16);
+		d1 = !!(decode_byte & 0x32);
+		d2 = !!(decode_byte & 0x64);
+		d3 = !!(decode_byte & 0x128);
+		/*Construct Syndrome*/
+		s0 = d3 ^ d1 ^ d0 ^ h0;
+		s1 = d3 ^ d2 ^ d0 ^ h1;
+		s2 = d3 ^ d2 ^ d1 ^ h2;
+		S = (s0 << 0) | (s1 << 1) | (s2 << 2);
+		if (S == 0) {
+			/*No hamming Error*/
+			debug_printf("No error");
+		}
+	}
+}
+uint8_t hamming_hbyte_encoder(uint8_t in)

@@ -107,9 +107,9 @@ void main(void) {
 		}
 		if (((HAL_GetTick()/10000) % 100) == 0) {
 			debug_printf("\nPan: %d Tlit: %d\n", pantilt->set_angle_pan, pantilt->set_angle_tilt);
-			/*for (int i = 0; i < vars->recieve_element; i++) {
-				debug_printf("Recieve edge %d : %d\n", i, vars->recieve[(i+l)]);
-			}*/
+			for (int i = 0; i < vars->recieve_element; i++) {
+				debug_printf("Recieve edge %d : %d\n", i, vars->recieve[i]);
+			}
 			manchester_decode();
 			//BRD_LEDToggle();
 		}//
@@ -219,7 +219,7 @@ void Pb_init(void) {
 		GPIO_InitStructure.Speed = GPIO_SPEED_FAST;
 		GPIO_InitStructure.Pin = LASER_WAVE_GEN_1_PIN;
 		HAL_GPIO_Init(LASER_WAVE_GEN_1_GPIO_PORT, &GPIO_InitStructure);
-		HAL_Delay(1000);
+		HAL_Delay(500);
 		/* Initialise Timer */
 		HAL_TIM_Base_Init(&TIM_Init);
 
@@ -381,8 +381,8 @@ void manchester_decode(void) {
 	uint8_t lower_byte = 0x00;
 	/*If the first bit doesn't have an input capture of approximately_equal to any other input capture then first bit was not one and an error occured*/
 	if (approximately_equal(vars->recieve[1], vars->recieve_period*0.5) == 1) {
-		for (int l = 0; l < 21; l += 11) {
-			for (int i = 0; i < 22; i++) {
+		for (int l = 0; l < 21; l += 12) {
+			for (int i = 0; i < 11; i++) {
 				if ((i == 0) && (l==0)) {
 					vars->recieve_decoded[i] = 1;
 					debug_printf("%d", vars->recieve_decoded[i]);
@@ -410,18 +410,21 @@ void manchester_decode(void) {
 					i++;
 					vars->recieve_decoded[(i+l)] = vars->current_bit;
 					debug_printf("%d", vars->recieve_decoded[(i+l)]);
+				} else if ((i == 10) && (l == 12)) {
+					vars->recieve_decoded[(i+l)] = 0;
+					debug_printf("%d", vars->recieve_decoded[(i+l)]);
 				}
 				j++;
 			}
-			debug_printf("\n");
 			if (vars->recieve_decoded[10+l] != 0) {
 				/*There is no stop bit, send error back to radio and cancel current recieve*/
-				debug_printf("ERROR\n");
+				debug_printf("ERROR1\n");
 			}
 		}
+		debug_printf("\n");
 	} else {
 	/*Start bits are not equal to 1, send error back to radio and cancel current recieve*/
-	debug_printf("ERROR\n");
+	debug_printf("ERROR2\n");
 	}
 	/*lower half byte*/
 			/*Convert recieved_decoded to MSB and remove start and stop bits*/
@@ -442,17 +445,22 @@ void manchester_decode(void) {
 			}
 		}
 	} else {
-		debug_printf("ERROR\n");
+		debug_printf("ERROR3\n");
 		//ERROR No start bits recieved
 	}	/*Convert recieve_decoded to MSB and remove start and stop bits*/
-	debug_printf("Upper is ");
-	for(int i=0; i<8; i++) {
-		debug_printf("%d", !!((upper_byte << i) & 0x80));
+	/*debug_printf("Recieve_decoded is ");
+	for(int p = 0; p < 22; p++) {
+		debug_printf("%d", vars->recieve_decoded[p]);
+	}*/
+	debug_printf("\nUpper is ");
+	for(int g = 0; g<8; g++) {
+		debug_printf("%d", !!((upper_byte << g) & 0x80));
 	}
 	debug_printf("\nLower is ");
-	for(int i=0; i<8; i++) {
-		debug_printf("%d", !!((lower_byte << i) & 0x80));
+	for(int t=0; t<8; t++) {
+		debug_printf("%d", !!((lower_byte << t) & 0x80));
 	}
+	hamming_byte_decoder(lower_byte, upper_byte);
 }
 /*void s4353096_pantilt_irqhandler(void) {
   TIM_Init.Instance = PANTILT_IR_TIM;

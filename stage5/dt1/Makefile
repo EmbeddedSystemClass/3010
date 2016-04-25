@@ -31,8 +31,13 @@ all: proj
 #Include freertos makefile
 include $(NP2_ROOT)/src/FreeRTOS/Makefile.freertos
 
+#include NRF24l01 makefile
+include $(NP2_ROOT)/src/peripherals/nrf24l01plus/Makefile.nrf24l01plus
+
+
 #Include np2 makefile - NOTE MUST BE LAST TO INCLUDE
 include $(NP2_ROOT)/src/boards/netduinoplus2/Makefile.np2
+
 
 lib:
 	$(MAKE) -C lib
@@ -52,6 +57,7 @@ depend: .depend
 
 .depend: $(SRCS)
 	rm -f ./.depend
+	mkdir -p obj
 	$(CC) $(CFLAGS) -MM $^>>./.depend;
 
 prog:
@@ -73,6 +79,7 @@ clean:
 	rm -f $(PROJ_NAME).hex
 	rm -f $(PROJ_NAME).bin
 	rm -f $(LIBNP2)
+	rm -rf .depend
 	rmdir $(OBJDIR)
 
 

@@ -27,9 +27,12 @@
 /* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 void Hardware_init();
+int main (void) {
 	BRD_init();
 	Hardware_init();
-
+	xTaskCreate( (void *) &Task1_Task, (const signed char *) "TASK1", mainLA_CHAN0TASK1_STACK_SIZE, NULL,  mainLA_CHAN0TASK1_PRIORITY, NULL );
+  xTaskCreate( (void *) &Task2_Task, (const signed char *) "TASK2", mainLA_CHAN1TASK2_STACK_SIZE, NULL,  mainLA_CHAN1TASK2_PRIORITY, NULL );
+  xTaskCreate( (void *) &Task3_Task, (const signed char *) "TASK3", mainLA_CHAN2TASK3_STACK_SIZE, NULL,  mainLA_CHAN2TASK3_PRIORITY, NULL );
 	/* Start the scheduler.
 
 	NOTE : Tasks run in system mode and the scheduler runs in Supervisor mode.
@@ -53,3 +56,18 @@ void Hardware_init( void ) {
 	portENABLE_INTERRUPTS();	//Enable interrupts
 
 }
+void vApplicationStackOverflowHook( xTaskHandle pxTask, signed char *pcTaskName ) {
+	/* This function will get called if a task overflows its stack.   If the
+	parameters are corrupt then inspect pxCurrentTCB to find which was the
+	offending task. */
+
+	BRD_LEDOff();
+	( void ) pxTask;
+	( void ) pcTaskName;
+
+	for( ;; );
+}
+/*void vApplicationTickHook( void ) {
+
+	BRD_LEDOff();
+}*/

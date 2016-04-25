@@ -78,11 +78,23 @@ void lightbar_seg_set(int segment, unsigned char segment_value) {
 
 		}
 }
+/*Takes in a byte and writes each pin of the light bar to a specified bit in
+the byte*/
+extern void s4353096_lightbar_write(unsigned short value) {
+	for (int i=0; i < 10; i++) {
+		if ((value & (1 << i)) == (1 << i)) {
+			//Turn on LED BAR Segment i
+			lightbar_seg_set(i, 1);
+		} else if ((value & (1 << i)) == (0 << i)){
+			//Turn off LED BAR Segment i
+			lightbar_seg_set(i, 0);
+		} else {
 
+		}
+	}
+}
 /*Initialises Lightbar pins*/
 extern void s4353096_lightbar_init(void) {
-<<<<<<< HEAD
-<<<<<<< HEAD
 	struct Lightbar Lightbar_Init;
 	/* Configure the GPIO_D0 pin
 
@@ -90,10 +102,6 @@ extern void s4353096_lightbar_init(void) {
 
 		Configure the GPIO_D9 pin
     */
-=======
->>>>>>> d7425b736f48801ac96f2cf1bbe64b786c9361bf
-=======
->>>>>>> d7425b736f48801ac96f2cf1bbe64b786c9361bf
 		//Enable D0-D9 Clocks
 		__LED_0_GPIO_CLK();
 		__LED_1_GPIO_CLK();
@@ -131,28 +139,6 @@ extern void s4353096_lightbar_init(void) {
 		HAL_GPIO_Init(LED_8_GPIO_PORT, &GPIO_InitStructure);
 		GPIO_InitStructure.Pin = LED_9_PIN;
 		HAL_GPIO_Init(LED_9_GPIO_PORT, &GPIO_InitStructure);
-<<<<<<< HEAD
-<<<<<<< HEAD
-		//xTaskCreate( (void *) &s4353096_lightbar_write, (const signed char *) "LIGHTBAR", mainLIGHTBARTASK_STACK_SIZE, (unsigned short) value, mainLIGHTBARTASK_PRIORITY, NULL);
-		//LightbarQueue = xQueueCreate(10, sizeof(Lightbar_Init));
-=======
->>>>>>> d7425b736f48801ac96f2cf1bbe64b786c9361bf
-=======
->>>>>>> d7425b736f48801ac96f2cf1bbe64b786c9361bf
-}
-
-/*Takes in a byte and writes each pin of the light bar to a specified bit in
-the byte*/
-extern void s4353096_lightbar_write(unsigned short value) {
-	for (int i=0; i < 10; i++) {
-		if ((value & (1 << i)) == (1 << i)) {
-			//Turn on LED BAR Segment i
-			lightbar_seg_set(i, 1);
-		} else if ((value & (1 << i)) == (0 << i)){
-			//Turn off LED BAR Segment i
-			lightbar_seg_set(i, 0);
-		} else {
-
-		}
-	}
+		xTaskCreate( (void *) &s4353096_lightbar_write, (const signed char *) "LIGHTBAR", mainLIGHTBARTASK_STACK_SIZE, NULL, mainLIGHTBARTASK_PRIORITY, NULL);
+		LightbarQueue = xQueueCreate(10, sizeof(Lightbar_Init));
 }

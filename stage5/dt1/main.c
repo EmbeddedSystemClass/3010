@@ -67,6 +67,45 @@ void vApplicationStackOverflowHook( xTaskHandle pxTask, signed char *pcTaskName 
 
 	for( ;; );
 }
+void Task1_Task(void) {
+  S4353096_LA_CHAN0_CLR();        //Clear LA Channel 0
+  for (;;) {
+    S4353096_LA_CHAN0_SET();      //Set LA Channel 0
+    /*Do Stuff Here*/
+    vTaskDelay(3);               //Extra Task Delay of 3ms
+    S4353096_LA_CHAN0_CLR();
+    vTaskDelay(1);                // Mandatory Delay
+
+
+  }
+}
+
+void Task2_Task(void) {
+  S4353096_LA_CHAN1_CLR();        //Clear LA Channel 0
+  for (;;) {
+    S4353096_LA_CHAN1_SET();      //Set LA Channel 0
+    /*Do Stuff Here*/
+    vTaskDelay(3);               //Extra Task Delay of 3ms
+    S4353096_LA_CHAN1_CLR();
+    vTaskDelay(1);                // Mandatory Delay
+
+
+  }
+}
+
+void Task3_Task(void) {
+  S4353096_LA_CHAN2_CLR();        //Clear LA Channel 0
+  //TickType_t xLastWakeTime3;
+  //const TickType_t xFrequency3 = 30 / portTICK_PERIOD_MS;;
+  //xLastWakeTime3 = xTaskGetTickCount();
+  for (;;) {
+    S4353096_LA_CHAN2_SET();      //Set LA Channel 0
+    /*Do Stuff Here*/
+    //vTaskDelayUntil( &xLastWakeTime3, xFrequency3 );               //Extra Task Delay of 3ms
+    S4353096_LA_CHAN2_CLR();
+    vTaskDelay(1);                // Mandatory Delay
+  }
+}
 /*void vApplicationTickHook( void ) {
 
 	BRD_LEDOff();

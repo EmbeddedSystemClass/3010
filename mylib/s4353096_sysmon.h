@@ -46,7 +46,4 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
-void Task1_Task(void);
-void Task2_Task(void);
-void Task3_Task(void);
 void s4353096_sysmon_init(void);

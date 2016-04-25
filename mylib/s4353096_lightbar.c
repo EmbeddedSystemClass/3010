@@ -19,6 +19,7 @@
 #include "stm32f4xx_hal_conf.h"
 #include "debug_printf.h"
 #include "s4353096_lightbar.h"
+#include "s4353096_sysmon.h"
 /* Scheduler includes. */
 #include "FreeRTOS.h"
 #include "task.h"
@@ -29,11 +30,8 @@ GPIO_InitTypeDef  GPIO_InitStructure;
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-struct Lightbar {
-	unsigned short segment_values;
-};
-
-QueueHandle_t LightbarQueue;	/* Queue used */
+struct Timer Recieve;
+//QueueHandle_t s4353096_QueueLightBar;	/* Queue used */
 
 void lightbar_seg_set(int segment, unsigned char segment_value) {
 	/*
@@ -95,7 +93,6 @@ extern void s4353096_lightbar_write(unsigned short value) {
 }
 /*Initialises Lightbar pins*/
 extern void s4353096_lightbar_init(void) {
-	struct Lightbar Lightbar_Init;
 	/* Configure the GPIO_D0 pin
 
 	 	....
@@ -139,6 +136,35 @@ extern void s4353096_lightbar_init(void) {
 		HAL_GPIO_Init(LED_8_GPIO_PORT, &GPIO_InitStructure);
 		GPIO_InitStructure.Pin = LED_9_PIN;
 		HAL_GPIO_Init(LED_9_GPIO_PORT, &GPIO_InitStructure);
-		xTaskCreate( (void *) &s4353096_lightbar_write, (const signed char *) "LIGHTBAR", mainLIGHTBARTASK_STACK_SIZE, NULL, mainLIGHTBARTASK_PRIORITY, NULL);
-		LightbarQueue = xQueueCreate(10, sizeof(Lightbar_Init));
+		xTaskCreate( (void *) &s4353096_TaskLightBar, (const signed char *) "s4353096_TaskLightBar", mainLA_CHAN2TASK3_STACK_SIZE, NULL,  mainLA_CHAN2TASK3_PRIORITY, NULL );
+		s4353096_QueueLightBar = xQueueCreate(10, sizeof(Recieve));
+}
+void s4353096_TaskLightBar(void) {
+  S4353096_LA_CHAN2_CLR();        //Clear LA Channel 0
+  //TickType_t xLastWakeTime3;
+  //const TickType_t xFrequency3 = 200 / portTICK_PERIOD_MS;;
+  //xLastWakeTime3 = xTaskGetTickCount();
+	//struct Timer Recieve;
+	unsigned short lightbar_value = 0;
+  for (;;) {
+    S4353096_LA_CHAN2_SET();      //Set LA Channel 0
+    /*Do Stuff Here*/
+		//lightbar_value = ((tim_l->count & 0xF) ^ ((tim_r->count & 0xF) << 4));
+		if (s4353096_QueueLightBar != NULL) {	/* Check if queue exists */
+			/* Check for item received - block atmost for 10 ticks */
+			if (xQueueReceive(s4353096_QueueLightBar, &Recieve, 10 )) {
+				if ((Recieve.count & 0xF) == 0x00) {
+					lightbar_value = (lightbar_value & 0x1F) ^ (Recieve.count);
+				} else {
+					lightbar_value = (lightbar_value & 0x3E0) ^ (Recieve.count);
+				}
+				s4353096_lightbar_write(lightbar_value);
+        /* Toggle LED */
+				BRD_LEDToggle();
+      }
+		}
+    //vTaskDelayUntil( &xLastWakeTime3, xFrequency3 );               //Extra Task Delay of 3ms
+    S4353096_LA_CHAN2_CLR();
+    vTaskDelay(1);                // Mandatory Delay
+  }
 }

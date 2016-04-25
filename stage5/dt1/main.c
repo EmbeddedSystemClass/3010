@@ -13,7 +13,6 @@
 #include "board.h"
 #include "stm32f4xx_hal_conf.h"
 #include "debug_printf.h"
-#include "s4353096_lightbar.h"
 #include "s4353096_sysmon.h"
 
 /* Scheduler includes. */
@@ -27,6 +26,9 @@
 /* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 void Hardware_init();
+void Task1_Task(void);
+void Task2_Task(void);
+void Task3_Task(void);
 int main (void) {
 	BRD_init();
 	Hardware_init();

@@ -23,8 +23,9 @@
 #include "queue.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-struct Timer {
-	unsigned int count;
+struct dualtimer_msg {
+  char type; //type is either ‘l’ or ‘r’
+  unsigned char timer_value;
 };
 /* Task Priorities ------------------------------------------------------------*/
 #define mainLIGHTBARTASK_PRIORITY					( tskIDLE_PRIORITY + 2 )

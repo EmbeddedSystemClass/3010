@@ -71,12 +71,12 @@ void TaskTimerLeft(void) {
   TickType_t xLastWakeTime1;
   const TickType_t xFrequency1 = 1000 / portTICK_PERIOD_MS;;
   xLastWakeTime1 = xTaskGetTickCount();
-	struct Timer TimerLeft;
-	TimerLeft.count = 0; /*Might possibly need to adjust this depending on if Task fires at 0 or 1 first*/
+	struct dualtimer_msg TimerLeft;
+	TimerLeft.timer_value = 0; /*Might possibly need to adjust this depending on if Task fires at 0 or 1 first*/
 	for (;;) {
     S4353096_LA_CHAN0_SET();      //Set LA Channel 0
     /*Do Stuff Here*/
-		TimerLeft.count++;
+		TimerLeft.timer_value++;
 		/*Send Count via Queue here*/
 		if (s4353096_QueueLightBar != NULL) {	/* Check if queue exists */
 			if( xQueueSendToBack(s4353096_QueueLightBar, ( void * ) &TimerLeft, ( portTickType ) 10 ) != pdPASS ) {
@@ -96,26 +96,26 @@ void TaskTimerRight(void) {
   TickType_t xLastWakeTime2;
   const TickType_t xFrequency2 = 100 / portTICK_PERIOD_MS;;
   xLastWakeTime2 = xTaskGetTickCount();
-	struct Timer TimerRight;
-	TimerRight.count = -1;
+	struct dualtimer_msg TimerRight;
+	TimerRight.timer_value = -1;
 	for (;;) {
     S4353096_LA_CHAN1_SET();      //Set LA Channel 0
     /*Do Stuff Here*/
-		TimerRight.count++;
+		TimerRight.timer_value++;
 		/*if (timeright.count == 10) {
 			timeright.count = 0;
 		} else {
 
 		}*/
 		/*Adjust count for sending via queue*/
-		TimerRight.count = ((TimerRight.count & 0x1F) << 5);
+		TimerRight.timer_value = ((TimerRight.timer_value & 0x1F) << 5);
 		/*Send Count via Queue here*/
 		if (s4353096_QueueLightBar != NULL) {	/* Check if queue exists */
 			if( xQueueSendToBack(s4353096_QueueLightBar, ( void * ) &TimerRight, ( portTickType ) 10 ) != pdPASS ) {
 				debug_printf("Failed to post the message, after 10 ticks.\n\r");
 			}
 		}
-		TimerRight.count = ((TimerRight.count & 0x3E0) >> 5);
+		TimerRight.timer_value = ((TimerRight.timer_value & 0x3E0) >> 5);
     vTaskDelayUntil( &xLastWakeTime2, xFrequency2 );                //Extra Task Delay of 3ms
     S4353096_LA_CHAN1_CLR();
     vTaskDelay(1);                // Mandatory Delay

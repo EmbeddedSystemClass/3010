@@ -30,7 +30,7 @@ GPIO_InitTypeDef  GPIO_InitStructure;
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-struct Timer Recieve;
+struct dualtimer_msg Recieve;
 //QueueHandle_t s4353096_QueueLightBar;	/* Queue used */
 
 void lightbar_seg_set(int segment, unsigned char segment_value) {
@@ -153,10 +153,10 @@ void s4353096_TaskLightBar(void) {
 		if (s4353096_QueueLightBar != NULL) {	/* Check if queue exists */
 			/* Check for item received - block atmost for 10 ticks */
 			if (xQueueReceive(s4353096_QueueLightBar, &Recieve, 10 )) {
-				if ((Recieve.count & 0xF) == 0x00) {
-					lightbar_value = (lightbar_value & 0x1F) ^ (Recieve.count);
+				if ((Recieve.timer_value & 0xF) == 0x00) {
+					lightbar_value = (lightbar_value & 0x1F) ^ (Recieve.timer_value);
 				} else {
-					lightbar_value = (lightbar_value & 0x3E0) ^ (Recieve.count);
+					lightbar_value = (lightbar_value & 0x3E0) ^ (Recieve.timer_value);
 				}
 				s4353096_lightbar_write(lightbar_value);
         /* Toggle LED */

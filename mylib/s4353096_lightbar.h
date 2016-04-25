@@ -21,6 +21,12 @@
 /* Includes ------------------------------------------------------------------*/
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
+/* Task Priorities ------------------------------------------------------------*/
+#define mainLIGHTBARTASK_PRIORITY					( tskIDLE_PRIORITY + 2 )
+/* Task Stack Allocations -----------------------------------------------------*/
+#define mainLIGHTBARTASK_STACK_SIZE		( configMINIMAL_STACK_SIZE * 2 )
+
+#define s4353096_QueueLightBar
 /*The defines bellow define which pins the lightbar is plugged into
   The current configuration is D2-D11*/
 #define LED_0_PIN BRD_D2_PIN

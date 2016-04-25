@@ -91,9 +91,9 @@ void main(void) {
 	vars->encoded_bit = 0;
 	vars->encoded_char = hamming_byte_encoder('<');
 	vars->transmit_frequency = 1000;
-	vars->period_multiplyer = ((1.000000/vars->transmit_frequency)*500)*0.998;
+	vars->period_multiplyer = ((1.00000000000000000/vars->transmit_frequency)*500)*0.998;
 	vars->recieve_element = 0;
-	debug_printf("\n%f\n", variables.period_multiplyer);
+	//debug_printf("\n%f\n", variables.period_multiplyer);
 	Pb_init();
 	//HAL_Delay(1000);
 	for(int i=0; i<16; i++) {
@@ -107,9 +107,9 @@ void main(void) {
 		}
 		if (((HAL_GetTick()/10000) % 100) == 0) {
 			debug_printf("\nPan: %d Tlit: %d\n", pantilt->set_angle_pan, pantilt->set_angle_tilt);
-			/*for (int i = 0; i < vars->recieve_element; i++) {
+			for (int i = 0; i < vars->recieve_element; i++) {
 				debug_printf("Recieve edge %d : %d\n", i, vars->recieve[i]);
-			}*/
+			}
 			manchester_decode();
 			//BRD_LEDToggle();
 		}//
@@ -137,15 +137,27 @@ void main(void) {
 					switch (RxChar) {
 						case 'w':
 							pantilt->set_angle_tilt += 1;
+							vars->transmit_frequency = 10000;
+							vars->period_multiplyer = ((1.000000/vars->transmit_frequency)*500)*0.998;
+							mode = S4353096_LASER_TRANSMIT;
 							break;
 						case 's':
 							pantilt->set_angle_tilt -= 1;
+							vars->transmit_frequency = 1000;
+							vars->period_multiplyer = ((1.000000/vars->transmit_frequency)*500)*0.998;
+							mode = S4353096_LASER_TRANSMIT;
 							break;
 						case 'a':
 							pantilt->set_angle_pan += 1;
+							vars->transmit_frequency = 2000;
+							vars->period_multiplyer = ((1.000000/vars->transmit_frequency)*500)*0.998;
+							mode = S4353096_LASER_TRANSMIT;
 							break;
 						case 'd':
 							pantilt->set_angle_pan -= 1;
+							vars->transmit_frequency = 30000;
+							vars->period_multiplyer = ((1.000000/vars->transmit_frequency)*500)*0.998;
+							mode = S4353096_LASER_TRANSMIT;
 							break;
 						case 't':
 							mode = S4353096_LASER_TRANSMIT;
@@ -255,11 +267,11 @@ void Pb_init(void) {
 		HAL_GPIO_Init(BRD_D0_GPIO_PORT, &GPIO_InitStructure);	//Initialise Pin
 
 	/* Compute the prescaler value. SystemCoreClock = 168000000 - set for 50Khz clock */
-		PrescalerValue = (uint16_t) ((SystemCoreClock /2) / 500000) - 1;
+		PrescalerValue = (uint16_t) ((SystemCoreClock /2) / 1000000) - 1;
 
 	/* Configure Timer 3 settings */
 	TIM_Init.Instance = TIM3;					//Enable Timer 3
-		TIM_Init.Init.Period = 2*500000;			//Set for 100ms (10Hz) period
+		TIM_Init.Init.Period = 2*(vars->transmit_frequency*100);// Sets recieve timer resolution and transmit frequency to be linked
 		TIM_Init.Init.Prescaler = PrescalerValue;	//Set presale value
 		TIM_Init.Init.ClockDivision = 0;			//Set clock division
 	TIM_Init.Init.RepetitionCounter = 0; 		// Set Reload Value
@@ -335,7 +347,7 @@ void s4353096_laser_transmit_bit(int bit) {
 void tim3_irqhandler (void) {
 	unsigned int input_capture_value;
 	TIM_Init.Instance = TIM3;					//Enable Timer 3
-		TIM_Init.Init.Period = 2*500000;			//Set for 100ms (10Hz) period
+		TIM_Init.Init.Period = 2*(vars->transmit_frequency*100);// Sets recieve timer resolution and transmit frequency to be linked
 		TIM_Init.Init.Prescaler = PrescalerValue;	//Set presale value
 		TIM_Init.Init.ClockDivision = 0;			//Set clock division
 	TIM_Init.Init.RepetitionCounter = 0; 		// Set Reload Value

@@ -19,14 +19,21 @@
 #include "stm32f4xx_hal_conf.h"
 #include "debug_printf.h"
 #include "s4353096_lightbar.h"
+/* Scheduler includes. */
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
 
 /* Private typedef -----------------------------------------------------------*/
 GPIO_InitTypeDef  GPIO_InitStructure;
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+struct Lightbar {
+	unsigned short segment_values;
+};
 
-
+QueueHandle_t LightbarQueue;	/* Queue used */
 
 void lightbar_seg_set(int segment, unsigned char segment_value) {
 
@@ -80,7 +87,7 @@ void lightbar_seg_set(int segment, unsigned char segment_value) {
   * @retval None
   */
 extern void s4353096_lightbar_init(void) {
-
+	struct Lightbar Lightbar_Init;
 	/* Configure the GPIO_D0 pin
 
 	 	....
@@ -128,7 +135,8 @@ extern void s4353096_lightbar_init(void) {
 		HAL_GPIO_Init(LED_8_GPIO_PORT, &GPIO_InitStructure);
 		GPIO_InitStructure.Pin = LED_9_PIN;
 		HAL_GPIO_Init(LED_9_GPIO_PORT, &GPIO_InitStructure);
-
+		//xTaskCreate( (void *) &s4353096_lightbar_write, (const signed char *) "LIGHTBAR", mainLIGHTBARTASK_STACK_SIZE, (unsigned short) value, mainLIGHTBARTASK_PRIORITY, NULL);
+		//LightbarQueue = xQueueCreate(10, sizeof(Lightbar_Init));
 }
 
 /**

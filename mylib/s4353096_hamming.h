@@ -1,16 +1,21 @@
 /**
- ******************************************************************************
- * @file    mylib/s4353096_pantilt.h
- * @author  Steffen Mitchell - 43530960
- * @date    16032016
- * @brief   Servo Pan and Tilt peripheral driver
- ******************************************************************************
- *     EXTERNAL FUNCTIONS
- ******************************************************************************
- * s4353096_pantilt_init() - Initialise servo (GPIO, PWM, Timer, etc)
- * s4353096_pantilt_angle(type, angle) - Write the pan or tilt servo to an angle
- ******************************************************************************
+  ******************************************************************************
+  * @file    s4353096_hamming.h
+  * @author  Steffen Mitchell
+  * @date    20042016
+  * @brief   Hamming encoder and decoder
+  *			 Bytes received are can use the below functions to be hamming encoded
+	*			 or decoded.
+  ******************************************************************************
+	* EXTERNAL FUNCTIONS
+  ******************************************************************************
+  * extern uint16_t hamming_byte_encoder(uint8_t input) - Hamming encodes input
+	* byte
+  * extern uint8_t hamming_byte_decoder(uint8_t lower, uint8_t upper) - Hamming
+	*	decodes input bytes
+  ******************************************************************************
  */
 
 extern uint16_t hamming_byte_encoder(uint8_t input);
 uint8_t hamming_hbyte_encoder(uint8_t in);
+extern uint8_t hamming_byte_decoder(uint8_t lower, uint8_t upper);

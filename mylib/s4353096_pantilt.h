@@ -9,10 +9,10 @@
  ******************************************************************************
  * s4353096_pantilt_init() - Initialise servo (GPIO, PWM, Timer, etc)
  * s4353096_pantilt_angle(type, angle) - Write the pan or tilt servo to an angle
+ * s4353096_terminal_angle_check () - Checks  angle setting values and adjusts
+ * their values accordingly.
  ******************************************************************************
  */
-// #ifndef S4353096_PANTILT_H
-// #define S4353096_PANTILT_H
 
 struct PanTilt {
 	int write_angles;
@@ -43,5 +43,4 @@ struct PanTilt *pantilt;
 
  extern void s4353096_pantilt_init(void);
  extern void s4353096_pantilt_angle_write(int type, int angle);
- void s4353096_pantilt_irqhandler(void);
 extern void s4353096_terminal_angle_check (void);

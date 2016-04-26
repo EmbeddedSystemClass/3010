@@ -3,14 +3,20 @@
 #
 # all the files will be generated with this name (main.elf, main.bin, main.hex, etc)
 
+#location of freertos source files
+FREERTOS_PATH=$(NP2_ROOT)/src/FreeRTOS
+
 #Name of project
 PROJ_NAME=main
 
-#Your local source files
+#Your local source files must ONLY be added to SRCS
 SRCS = $(PROJ_NAME).c
 CFLAGS += -DENABLE_VCP #enable USB Virtual Com Port
 MYLIB=$(HOME)/repo/mylib
 CFLAGS += -I$(MYLIB)
+
+#Extra files from the src folder must ONLY be added to LIBSRCS
+LIBSRCS = $(FREERTOS_PATH)/portable/MemMang/heap_1.c
 
 ###################################################
 ROOT=$(shell pwd)
@@ -22,10 +28,14 @@ OBJS=$(SRCS:.c=.o)
 .PHONY: $(shell mkdir -p obj) lib proj all depend
 all: proj
 
+#Include freertos makefile
+include $(NP2_ROOT)/src/FreeRTOS/Makefile.freertos
+
 #include NRF24l01 makefile
 include $(NP2_ROOT)/src/peripherals/nrf24l01plus/Makefile.nrf24l01plus
 
-#include NP2 makefile
+
+#Include np2 makefile - NOTE MUST BE LAST TO INCLUDE
 include $(NP2_ROOT)/src/boards/netduinoplus2/Makefile.np2
 
 
@@ -34,6 +44,7 @@ lib:
 
 proj: 	$(PROJ_NAME).elf
 
+#compile and link file
 $(PROJ_NAME).elf:	$(NP2OBJ) $(OBJS)
 	$(CC) $(LDFLAGS) -o $@ -Llib $(OBJS) $(NP2OBJ) $(LD_SYS_LIBS)
 	$(OBJCOPY) -O ihex $(PROJ_NAME).elf $(PROJ_NAME).hex
@@ -73,4 +84,3 @@ clean:
 
 
 include .depend
-

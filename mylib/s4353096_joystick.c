@@ -31,7 +31,6 @@ extern void s4353096_joystick_init(void) {
   __JOYSTICK_X_GPIO_CLK();
   __JOYSTICK_Y_GPIO_CLK();
   __JOYSTICK_Z_GPIO_CLK();
-
   GPIO_InitStructure.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
   GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;

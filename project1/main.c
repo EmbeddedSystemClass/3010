@@ -5,7 +5,7 @@
 * @date    10-January-2015
 * @brief   Project 1 main file.
 *
-*			 REFERENCES: 
+*			 REFERENCES:
 ******************************************************************************
 */
 
@@ -37,7 +37,7 @@ static uint16_t PrescalerValue = 0;
 int count_interrupt = 199;
 int duty_cycle;
 char RxChar;
-int mode = S4353096_LASER_TRANSMIT;
+int mode = S4353096_TERMINAL;
 struct Variables {
 	int count;
 	int bit_half;
@@ -91,7 +91,6 @@ void main(void) {
 	vars->bit_count = 0;
 	vars->encoded_bit_count = -1;
 	vars->encoded_bit = 0;
-	vars->encoded_char = hamming_byte_encoder('<');
 	vars->transmit_frequency = 1000;
 	vars->period_multiplyer = ((1.000000/vars->transmit_frequency)*500)*0.998;
 	vars->recieve_element = 0;
@@ -107,15 +106,18 @@ void main(void) {
 			manchester_decode();
 			vars->recieve_flag = 0;
 		}
-		if (mode == S4353096_RADIO) {
+		if (mode == S4353096_JOYSTICK) {
 		/*Processes the current fsm state*/
 		RxChar = debug_getc();
 		if (RxChar != '\0') {
 			s4353096_keystroke = 1;
 			while(s4353096_keystroke == 1){
-				if (RxChar == '\r' || s4353096_payload_length == 7) {
+				if (RxChar == '\r' || s4353096_payload_length == 7 || RxChar == '*') {
 					for (int j = s4353096_payload_length; j < 7; j++) {
 						s4353096_payload_buffer[j] = '-';
+					}
+					if (RxChar == '*') {
+						mode = S4353096_LASER_TRANSMIT;
 					}
 					s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
 					s4353096_radio_fsmprocessing();
@@ -192,7 +194,7 @@ void main(void) {
 						case 'd':
 							pantilt->set_angle_pan -= 1;
 							break;
-						case 't':
+						case '*':
 							mode = S4353096_LASER_TRANSMIT;
 							break;
 						default:
@@ -202,6 +204,20 @@ void main(void) {
 				}
 				s4353096_terminal_angle_check();
 
+			} else if (mode == S4353096_LASER_TRANSMIT) {
+				RxChar = debug_getc();
+				/* Check if character is not Null */
+				if (RxChar != '\0') {
+					switch (RxChar) {
+						case '*':
+							mode = S4353096_TERMINAL;
+							break;
+						default:
+							vars->encoded_char = hamming_byte_encoder(RxChar);
+							break;
+					}
+					debug_flush();
+				}
 			}
 			pantilt->read_angles = 0;
 		}

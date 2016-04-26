@@ -26,6 +26,7 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+static uint8_t mode = 1;
 //struct Timer *tim_l;
 //struct Timer *tim_r;
 /* Private function prototypes -----------------------------------------------*/
@@ -109,6 +110,7 @@ void TaskTimerLeft(void) {
 		}
 		if (mode == 1) {
 			TimerLeft.timer_value++;
+			TimerLeft.type = 'l';
 			if (s4353096_QueueLightBar != NULL) {	/* Check if queue exists */
 				if( xQueueSendToBack(s4353096_QueueLightBar, ( void * ) &TimerLeft, ( portTickType ) 10 ) != pdPASS ) {
 					debug_printf("Failed to post the message, after 10 ticks.\n\r");
@@ -150,15 +152,16 @@ void TaskTimerRight(void) {
 		}
 		if (mode == 1) {
 			TimerRight.timer_value++;
+			TimerRight.type = 'r';
 			/*Adjust count for sending via queue*/
-			TimerRight.timer_value = ((TimerRight.timer_value & 0x1F) << 5);
+			//TimerRight.timer_value = ((TimerRight.timer_value & 0x1F) << 5);
 			/*Send Count via Queue here*/
 			if (s4353096_QueueLightBar != NULL) {	/* Check if queue exists */
 				if( xQueueSendToBack(s4353096_QueueLightBar, ( void * ) &TimerRight, ( portTickType ) 10 ) != pdPASS ) {
 					debug_printf("Failed to post the message, after 10 ticks.\n\r");
 				}
 			}
-			TimerRight.timer_value = ((TimerRight.timer_value & 0x3E0) >> 5);
+			//TimerRight.timer_value = ((TimerRight.timer_value & 0x3E0) >> 5);
 		} else {
 
 		}

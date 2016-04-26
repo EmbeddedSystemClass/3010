@@ -28,7 +28,6 @@ struct dualtimer_msg {
   char type; //type is either ‘l’ or ‘r’
   unsigned char timer_value;
 };
-uint8_t mode = 1;
 /* Task Priorities ------------------------------------------------------------*/
 #define mainLIGHTBARTASK_PRIORITY					( tskIDLE_PRIORITY + 2 )
 /* Task Stack Allocations -----------------------------------------------------*/

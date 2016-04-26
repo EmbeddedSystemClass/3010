@@ -153,10 +153,17 @@ void s4353096_TaskLightBar(void) {
 		if (s4353096_QueueLightBar != NULL) {	/* Check if queue exists */
 			/* Check for item received - block atmost for 10 ticks */
 			if (xQueueReceive(s4353096_QueueLightBar, &Recieve, 10 )) {
-				if ((Recieve.timer_value & 0xF) == 0x00) {
+				/*if ((Recieve.timer_value & 0xF) == 0x00) {
 					lightbar_value = (lightbar_value & 0x1F) ^ (Recieve.timer_value);
 				} else {
 					lightbar_value = (lightbar_value & 0x3E0) ^ (Recieve.timer_value);
+				}*/
+				if (Recieve.type == 'l') {
+					lightbar_value = (lightbar_value & 0x3E0) ^ (Recieve.timer_value);
+				} else if (Recieve.type == 'r') {
+					lightbar_value = (lightbar_value & 0x1F) ^ (Recieve.timer_value << 5);
+				} else {
+
 				}
 				s4353096_lightbar_write(lightbar_value);
         /* Toggle LED */

@@ -24,6 +24,7 @@
 #include "semphr.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
+/*Struct for storing timer values and transmitting via queue*/
 struct dualtimer_msg {
   char type; //type is either ‘l’ or ‘r’
   unsigned char timer_value;

@@ -27,26 +27,18 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 static uint8_t mode = 1;
-//struct Timer *tim_l;
-//struct Timer *tim_r;
 /* Private function prototypes -----------------------------------------------*/
 void Hardware_init();
 void TaskTimerLeft(void);
 void TaskTimerRight(void);
 void exti_pb_irqhandler(void);
 int main (void) {
-	//struct Timer timerleft;
-	//struct Timer timerright;
-	//tim_l = &timerleft;
-	//tim_r = &timerright;
-	//tim_l->count = 0;
-	//tim_r->count = 0;
 	BRD_init();
 	Hardware_init();
 	xTaskCreate( (void *) &TaskTimerLeft, (const signed char *) "TaskTimerLeft", mainLA_CHAN0TASK1_STACK_SIZE, NULL,  mainLA_CHAN0TASK1_PRIORITY, NULL );
   xTaskCreate( (void *) &TaskTimerRight, (const signed char *) "TaskTimerRight", mainLA_CHAN1TASK2_STACK_SIZE, NULL,  mainLA_CHAN1TASK2_PRIORITY, NULL );
 	PBLeftSemaphore = xSemaphoreCreateBinary();
-	PBRightSemaphore = xSemaphoreCreateBinary();
+	//PBRightSemaphore = xSemaphoreCreateBinary();
 	/* Start the scheduler.
 
 	NOTE : Tasks run in system mode and the scheduler runs in Supervisor mode.
@@ -60,6 +52,7 @@ int main (void) {
 	/* We should never get here as control is now taken by the scheduler. */
   	return 0;
 }
+/*Initialise Hardware (i.e Lightbar, Pushbutton, sysmon)*/
 void Hardware_init( void ) {
 
 	portDISABLE_INTERRUPTS();	//Disable interrupts
@@ -89,28 +82,33 @@ void Hardware_init( void ) {
 }
 void TaskTimerLeft(void) {
   S4353096_LA_CHAN0_CLR();        //Clear LA Channel 0
+	/*Set up delay until delay time*/
   TickType_t xLastWakeTime1;
-  const TickType_t xFrequency1 = 1000 / portTICK_PERIOD_MS;;
+  const TickType_t xFrequency1 = 1000 / portTICK_PERIOD_MS;; //1000 represents 1 second delay
   xLastWakeTime1 = xTaskGetTickCount();
-	struct dualtimer_msg TimerLeft;
-	TimerLeft.timer_value = 0; /*Might possibly need to adjust this depending on if Task fires at 0 or 1 first*/
+	struct dualtimer_msg TimerLeft; //Initialise Timer Left Struct
+	TimerLeft.timer_value = 0;
 	for (;;) {
     S4353096_LA_CHAN0_SET();      //Set LA Channel 0
-    /*Do Stuff Here*/
-		if (PBLeftSemaphore != NULL) {	/* Check if semaphore exists */
+    /*Do Stuff Here, this is the loop*/
 
+		if (PBLeftSemaphore != NULL) {	/* Check if semaphore exists */
 			/* See if we can obtain the PB semaphore. If the semaphore is not available
            	wait 10 ticks to see if it becomes free. */
+
 			if( xSemaphoreTake( PBLeftSemaphore, 10 ) == pdTRUE ) {
             	/* We were able to obtain the semaphore and can now access the shared resource. */
-
-            	/* Invert mode to stop or start LED flashing */
+            	/* Invert mode to stop or start the Timers */
 				mode = ~mode & 0x01;
 			}
 		}
+
+		/*Increment timer and send the value through the queue*/
 		if (mode == 1) {
 			TimerLeft.timer_value++;
 			TimerLeft.type = 'l';
+
+			/*Send the timer value here if the queue exists*/
 			if (s4353096_QueueLightBar != NULL) {	/* Check if queue exists */
 				if( xQueueSendToBack(s4353096_QueueLightBar, ( void * ) &TimerLeft, ( portTickType ) 10 ) != pdPASS ) {
 					debug_printf("Failed to post the message, after 10 ticks.\n\r");
@@ -119,82 +117,54 @@ void TaskTimerLeft(void) {
 		} else {
 
 		}
-		//TimerLeft.timer_value++;
-		/*Send Count via Queue here*/
     vTaskDelayUntil( &xLastWakeTime1, xFrequency1 );                //Extra Task Delay of 3ms
     S4353096_LA_CHAN0_CLR();
-    vTaskDelay(1);                // Mandatory Delay
-
-
+    vTaskDelay(1);                																	// Mandatory Delay
   }
 }
 
 void TaskTimerRight(void) {
   S4353096_LA_CHAN1_CLR();        //Clear LA Channel 0
+	/*set delay until delay timer*/
   TickType_t xLastWakeTime2;
-  const TickType_t xFrequency2 = 100 / portTICK_PERIOD_MS;;
+  const TickType_t xFrequency2 = 100 / portTICK_PERIOD_MS;; //100 represents 100ms delay
   xLastWakeTime2 = xTaskGetTickCount();
+	/*Intialise Timer Right struct*/
 	struct dualtimer_msg TimerRight;
 	TimerRight.timer_value = -1;
 	for (;;) {
     S4353096_LA_CHAN1_SET();      //Set LA Channel 0
-    /*Do Stuff Here*/
+    /*Do Stuff Here, this is the loop*/
+
 		if (PBLeftSemaphore != NULL) {	/* Check if semaphore exists */
 
 			/* See if we can obtain the PB semaphore. If the semaphore is not available
            	wait 10 ticks to see if it becomes free. */
 			if( xSemaphoreTake( PBLeftSemaphore, 10 ) == pdTRUE ) {
             	/* We were able to obtain the semaphore and can now access the shared resource. */
-
-            	/* Invert mode to stop or start LED flashing */
+            	/* Invert mode to stop or start Timers */
 				mode = ~mode & 0x01;
 			}
 		}
+		/*Increment timer and send the value through the queue*/
 		if (mode == 1) {
 			TimerRight.timer_value++;
 			TimerRight.type = 'r';
-			/*Adjust count for sending via queue*/
-			//TimerRight.timer_value = ((TimerRight.timer_value & 0x1F) << 5);
 			/*Send Count via Queue here*/
 			if (s4353096_QueueLightBar != NULL) {	/* Check if queue exists */
 				if( xQueueSendToBack(s4353096_QueueLightBar, ( void * ) &TimerRight, ( portTickType ) 10 ) != pdPASS ) {
 					debug_printf("Failed to post the message, after 10 ticks.\n\r");
 				}
 			}
-			//TimerRight.timer_value = ((TimerRight.timer_value & 0x3E0) >> 5);
 		} else {
 
 		}
-
-		//TimerRight.timer_value++;
-		/*if (timeright.count == 10) {
-			timeright.count = 0;
-		} else {
-
-		}*/
     vTaskDelayUntil( &xLastWakeTime2, xFrequency2 );                //Extra Task Delay of 3ms
     S4353096_LA_CHAN1_CLR();
     vTaskDelay(1);                // Mandatory Delay
-
-
   }
 }
-
-/*void s4353096_TaskLightBar(void) {
-  S4353096_LA_CHAN2_CLR();        //Clear LA Channel 0
-  TickType_t xLastWakeTime3;
-  const TickType_t xFrequency3 = 200 / portTICK_PERIOD_MS;;
-  xLastWakeTime3 = xTaskGetTickCount();
-  for (;;) {
-    S4353096_LA_CHAN2_SET();*/      //Set LA Channel 0
-    /*Do Stuff Here*/
-		/*lightbar_value = ((tim_l->count & 0xF) ^ ((tim_r->count & 0xF) << 4));
-
-    vTaskDelayUntil( &xLastWakeTime3, xFrequency3 );               //Extra Task Delay of 3ms
-    S4353096_LA_CHAN2_CLR();
-    vTaskDelay(1);                // Mandatory Delay
-  }
-}*/
+/*Interrupt handler for Push Button*/
 void exti_pb_irqhandler(void) {
 
 	BaseType_t xHigherPriorityTaskWoken;
@@ -205,6 +175,7 @@ void exti_pb_irqhandler(void) {
 	/* Check if Pushbutton external interrupt has occured */
   	HAL_GPIO_EXTI_IRQHandler(BRD_PB_PIN);				//Clear D0 pin external interrupt flag
 
+	/* Set the semaphore as available if the semaphore exists*/
 	if (PBLeftSemaphore != NULL) {	/* Check if semaphore exists */
 		xSemaphoreGiveFromISR( PBLeftSemaphore, &xHigherPriorityTaskWoken );		/* Give PB Semaphore from ISR*/
 		debug_printf("Triggered \n\r");    //Print press count value
@@ -225,7 +196,3 @@ void vApplicationStackOverflowHook( xTaskHandle pxTask, signed char *pcTaskName 
 
 	for( ;; );
 }
-/*void vApplicationTickHook( void ) {
-
-	BRD_LEDOff();
-}*/

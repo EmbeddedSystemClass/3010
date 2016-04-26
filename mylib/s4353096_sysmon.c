@@ -28,6 +28,7 @@ GPIO_InitTypeDef  GPIO_InitStructure;
 /* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 
+/*Initialise the system monitor pins*/
 void s4353096_sysmon_init(void) {
   /*Enable Clocks*/
   __LA_CHAN0_GPIO_CLK();
@@ -44,8 +45,4 @@ void s4353096_sysmon_init(void) {
   HAL_GPIO_Init(LA_CHAN1_GPIO_PORT, &GPIO_InitStructure);
   GPIO_InitStructure.Pin = LA_CHAN2_PIN;
   HAL_GPIO_Init(LA_CHAN2_GPIO_PORT, &GPIO_InitStructure);
-  /*xTaskCreate( (void *) &Task1_Task, (const signed char *) "TASK1", mainLA_CHAN0TASK1_STACK_SIZE, NULL,  mainLA_CHAN0TASK1_PRIORITY, NULL );
-  xTaskCreate( (void *) &Task2_Task, (const signed char *) "TASK2", mainLA_CHAN1TASK2_STACK_SIZE, NULL,  mainLA_CHAN1TASK2_PRIORITY, NULL );
-  xTaskCreate( (void *) &Task3_Task, (const signed char *) "TASK3", mainLA_CHAN2TASK3_STACK_SIZE, NULL,  mainLA_CHAN2TASK3_PRIORITY, NULL );
-*/
 }

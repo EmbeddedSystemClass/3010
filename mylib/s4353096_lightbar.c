@@ -136,32 +136,26 @@ extern void s4353096_lightbar_init(void) {
 		HAL_GPIO_Init(LED_8_GPIO_PORT, &GPIO_InitStructure);
 		GPIO_InitStructure.Pin = LED_9_PIN;
 		HAL_GPIO_Init(LED_9_GPIO_PORT, &GPIO_InitStructure);
+		/*Create TaskLightBar*/
 		xTaskCreate( (void *) &s4353096_TaskLightBar, (const signed char *) "s4353096_TaskLightBar", mainLA_CHAN2TASK3_STACK_SIZE, NULL,  mainLA_CHAN2TASK3_PRIORITY, NULL );
+		/*Create QueueLightBar*/
 		s4353096_QueueLightBar = xQueueCreate(10, sizeof(Recieve));
 }
 void s4353096_TaskLightBar(void) {
   S4353096_LA_CHAN2_CLR();        //Clear LA Channel 0
-  //TickType_t xLastWakeTime3;
-  //const TickType_t xFrequency3 = 200 / portTICK_PERIOD_MS;;
-  //xLastWakeTime3 = xTaskGetTickCount();
-	//struct Timer Recieve;
-	unsigned short lightbar_value = 0;
+	unsigned short lightbar_value = 0; //value used to store the binary lightbar segment values
   for (;;) {
     S4353096_LA_CHAN2_SET();      //Set LA Channel 0
-    /*Do Stuff Here*/
-		//lightbar_value = ((tim_l->count & 0xF) ^ ((tim_r->count & 0xF) << 4));
+    /*Do Stuff Here, this is the loop*/
+
 		if (s4353096_QueueLightBar != NULL) {	/* Check if queue exists */
 			/* Check for item received - block atmost for 10 ticks */
 			if (xQueueReceive(s4353096_QueueLightBar, &Recieve, 10 )) {
-				/*if ((Recieve.timer_value & 0xF) == 0x00) {
-					lightbar_value = (lightbar_value & 0x1F) ^ (Recieve.timer_value);
-				} else {
-					lightbar_value = (lightbar_value & 0x3E0) ^ (Recieve.timer_value);
-				}*/
+
 				if (Recieve.type == 'l') {
-					lightbar_value = (lightbar_value & 0x3E0) ^ (Recieve.timer_value);
+					lightbar_value = (lightbar_value & 0x3E0) ^ (Recieve.timer_value); //Sets timer left
 				} else if (Recieve.type == 'r') {
-					lightbar_value = (lightbar_value & 0x1F) ^ (Recieve.timer_value << 5);
+					lightbar_value = (lightbar_value & 0x1F) ^ (Recieve.timer_value << 5); //Sets timer right
 				} else {
 
 				}
@@ -170,7 +164,6 @@ void s4353096_TaskLightBar(void) {
 				BRD_LEDToggle();
       }
 		}
-    //vTaskDelayUntil( &xLastWakeTime3, xFrequency3 );               //Extra Task Delay of 3ms
     S4353096_LA_CHAN2_CLR();
     vTaskDelay(1);                // Mandatory Delay
   }

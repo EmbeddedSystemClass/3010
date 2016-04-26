@@ -21,12 +21,14 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
+#include "semphr.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 struct dualtimer_msg {
   char type; //type is either ‘l’ or ‘r’
   unsigned char timer_value;
 };
+uint8_t mode = 1;
 /* Task Priorities ------------------------------------------------------------*/
 #define mainLIGHTBARTASK_PRIORITY					( tskIDLE_PRIORITY + 2 )
 /* Task Stack Allocations -----------------------------------------------------*/
@@ -92,4 +94,6 @@ extern void s4353096_lightbar_init(void);
 extern void s4353096_lightbar_write(unsigned short value);
 void s4353096_TaskLightBar(void);
 QueueHandle_t s4353096_QueueLightBar;	/* Queue used */
+SemaphoreHandle_t PBLeftSemaphore;
+SemaphoreHandle_t PBRightSemaphore;
 #endif

@@ -1,10 +1,9 @@
 /**
   ******************************************************************************
-  * @file    ex14_fr_ledflashing/main.c
-  * @author  MDS
+  * @file    stage5/dt2/main.c
+  * @author  Steffen Mitchell
   * @date    04022015
-  * @brief   FreeRTOS LED Flashing program.Creates a task to flash the onboard
-  *			 Blue LED. Note the Idle task will also flash the Blue LED.
+  * @brief   FreeRTOS Dual Timer LED program.
   ******************************************************************************
   *
   */
@@ -78,7 +77,6 @@ void Hardware_init( void ) {
   	GPIO_InitStructure.Speed = GPIO_SPEED_FAST;			//Pin latency
   	HAL_GPIO_Init(BRD_PB_GPIO_PORT, &GPIO_InitStructure);	//Initialise Pin
 	portENABLE_INTERRUPTS();	//Enable interrupts
-
 }
 void TaskTimerLeft(void) {
   S4353096_LA_CHAN0_CLR();        //Clear LA Channel 0

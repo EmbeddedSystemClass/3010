@@ -129,3 +129,45 @@ extern void s4353096_terminal_angle_check (void) {
       break;
   }
 }
+void s4353096_TaskPanTilt(void) {
+  S4353096_LA_CHAN0_CLR();        //Clear LA Channel 0
+	/*Set up delay until delay time*/
+  TickType_t xLastWakeTime1;
+  const TickType_t xFrequency1 = 1000 / portTICK_PERIOD_MS;; //1000 represents 1 second delay
+  xLastWakeTime1 = xTaskGetTickCount();
+	struct dualtimer_msg TimerLeft; //Initialise Timer Left Struct
+	TimerLeft.timer_value = 0;
+	for (;;) {
+    S4353096_LA_CHAN0_SET();      //Set LA Channel 0
+    /*Do Stuff Here, this is the loop*/
+
+		if (PBLeftSemaphore != NULL) {	/* Check if semaphore exists */
+			/* See if we can obtain the PB semaphore. If the semaphore is not available
+           	wait 10 ticks to see if it becomes free. */
+
+			if( xSemaphoreTake( PBLeftSemaphore, 10 ) == pdTRUE ) {
+            	/* We were able to obtain the semaphore and can now access the shared resource. */
+            	/* Invert mode to stop or start the Timers */
+				mode = ~mode & 0x01;
+			}
+		}
+
+		/*Increment timer and send the value through the queue*/
+		if (mode == 1) {
+			TimerLeft.timer_value++;
+			TimerLeft.type = 'l';
+
+			/*Send the timer value here if the queue exists*/
+			if (s4353096_QueueLightBar != NULL) {	/* Check if queue exists */
+				if( xQueueSendToBack(s4353096_QueueLightBar, ( void * ) &TimerLeft, ( portTickType ) 10 ) != pdPASS ) {
+					debug_printf("Failed to post the message, after 10 ticks.\n\r");
+				}
+			}
+		} else {
+
+		}
+    vTaskDelayUntil( &xLastWakeTime1, xFrequency1 );                //Extra Task Delay of 3ms
+    S4353096_LA_CHAN0_CLR();
+    vTaskDelay(1);                																	// Mandatory Delay
+  }
+}

@@ -13,6 +13,10 @@
  * their values accordingly.
  ******************************************************************************
  */
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+#include "semphr.h"
 
 struct PanTilt {
 	int write_angles;
@@ -21,6 +25,13 @@ struct PanTilt {
   int set_angle_tilt;
 };
 struct PanTilt *pantilt;
+QueueHandle_t s4353096_QueuePan;
+QueueHandle_t s4353096_QueueTilt;
+SemaphoreHandle_t s4353096_SemaphoreLaser;		//Used to control laser
+SemaphoreHandle_t s4353096_SemaphorePanLeft;	//Used to pan left 5degrees
+SemaphoreHandle_t s4353096_SemaphorePanRight;	//Used to pan right 5degrees
+SemaphoreHandle_t s4353096_SemaphoreTiltUp;		//Used to tilt up 5degrees
+SemaphoreHandle_t s4353096_SemaphoreTiltDown;	//Used to tilt down 5degrees
  #define PWM_PAN_TIM TIM4
  #define PWM_PAN_PIN BRD_D6_PIN
  #define PWM_PAN_GPIO_PORT BRD_D6_GPIO_PORT
@@ -44,3 +55,4 @@ struct PanTilt *pantilt;
  extern void s4353096_pantilt_init(void);
  extern void s4353096_pantilt_angle_write(int type, int angle);
 extern void s4353096_terminal_angle_check (void);
+extern void sxxxxxx_TaskPanTilt(void);

@@ -1,10 +1,9 @@
 /**
   ******************************************************************************
-  * @file    ex14_fr_ledflashing/main.c
-  * @author  MDS
+  * @file    stage5/dt1/main.c
+  * @author  Steffen Mitchell
   * @date    04022015
-  * @brief   FreeRTOS LED Flashing program.Creates a task to flash the onboard
-  *			 Blue LED. Note the Idle task will also flash the Blue LED.
+  * @brief   FreeRTOS sysmon tester.
   ******************************************************************************
   *
   */

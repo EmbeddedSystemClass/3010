@@ -23,8 +23,13 @@ struct PanTilt {
 	int read_angles;
   int set_angle_pan;
   int set_angle_tilt;
+	int laser_state;
 };
-struct PanTilt *pantilt;
+/* Task Priorities ------------------------------------------------------------*/
+#define mainTASKPANTILT_PRIORITY					( tskIDLE_PRIORITY + 2 )
+/* Task Stack Allocations -----------------------------------------------------*/
+#define mainTASKPANTILT_STACK_SIZE		( configMINIMAL_STACK_SIZE * 2 )
+
 QueueHandle_t s4353096_QueuePan;
 QueueHandle_t s4353096_QueueTilt;
 SemaphoreHandle_t s4353096_SemaphoreLaser;		//Used to control laser
@@ -52,7 +57,11 @@ SemaphoreHandle_t s4353096_SemaphoreTiltDown;	//Used to tilt down 5degrees
  #define __PANTILT_IR_TIMER_CLK() __TIM2_CLK_ENABLE()
  #define PANTILT_TIM_IRQn TIM2_IRQn
 
+ #define LASER_PIN BRD_D0_PIN
+ #define LASER_GPIO_PORT BRD_D0_GPIO_PORT
+ #define __LASER_GPIO_CLK() __BRD_D0_GPIO_CLK()
+ 
  extern void s4353096_pantilt_init(void);
  extern void s4353096_pantilt_angle_write(int type, int angle);
 extern void s4353096_terminal_angle_check (void);
-extern void sxxxxxx_TaskPanTilt(void);
+extern void s4353096_TaskPanTilt(void);

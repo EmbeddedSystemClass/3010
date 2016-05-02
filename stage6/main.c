@@ -12,13 +12,19 @@
 #include "board.h"
 #include "stm32f4xx_hal_conf.h"
 #include "debug_printf.h"
-#include "s4353096_sysmon.h"
+#include <string.h>
+#include <stdio.h>
 
 /* Scheduler includes. */
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
+#include "semphr.h"
+#include "FreeRTOS_CLI.h"
 
+#include "s4353096_sysmon.h"
+#include "s4353096_pantilt.h"
+#include "s4353096_cli.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -29,10 +35,9 @@ void Hardware_init();
 int main (void) {
 	BRD_init();
 	Hardware_init();
-	xTaskCreate( (void *) &TaskTimerLeft, (const signed char *) "TaskTimerLeft", mainLA_CHAN0TASK1_STACK_SIZE, NULL,  mainLA_CHAN0TASK1_PRIORITY, NULL );
-  xTaskCreate( (void *) &TaskTimerRight, (const signed char *) "TaskTimerRight", mainLA_CHAN1TASK2_STACK_SIZE, NULL,  mainLA_CHAN1TASK2_PRIORITY, NULL );
-	PBLeftSemaphore = xSemaphoreCreateBinary();
-	//PBRightSemaphore = xSemaphoreCreateBinary();
+	s4353096_SemaphoreLaser = xSemaphoreCreateBinary();
+
+	FreeRTOS_CLIRegisterCommand(&xLaser);
 	/* Start the scheduler.
 
 	NOTE : Tasks run in system mode and the scheduler runs in Supervisor mode.
@@ -54,7 +59,28 @@ void Hardware_init( void ) {
 	GPIO_InitTypeDef GPIO_InitStructure;
 	BRD_LEDInit();				//Initialise Blue LED
 	BRD_LEDOff();				//Turn off Blue LED
-	s4353096_lightbar_init();
+	s4353096_pantilt_init();
   s4353096_sysmon_init();
+	__LASER_GPIO_CLK();
+	//Set up Pin behaviour
+	GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP; //Output Mode
+	GPIO_InitStructure.Pull = GPIO_PULLUP; //Pull up resistor
+	GPIO_InitStructure.Speed = GPIO_SPEED_FAST; //Pun latency
+	/*GPIO Pins D0-D9 are configured to the above specifications in the space
+	bellow*/
+	GPIO_InitStructure.Pin = LASER_PIN;
+	HAL_GPIO_Init(LASER_GPIO_PORT, &GPIO_InitStructure);
   portENABLE_INTERRUPTS();	//Disable interrupts
+}
+
+void vApplicationStackOverflowHook( xTaskHandle pxTask, signed char *pcTaskName ) {
+	/* This function will get called if a task overflows its stack.   If the
+	parameters are corrupt then inspect pxCurrentTCB to find which was the
+	offending task. */
+
+	BRD_LEDOff();
+	( void ) pxTask;
+	( void ) pcTaskName;
+
+	for( ;; );
 }

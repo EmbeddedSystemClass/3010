@@ -20,7 +20,6 @@
 #include "debug_printf.h"
 #include <string.h>
 #include <stdio.h>
-
 /* Scheduler includes. */
 #include "FreeRTOS.h"
 #include "task.h"
@@ -244,6 +243,37 @@ void s4353096_TaskPanTilt(void) {
             if (xQueueReceive(s4353096_QueuePan, &Recieve_PT, 10 )) {
               servo_control.set_angle_pan = Recieve_PT.set_angle_pan;
               s4353096_pantilt_angle_write(1, servo_control.set_angle_pan);
+            }
+          }
+          if (s4353096_SemaphoreTiltDown != NULL) {	/* Check if semaphore exists */
+      			/* See if we can obtain the PB semaphore. If the semaphore is not available
+                 	wait 10 ticks to see if it becomes free. */
+
+      			if( xSemaphoreTake( s4353096_SemaphoreTiltDown, 10 ) == pdTRUE ) {
+              /* We were able to obtain the semaphore and can now access the shared resource. */
+              /*Increment the pan angle by -5degrees*/
+              servo_control.set_angle_tilt -= 5;
+              s4353096_pantilt_angle_write(0, servo_control.set_angle_tilt);
+
+            }
+      		}
+          if (s4353096_SemaphoreTiltUp != NULL) {	/* Check if semaphore exists */
+      			/* See if we can obtain the PB semaphore. If the semaphore is not available
+                 	wait 10 ticks to see if it becomes free. */
+
+      			if( xSemaphoreTake( s4353096_SemaphoreTiltUp, 10 ) == pdTRUE ) {
+              /* We were able to obtain the semaphore and can now access the shared resource. */
+              /*Increment the pan angle by -5degrees*/
+              servo_control.set_angle_tilt += 5;
+              s4353096_pantilt_angle_write(0, servo_control.set_angle_tilt);
+
+            }
+      		}
+          if (s4353096_QueueTilt != NULL) {	/* Check if queue exists */
+            /* Check for item received - block atmost for 10 ticks */
+            if (xQueueReceive(s4353096_QueueTilt, &Recieve_PT, 10 )) {
+              servo_control.set_angle_tilt = Recieve_PT.set_angle_tilt;
+              s4353096_pantilt_angle_write(0, servo_control.set_angle_tilt);
             }
           }
           /* Display CLI output string */

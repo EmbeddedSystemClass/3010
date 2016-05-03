@@ -19,11 +19,13 @@
 #include "debug_printf.h"
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 /* Scheduler includes. */
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
+#include "semphr.h"
 
 #include "FreeRTOS_CLI.h"
 
@@ -35,7 +37,7 @@
 /* Private function prototypes -----------------------------------------------*/
 struct PanTilt SendPosition;
 
-BaseType_t prvLaserCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+extern BaseType_t prvLaserCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 
 	long lParam_len;
 	const char *cCmd_string;
@@ -55,7 +57,7 @@ BaseType_t prvLaserCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const ch
 	return pdFALSE;
 }
 
-BaseType_t prvPanCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+extern BaseType_t prvPanCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 
 	long lParam_len;
 	const char *cCmd_string;
@@ -91,7 +93,7 @@ BaseType_t prvPanCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char
 	return pdFALSE;
 }
 
-BaseType_t prvTiltCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+extern BaseType_t prvTiltCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 
 	long lParam_len;
 	const char *cCmd_string;
@@ -102,9 +104,25 @@ BaseType_t prvTiltCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const cha
 	/* Write command echo output string to write buffer. */
 	xWriteBufferLen = sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
   /* Set the semaphore as available if the semaphore exists*/
-	if (s4353096_SemaphoreLaser != NULL) {	/* Check if semaphore exists */
-		xSemaphoreGive(s4353096_SemaphoreLaser);		/* Give PB Semaphore from ISR*/
-		//debug_printf("Triggered \n\r");    //Print press count value
+	if (strcmp(pcWriteBuffer,"up") == 0) {
+    /*Give Semaphore*/
+    xSemaphoreGive(s4353096_SemaphoreTiltUp);
+  } else if (strcmp(pcWriteBuffer,"down") == 0) {
+    /*Give Semaphore*/
+    xSemaphoreGive(s4353096_SemaphoreTiltDown);
+  } else {
+    /*Check if value is a valid integer and if it is send it to the queue*/
+    if (atoi(pcWriteBuffer) != 0) {
+      /*Valid integer, send to queue*/
+      SendPosition.set_angle_tilt = atoi(pcWriteBuffer);
+      if (s4353096_QueueTilt != NULL) {	/* Check if queue exists */
+				if( xQueueSendToBack(s4353096_QueueTilt, ( void * ) &SendPosition, ( portTickType ) 10 ) != pdPASS ) {
+					debug_printf("Failed to post the message, after 10 ticks.\n\r");
+				}
+			}
+    } else {
+      /*Not a valid integer*/
+    }
 	}
 	/* Return pdFALSE, as there are no more strings to return */
 	/* Only return pdTRUE, if more strings need to be printed */

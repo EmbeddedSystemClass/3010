@@ -1,7 +1,7 @@
 /**
   ******************************************************************************
-  * @file    ex18_fr_cli/main.c
-  * @author  MDS
+  * @file    mylib/s4353096_cli.h
+  * @author  Steffen Mitchell
   * @date    9-May-2014
   * @brief   FreeRTOS CLI program.Creates a task to implement the CLI and flash
   *			 the onboard Blue LED.

@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    stage5/dt1/main.c
+  * @file    stage6/main.c
   * @author  Steffen Mitchell
   * @date    04022015
   * @brief   FreeRTOS sysmon tester.

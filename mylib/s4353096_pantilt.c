@@ -362,7 +362,6 @@ extern void s4353096_TaskBox(void) {
         current_angle_tilt = servo_control.set_angle_tilt;
         MakeBox.set_angle_pan = current_angle_pan + 25;
         MakeBox.set_angle_tilt = current_angle_tilt - 18;
-        debug_printf("Current Pan:%d  Set Pan: %d    Current Tilt: %d  Set Tilt: %d\n", current_angle_pan, MakeBox.set_angle_pan, current_angle_tilt, MakeBox.set_angle_tilt);
         if (s4353096_QueueBox != NULL) {	/* Check if queue exists */
   				if( xQueueSendToBack(s4353096_QueueBox, ( void * ) &MakeBox, ( portTickType ) 10 ) != pdPASS ) {
   					debug_printf("Failed to post the message, after 10 ticks.\n\r");

@@ -33,8 +33,65 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
+struct PanTilt SendPosition;
 
 BaseType_t prvLaserCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+
+	long lParam_len;
+	const char *cCmd_string;
+
+	/* Get parameters from command string */
+	cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
+
+	/* Write command echo output string to write buffer. */
+	xWriteBufferLen = sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+  /* Set the semaphore as available if the semaphore exists*/
+	if (s4353096_SemaphoreLaser != NULL) {	/* Check if semaphore exists */
+		xSemaphoreGive(s4353096_SemaphoreLaser);		/* Give PB Semaphore from ISR*/
+		//debug_printf("Triggered \n\r");    //Print press count value
+	}
+	/* Return pdFALSE, as there are no more strings to return */
+	/* Only return pdTRUE, if more strings need to be printed */
+	return pdFALSE;
+}
+
+BaseType_t prvPanCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+
+	long lParam_len;
+	const char *cCmd_string;
+
+	/* Get parameters from command string */
+	cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
+
+	/* Write command echo output string to write buffer. */
+	xWriteBufferLen = sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+  /* Set the semaphore as available if the semaphore exists*/
+	if (strcmp(pcWriteBuffer,"left") == 0) {
+    /*Give Semaphore*/
+    xSemaphoreGive(s4353096_SemaphorePanLeft);
+  } else if (strcmp(pcWriteBuffer,"right") == 0) {
+    /*Give Semaphore*/
+    xSemaphoreGive(s4353096_SemaphorePanRight);
+  } else {
+    /*Check if value is a valid integer and if it is send it to the queue*/
+    if (atoi(pcWriteBuffer) != 0) {
+      /*Valid integer, send to queue*/
+      SendPosition.set_angle_pan = atoi(pcWriteBuffer);
+      if (s4353096_QueuePan != NULL) {	/* Check if queue exists */
+				if( xQueueSendToBack(s4353096_QueuePan, ( void * ) &SendPosition, ( portTickType ) 10 ) != pdPASS ) {
+					debug_printf("Failed to post the message, after 10 ticks.\n\r");
+				}
+			}
+    } else {
+      /*Not a valid integer*/
+    }
+  }
+	/* Return pdFALSE, as there are no more strings to return */
+	/* Only return pdTRUE, if more strings need to be printed */
+	return pdFALSE;
+}
+
+BaseType_t prvTiltCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 
 	long lParam_len;
 	const char *cCmd_string;

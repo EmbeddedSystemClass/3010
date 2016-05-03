@@ -37,6 +37,7 @@ TIM_OC_InitTypeDef PWMConfig;
 TIM_HandleTypeDef TIM_Init;
 static uint16_t PrescalerValue = 0;
 struct PanTilt *pantilt;
+struct PanTilt servo_control;
 /*Initialise pantilt GPIO, Timer, PWM */
 extern void s4353096_pantilt_init(void) {
   /* Enable the PWM Pin Clocks */
@@ -90,6 +91,9 @@ extern void s4353096_pantilt_init(void) {
 
   /* Start PWM for Tilt*/
   HAL_TIM_PWM_Start(&TIM_Init, PWM_TILT_TIM_CHANNEL);
+  /*Create Queues*/
+  s4353096_QueuePan = xQueueCreate(10, sizeof(servo_control));
+  s4353096_QueueTilt = xQueueCreate(10, sizeof(servo_control));
   /*Create Task*/
   xTaskCreate( (void *) &s4353096_TaskPanTilt, (const signed char *) "s4353096_TaskPanTilt", mainTASKPANTILT_STACK_SIZE, NULL,  mainTASKPANTILT_PRIORITY, NULL );
 }
@@ -150,7 +154,8 @@ void s4353096_TaskPanTilt(void) {
   //TickType_t xLastWakeTime1;
   //const TickType_t xFrequency1 = 1000 / portTICK_PERIOD_MS;; //1000 represents 1 second delay
   //xLastWakeTime1 = xTaskGetTickCount();
-	struct PanTilt servo_control; //Initialise Timer Left Struct
+  //Initialise Timer Left Struct
+  struct PanTilt Recieve_PT;
 	servo_control.set_angle_pan = 0;
   servo_control.set_angle_tilt = 0;
   servo_control.laser_state = 0;
@@ -210,6 +215,37 @@ void s4353096_TaskPanTilt(void) {
               }
             }
       		}
+          if (s4353096_SemaphorePanLeft != NULL) {	/* Check if semaphore exists */
+      			/* See if we can obtain the PB semaphore. If the semaphore is not available
+                 	wait 10 ticks to see if it becomes free. */
+
+      			if( xSemaphoreTake( s4353096_SemaphorePanLeft, 10 ) == pdTRUE ) {
+              /* We were able to obtain the semaphore and can now access the shared resource. */
+              /*Increment the pan angle by -5degrees*/
+              servo_control.set_angle_pan -= 5;
+              s4353096_pantilt_angle_write(1, servo_control.set_angle_pan);
+
+            }
+      		}
+          if (s4353096_SemaphorePanRight != NULL) {	/* Check if semaphore exists */
+      			/* See if we can obtain the PB semaphore. If the semaphore is not available
+                 	wait 10 ticks to see if it becomes free. */
+
+      			if( xSemaphoreTake( s4353096_SemaphorePanRight, 10 ) == pdTRUE ) {
+              /* We were able to obtain the semaphore and can now access the shared resource. */
+              /*Increment the pan angle by -5degrees*/
+              servo_control.set_angle_pan += 5;
+              s4353096_pantilt_angle_write(1, servo_control.set_angle_pan);
+
+            }
+      		}
+          if (s4353096_QueuePan != NULL) {	/* Check if queue exists */
+            /* Check for item received - block atmost for 10 ticks */
+            if (xQueueReceive(s4353096_QueuePan, &Recieve_PT, 10 )) {
+              servo_control.set_angle_pan = Recieve_PT.set_angle_pan;
+              s4353096_pantilt_angle_write(1, servo_control.set_angle_pan);
+            }
+          }
           /* Display CLI output string */
 					debug_printf("%s\n\r",pcOutputString);
 				    vTaskDelay(5);	//Must delay between debug_printfs.

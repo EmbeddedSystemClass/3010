@@ -36,8 +36,12 @@ int main (void) {
 	BRD_init();
 	Hardware_init();
 	s4353096_SemaphoreLaser = xSemaphoreCreateBinary();
+	s4353096_SemaphorePanLeft = xSemaphoreCreateBinary();
+	s4353096_SemaphorePanRight = xSemaphoreCreateBinary();
 
 	FreeRTOS_CLIRegisterCommand(&xLaser);
+	FreeRTOS_CLIRegisterCommand(&xPan);
+	//FreeRTOS_CLIRegisterCommand(&xTilt);
 	/* Start the scheduler.
 
 	NOTE : Tasks run in system mode and the scheduler runs in Supervisor mode.

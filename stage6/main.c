@@ -40,10 +40,12 @@ int main (void) {
 	s4353096_SemaphorePanRight = xSemaphoreCreateBinary();
 	s4353096_SemaphoreTiltUp = xSemaphoreCreateBinary();
 	s4353096_SemaphoreTiltDown = xSemaphoreCreateBinary();
+	s4353096_SemaphoreBox = xSemaphoreCreateBinary();
 
 	FreeRTOS_CLIRegisterCommand(&xLaser);
 	FreeRTOS_CLIRegisterCommand(&xPan);
 	FreeRTOS_CLIRegisterCommand(&xTilt);
+	FreeRTOS_CLIRegisterCommand(&xBox);
 	/* Start the scheduler.
 
 	NOTE : Tasks run in system mode and the scheduler runs in Supervisor mode.

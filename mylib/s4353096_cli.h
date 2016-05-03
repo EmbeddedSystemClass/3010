@@ -30,6 +30,7 @@
 extern BaseType_t prvLaserCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvPanCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvTiltCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+extern BaseType_t prvBoxCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 
 CLI_Command_Definition_t xLaser = {	/* Structure that defines the "echo" command line command. */
 	"laser",
@@ -50,4 +51,11 @@ CLI_Command_Definition_t xTilt = {	/* Structure that defines the "echo" command 
 	"tilt: Adjust tilt servo by increments of 5 degrees using ""up"" or ""down"" or to a given angle\r\n",
 	prvTiltCommand,
 	1
+};
+
+CLI_Command_Definition_t xBox = {	/* Structure that defines the "echo" command line command. */
+	"box",
+	"box: draws a 10cm by 10cm box with laser\r\n",
+	prvBoxCommand,
+	0
 };

@@ -76,7 +76,7 @@ extern BaseType_t prvPanCommand(char *pcWriteBuffer, size_t xWriteBufferLen, con
     xSemaphoreGive(s4353096_SemaphorePanRight);
   } else {
     /*Check if value is a valid integer and if it is send it to the queue*/
-    if (atoi(pcWriteBuffer) != 0) {
+    if ((atoi(pcWriteBuffer) != 0) || (pcWriteBuffer[0] == '0')) {
       /*Valid integer, send to queue*/
       SendPosition.set_angle_pan = atoi(pcWriteBuffer);
       if (s4353096_QueuePan != NULL) {	/* Check if queue exists */
@@ -112,7 +112,7 @@ extern BaseType_t prvTiltCommand(char *pcWriteBuffer, size_t xWriteBufferLen, co
     xSemaphoreGive(s4353096_SemaphoreTiltDown);
   } else {
     /*Check if value is a valid integer and if it is send it to the queue*/
-    if (atoi(pcWriteBuffer) != 0) {
+    if ((atoi(pcWriteBuffer) != 0) || (pcWriteBuffer[0] == '0')) {
       /*Valid integer, send to queue*/
       SendPosition.set_angle_tilt = atoi(pcWriteBuffer);
       if (s4353096_QueueTilt != NULL) {	/* Check if queue exists */
@@ -124,6 +124,17 @@ extern BaseType_t prvTiltCommand(char *pcWriteBuffer, size_t xWriteBufferLen, co
       /*Not a valid integer*/
     }
 	}
+	/* Return pdFALSE, as there are no more strings to return */
+	/* Only return pdTRUE, if more strings need to be printed */
+	return pdFALSE;
+}
+
+extern BaseType_t prvBoxCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+
+	/* Write command echo output string to write buffer. */
+	xWriteBufferLen = sprintf((char *) pcWriteBuffer, "\n");
+  /* Set the semaphore as available if the semaphore exists*/
+  xSemaphoreGive(s4353096_SemaphoreBox);
 	/* Return pdFALSE, as there are no more strings to return */
 	/* Only return pdTRUE, if more strings need to be printed */
 	return pdFALSE;

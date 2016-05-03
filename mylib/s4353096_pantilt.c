@@ -93,8 +93,10 @@ extern void s4353096_pantilt_init(void) {
   /*Create Queues*/
   s4353096_QueuePan = xQueueCreate(10, sizeof(servo_control));
   s4353096_QueueTilt = xQueueCreate(10, sizeof(servo_control));
+  s4353096_QueueBox = xQueueCreate(10, sizeof(servo_control));
   /*Create Task*/
   xTaskCreate( (void *) &s4353096_TaskPanTilt, (const signed char *) "s4353096_TaskPanTilt", mainTASKPANTILT_STACK_SIZE, NULL,  mainTASKPANTILT_PRIORITY, NULL );
+  xTaskCreate( (void *) &s4353096_TaskBox, (const signed char *) "s4353096_TaskBox", mainTASKBOX_STACK_SIZE, NULL,  mainTASKBOX_PRIORITY, NULL );
 }
 /*Sets the angle of pan or tilt through pwm with type 1 = pan and type 0 = tilt*/
 extern void s4353096_pantilt_angle_write(int type, int angle) {
@@ -147,7 +149,7 @@ extern void s4353096_terminal_angle_check (void) {
       break;
   }
 }
-void s4353096_TaskPanTilt(void) {
+extern void s4353096_TaskPanTilt(void) {
   S4353096_LA_CHAN0_CLR();        //Clear LA Channel 0
 	/*Set up delay until delay time*/
   //TickType_t xLastWakeTime1;
@@ -221,7 +223,7 @@ void s4353096_TaskPanTilt(void) {
       			if( xSemaphoreTake( s4353096_SemaphorePanLeft, 10 ) == pdTRUE ) {
               /* We were able to obtain the semaphore and can now access the shared resource. */
               /*Increment the pan angle by -5degrees*/
-              servo_control.set_angle_pan -= 5;
+              servo_control.set_angle_pan += 5;
               s4353096_pantilt_angle_write(1, servo_control.set_angle_pan);
 
             }
@@ -233,7 +235,7 @@ void s4353096_TaskPanTilt(void) {
       			if( xSemaphoreTake( s4353096_SemaphorePanRight, 10 ) == pdTRUE ) {
               /* We were able to obtain the semaphore and can now access the shared resource. */
               /*Increment the pan angle by -5degrees*/
-              servo_control.set_angle_pan += 5;
+              servo_control.set_angle_pan -= 5;
               s4353096_pantilt_angle_write(1, servo_control.set_angle_pan);
 
             }
@@ -252,7 +254,7 @@ void s4353096_TaskPanTilt(void) {
       			if( xSemaphoreTake( s4353096_SemaphoreTiltDown, 10 ) == pdTRUE ) {
               /* We were able to obtain the semaphore and can now access the shared resource. */
               /*Increment the pan angle by -5degrees*/
-              servo_control.set_angle_tilt -= 5;
+              servo_control.set_angle_tilt += 5;
               s4353096_pantilt_angle_write(0, servo_control.set_angle_tilt);
 
             }
@@ -264,7 +266,7 @@ void s4353096_TaskPanTilt(void) {
       			if( xSemaphoreTake( s4353096_SemaphoreTiltUp, 10 ) == pdTRUE ) {
               /* We were able to obtain the semaphore and can now access the shared resource. */
               /*Increment the pan angle by -5degrees*/
-              servo_control.set_angle_tilt += 5;
+              servo_control.set_angle_tilt -= 5;
               s4353096_pantilt_angle_write(0, servo_control.set_angle_tilt);
 
             }
@@ -274,6 +276,25 @@ void s4353096_TaskPanTilt(void) {
             if (xQueueReceive(s4353096_QueueTilt, &Recieve_PT, 10 )) {
               servo_control.set_angle_tilt = Recieve_PT.set_angle_tilt;
               s4353096_pantilt_angle_write(0, servo_control.set_angle_tilt);
+            }
+          }
+          if (s4353096_QueueBox != NULL) {	/* Check if queue exists */
+            /* Check for item received - block atmost for 10 ticks */
+            if (xQueueReceive(s4353096_QueueBox, &Recieve_PT, 10 )) {
+              servo_control.set_angle_pan = Recieve_PT.set_angle_pan;
+              s4353096_pantilt_angle_write(1, servo_control.set_angle_pan);
+              vTaskDelay(300);
+              servo_control.set_angle_tilt = Recieve_PT.set_angle_tilt;
+              s4353096_pantilt_angle_write(0, servo_control.set_angle_tilt);
+              vTaskDelay(300);
+              if (xQueueReceive(s4353096_QueueBox, &Recieve_PT, 10 )) {
+                servo_control.set_angle_pan = Recieve_PT.set_angle_pan;
+                s4353096_pantilt_angle_write(1, servo_control.set_angle_pan);
+                vTaskDelay(300);
+                servo_control.set_angle_tilt = Recieve_PT.set_angle_tilt;
+                s4353096_pantilt_angle_write(0, servo_control.set_angle_tilt);
+                vTaskDelay(300);
+              }
             }
           }
           /* Display CLI output string */
@@ -317,4 +338,47 @@ void s4353096_TaskPanTilt(void) {
     S4353096_LA_CHAN0_CLR();
     vTaskDelay(1);                																	// Mandatory Delay
   }
+}
+
+extern void s4353096_TaskBox(void) {
+	S4353096_LA_CHAN1_CLR();
+  struct PanTilt MakeBox;
+  int current_angle_pan;
+  int current_angle_tilt;
+  TickType_t xLastWakeTime1;
+  const TickType_t xFrequency1 = 50 / portTICK_PERIOD_MS;; //1000 represents 1 second delay
+  xLastWakeTime1 = xTaskGetTickCount();
+	for (;;) {
+		S4353096_LA_CHAN1_SET();      //Set LA Channel 0
+    if (s4353096_SemaphoreBox != NULL) {	/* Check if semaphore exists */
+      /* See if we can obtain the PB semaphore. If the semaphore is not available
+            wait 10 ticks to see if it becomes free. */
+
+      if( xSemaphoreTake( s4353096_SemaphoreBox, 10 ) == pdTRUE ) {
+        /* We were able to obtain the semaphore and can now access the shared resource. */
+        /*Increment the pan angle by -5degrees*/
+        HAL_GPIO_WritePin(LASER_GPIO_PORT, LASER_PIN, 1);
+        current_angle_pan = servo_control.set_angle_pan;
+        current_angle_tilt = servo_control.set_angle_tilt;
+        MakeBox.set_angle_pan = current_angle_pan + 25;
+        MakeBox.set_angle_tilt = current_angle_tilt - 18;
+        debug_printf("Current Pan:%d  Set Pan: %d    Current Tilt: %d  Set Tilt: %d\n", current_angle_pan, MakeBox.set_angle_pan, current_angle_tilt, MakeBox.set_angle_tilt);
+        if (s4353096_QueueBox != NULL) {	/* Check if queue exists */
+  				if( xQueueSendToBack(s4353096_QueueBox, ( void * ) &MakeBox, ( portTickType ) 10 ) != pdPASS ) {
+  					debug_printf("Failed to post the message, after 10 ticks.\n\r");
+  				}
+  			}
+        MakeBox.set_angle_pan = current_angle_pan;
+        MakeBox.set_angle_tilt = current_angle_tilt;
+        if (s4353096_QueueBox != NULL) {	/* Check if queue exists */
+  				if( xQueueSendToBack(s4353096_QueueBox, ( void * ) &MakeBox, ( portTickType ) 10 ) != pdPASS ) {
+  					debug_printf("Failed to post the message, after 10 ticks.\n\r");
+  				}
+  			}
+      }
+    }
+	}
+  vTaskDelayUntil( &xLastWakeTime1, xFrequency1 );                //Extra Task Delay of 3ms
+  S4353096_LA_CHAN1_CLR();
+  vTaskDelay(1);
 }

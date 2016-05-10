@@ -98,6 +98,23 @@ unsigned long ulTotalRunTime, ulStatsAsPercentage;
          format the raw data as human readable ASCII data. */
          for( x = 0; x < uxArraySize; x++ )
          {
+					 	/*Want to print in the below fashion*/
+						/* NAME | NUMBER | PRIORITY | STATE | RUNNING TIME |*/
+						/* Before this we have to work out the States appropriate char value*/
+						if (pxTaskStatusArray[x].eCurrentState == eReady) {
+
+						} else if (pxTaskStatusArray[x].eCurrentState == eBlocked) {
+
+						} else if (pxTaskStatusArray[x].eCurrentState == eSuspended) {
+
+						} else if (pxTaskStatusArray[x].eCurrentState == eDeleted) {
+
+						} else {
+							debug_printf("No State Recieved");
+						}
+
+						//debug_printf("%s\t\t%d\t\t%d\t\t%c\t\t%d",pxTaskStatusArray[x].pcTaskName,
+						//pxTaskStatusArray[x].xTaskNumber, pxTaskStatusArray[x].uxCurrentPriority, /*State value here*/, /*RunTime Here*/);
             /* What percentage of the total run time has the task used?
             This will always be rounded down to the nearest integer.
             ulTotalRunTimeDiv100 has already been divided by 100. */

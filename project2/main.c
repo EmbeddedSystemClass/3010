@@ -33,7 +33,7 @@ TIM_HandleTypeDef TIM_Init;
 void Hardware_init();
 void tim_2_init(void);
 void tim2_irqhandler (void);
-void GetRunTimeStats( void );
+extern void GetRunTimeStats( void );
 volatile unsigned long ulHighFrequencyTimerTicks;
 int main (void) {
 	BRD_init();
@@ -66,7 +66,7 @@ void Hardware_init( void ) {
 	BRD_LEDToggle();
   portENABLE_INTERRUPTS();	//Disable interrupts
 }
-void GetRunTimeStats( void ) {
+extern void GetRunTimeStats( void ) {
 TaskStatus_t *pxTaskStatusArray;
 volatile UBaseType_t uxArraySize, x;
 unsigned long ulTotalRunTime, ulStatsAsPercentage;
@@ -92,8 +92,8 @@ unsigned long ulTotalRunTime, ulStatsAsPercentage;
       ulTotalRunTime /= 100UL;
 
       /* Avoid divide by zero errors. */
-      if( ulTotalRunTime > 0 )
-      {
+      //if( ulTotalRunTime > 0 )
+      //{
          /* For each populated position in the pxTaskStatusArray array,
          format the raw data as human readable ASCII data. */
          for( x = 0; x < uxArraySize; x++ )
@@ -115,13 +115,16 @@ unsigned long ulTotalRunTime, ulStatsAsPercentage;
 
 						//debug_printf("%s\t\t%d\t\t%d\t\t%c\t\t%d",pxTaskStatusArray[x].pcTaskName,
 						//pxTaskStatusArray[x].xTaskNumber, pxTaskStatusArray[x].uxCurrentPriority, /*State value here*/, /*RunTime Here*/);
-            /* What percentage of the total run time has the task used?
+						debug_printf("%s\t\t%d\t\t%d\t\t\n",pxTaskStatusArray[x].pcTaskName,
+						pxTaskStatusArray[x].xTaskNumber, pxTaskStatusArray[x].uxCurrentPriority);
+
+						/* What percentage of the total run time has the task used?
             This will always be rounded down to the nearest integer.
             ulTotalRunTimeDiv100 has already been divided by 100. */
             ulStatsAsPercentage =
                   pxTaskStatusArray[ x ].ulRunTimeCounter / ulTotalRunTime;
 
-            if( ulStatsAsPercentage > 0UL )
+            /*if( ulStatsAsPercentage > 0UL )
             {
                debug_printf("%s\t\t%lu\t\t%lu%%\r\n",
                                  pxTaskStatusArray[ x ].pcTaskName,
@@ -129,15 +132,15 @@ unsigned long ulTotalRunTime, ulStatsAsPercentage;
                                  ulStatsAsPercentage );
             }
             else
-            {
+            {*/
                /* If the percentage is zero here then the task has
                consumed less than 1% of the total run time. */
-               debug_printf("%s\t\t%lu\t\t<1%%\r\n",
+            /*   debug_printf("%s\t\t%lu\t\t<1%%\r\n",
                                  pxTaskStatusArray[ x ].pcTaskName,
                                  pxTaskStatusArray[ x ].ulRunTimeCounter );
-            }
+            }*/
          }
-      }
+      //}
 
       /* The array is no longer needed, free the memory it consumes. */
       vPortFree( pxTaskStatusArray );

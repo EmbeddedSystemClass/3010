@@ -107,9 +107,7 @@ extern uint8_t hamming_byte_decoder(uint8_t lower, uint8_t upper) {
 		s0 = d0 ^ d1 ^ d2 ^ h0;
 		s1 = d0 ^ d1 ^ d3 ^ h1;
 		s2 = d0 ^ d2 ^ d3 ^ h2;
-		/*s0 = d3 ^ d1 ^ d0 ^ h0;
-		s1 = d3 ^ d2 ^ d0 ^ h1;
-		s2 = d3 ^ d2 ^ d1 ^ h2;*/
+
 		S = (s0 << 0) | (s1 << 1) | (s2 << 2);
 		ed0 = (1 << 0) | (1 << 1) | (0 << 2);
 		ed1 = (1 << 0) | (0 << 1) | (1 << 2);

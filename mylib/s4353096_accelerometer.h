@@ -33,7 +33,7 @@ struct Accelerometer {
 #define mainTASKACC_PRIORITY					( tskIDLE_PRIORITY + 2 )
 /* Task Stack Allocations -----------------------------------------------------*/
 #define mainTASKACC_STACK_SIZE		( configMINIMAL_STACK_SIZE * 4 )
-
+extern void GetRunTimeStats(void);
 extern void s4353096_readXYZ (void);
 extern void s4353096_TaskAccelerometer(void);
 extern void s4353096_accelerometer_init(void);

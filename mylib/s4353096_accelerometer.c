@@ -47,7 +47,7 @@ extern void s4353096_TaskAccelerometer(void) {
       /*If all semaphores are available, run multi byte read*/
       s4353096_readXYZ();
       /*If not check each semaphore individually*/
-
+			//GetRunTimeStats();
 			debug_printf("X: %d ,  Y: %d ,  Z: %d \n", Acc_vals.x_coord, Acc_vals.y_coord, Acc_vals.z_coord);
     	BRD_LEDToggle();	//Toggle LED on/off
 			vTaskDelay(10);
@@ -368,4 +368,68 @@ extern void s4353096_accelerometer_init(void) {
 	*/
 	while (HAL_I2C_GetState(&I2CHandle) != HAL_I2C_STATE_READY);
 
+
+	/*Place the Accelerometer into wake state*/
+	__HAL_I2C_CLEAR_FLAG(&I2CHandle, I2C_FLAG_AF);	//Clear Flags
+
+  I2CHandle.Instance->CR1 |= I2C_CR1_START;	// Generate the START condition
+
+  /*  Wait the START condition has been correctly sent */
+  while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_SB) == RESET);
+
+  /* Send Peripheral Device Write address */
+  I2CHandle.Instance->DR = __HAL_I2C_7BIT_ADD_WRITE(MMA8452Q_ADDRESS);
+
+  /* Wait for address to be acknowledged */
+  while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_ADDR) == RESET);
+  __HAL_I2C_CLEAR_ADDRFLAG(&I2CHandle);		//Clear ADDR Flag
+
+  /*Set First write register X_O*/
+  I2CHandle.Instance->DR = 0x0B;
+
+  /* Wait until register Address byte is transmitted */
+  while ((__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_TXE) == RESET) && (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_BTF) == RESET));
+
+
+
+
+
+  I2CHandle.Instance->DR = 0x01;
+
+  /* Wait to Write X_Value_MSB */
+	while ((__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_TXE) == RESET) && (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_BTF) == RESET));
+	I2CHandle.Instance->CR1 |= I2C_CR1_STOP;
+
+	
+	/*Place Full Scale Resolution into active state*/
+	/*Place the Accelerometer into wake state*/
+	__HAL_I2C_CLEAR_FLAG(&I2CHandle, I2C_FLAG_AF);	//Clear Flags
+
+	I2CHandle.Instance->CR1 |= I2C_CR1_START;	// Generate the START condition
+
+	/*  Wait the START condition has been correctly sent */
+	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_SB) == RESET);
+
+	/* Send Peripheral Device Write address */
+	I2CHandle.Instance->DR = __HAL_I2C_7BIT_ADD_WRITE(MMA8452Q_ADDRESS);
+
+	/* Wait for address to be acknowledged */
+	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_ADDR) == RESET);
+	__HAL_I2C_CLEAR_ADDRFLAG(&I2CHandle);		//Clear ADDR Flag
+
+	/*Set First write register X_O*/
+	I2CHandle.Instance->DR = 0x2A;
+
+	/* Wait until register Address byte is transmitted */
+	while ((__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_TXE) == RESET) && (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_BTF) == RESET));
+
+
+
+
+
+	I2CHandle.Instance->DR = 0x01;
+
+	/* Wait to Write X_Value_MSB */
+	while ((__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_TXE) == RESET) && (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_BTF) == RESET));
+	I2CHandle.Instance->CR1 |= I2C_CR1_STOP;
 }

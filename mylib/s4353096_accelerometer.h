@@ -29,6 +29,8 @@ struct Accelerometer {
   uint16_t z_coord;
   uint8_t coord_status;
 };
+SemaphoreHandle_t s4353096_SemaphoreAccRaw;		//Used to Specify Acc output
+SemaphoreHandle_t s4353096_SemaphoreAccPl;		//Used to control laser
 /* Task Priorities ------------------------------------------------------------*/
 #define mainTASKACC_PRIORITY					( tskIDLE_PRIORITY + 2 )
 /* Task Stack Allocations -----------------------------------------------------*/

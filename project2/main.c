@@ -24,7 +24,6 @@
 
 #include "s4353096_accelerometer.h"
 #include "s4353096_sysmon.h"
-#include "s4353096_cli.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -33,15 +32,12 @@
 TIM_HandleTypeDef TIM_Init;
 void Hardware_init();
 
+//volatile unsigned long ulHighFrequencyTimerTicks;
 int main (void) {
 	BRD_init();
 	Hardware_init();
-	s4353096_SemaphoreAccRaw = xSemaphoreCreateBinary();
-	s4353096_SemaphoreAccPl = xSemaphoreCreateBinary();
 	xTaskCreate( (void *) &s4353096_TaskAccelerometer, (const signed char *) "s4353096_TaskAccelerometer", mainTASKACC_STACK_SIZE, NULL,  mainTASKACC_PRIORITY, NULL );
-	xTaskCreate( (void *) &CLI_Task, (const signed char *) "CLI_Task", mainTASKCLI_STACK_SIZE, NULL,  mainTASKCLI_PRIORITY, NULL );
-	FreeRTOS_CLIRegisterCommand(&xTop);
-	FreeRTOS_CLIRegisterCommand(&xAcc);
+	//xTaskCreate( (void *) &s4353096_TaskAccelerometer, (const signed char *) "s4353096_", mainTASKACC_STACK_SIZE, NULL,  mainTASKACC_PRIORITY, NULL );
 	/* Start the scheduler.
 
 	NOTE : Tasks run in system mode and the scheduler runs in Supervisor mode.
@@ -68,6 +64,7 @@ void Hardware_init( void ) {
 	BRD_LEDToggle();
   portENABLE_INTERRUPTS();	//Disable interrupts
 }
+
 
 void vApplicationStackOverflowHook( xTaskHandle pxTask, signed char *pcTaskName ) {
 	/* This function will get called if a task overflows its stack.   If the

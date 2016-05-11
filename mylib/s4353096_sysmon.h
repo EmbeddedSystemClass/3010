@@ -20,7 +20,7 @@
 #define mainLA_CHAN0TASK1_STACK_SIZE		( configMINIMAL_STACK_SIZE * 2 )
 #define mainLA_CHAN1TASK2_STACK_SIZE		( configMINIMAL_STACK_SIZE * 2 )
 #define mainLA_CHAN2TASK3_STACK_SIZE		( configMINIMAL_STACK_SIZE * 2 )
-
+#include <stdio.h>
 /*Define associated BRD defines for GPIO ports to system monitor channels*/
 #define LA_CHAN0_PIN BRD_A3_PIN
 #define LA_CHAN0_GPIO_PORT BRD_A3_GPIO_PORT
@@ -36,6 +36,14 @@
 #define LA_CHAN2_GPIO_PORT BRD_A5_GPIO_PORT
 #define __LA_CHAN2_GPIO_CLK() __BRD_A5_GPIO_CLK()
 #define LA_CHAN2_EXTI_IRQ BRD_A5_EXTI_IRQ
+
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_YELLOW  "\x1b[33m"
+#define ANSI_COLOR_BLUE    "\x1b[34m"
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_CYAN    "\x1b[36m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
 /*Define CLR and SET for system monitor pins*/
 #define S4353096_LA_CHAN0_CLR() {HAL_GPIO_WritePin(LA_CHAN0_GPIO_PORT, LA_CHAN0_PIN, 0);}
 #define S4353096_LA_CHAN0_SET() {HAL_GPIO_WritePin(LA_CHAN0_GPIO_PORT, LA_CHAN0_PIN, 1);}
@@ -47,3 +55,4 @@
 /* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 void s4353096_sysmon_init(void);
+extern void GetTopList( void );

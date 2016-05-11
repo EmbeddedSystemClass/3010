@@ -40,18 +40,24 @@ struct Accelerometer Acc_vals;
   * @retval None
   */
 extern void s4353096_TaskAccelerometer(void) {
-		S4353096_LA_CHAN0_CLR();
+		//S4353096_LA_CHAN0_CLR();
   	for(;;) {
-			S4353096_LA_CHAN0_SET();
+			//S4353096_LA_CHAN0_SET();
       /*Read From the X,Y & Z Registers*/
       /*If all semaphores are available, run multi byte read*/
-      s4353096_readXYZ();
+			if (s4353096_SemaphoreAccRaw != NULL) {	/* Check if semaphore exists */
+				/* See if we can obtain the PB semaphore. If the semaphore is not available
+							wait 10 ticks to see if it becomes free. */
+
+				if( xSemaphoreTake( s4353096_SemaphoreAccRaw, 10 ) == pdTRUE ) {
+					s4353096_readXYZ();
+					debug_printf("X: %d ,  Y: %d ,  Z: %d \n", Acc_vals.x_coord, Acc_vals.y_coord, Acc_vals.z_coord);
+				}
+			}
       /*If not check each semaphore individually*/
-			GetRunTimeStats();
-			//debug_printf("X: %d ,  Y: %d ,  Z: %d \n", Acc_vals.x_coord, Acc_vals.y_coord, Acc_vals.z_coord);
     	BRD_LEDToggle();	//Toggle LED on/off
 			vTaskDelay(10);
-			S4353096_LA_CHAN0_CLR();
+			//S4353096_LA_CHAN0_CLR();
     	vTaskDelay(1);		//Delay for 1s (1000ms)
 	}
 }
@@ -71,7 +77,7 @@ extern void s4353096_readXYZ (void) {
   __HAL_I2C_CLEAR_ADDRFLAG(&I2CHandle);		//Clear ADDR Flag
 
   /*Set First read register X_OUT*/
-  I2CHandle.Instance->DR = X_OUT_START;
+  I2CHandle.Instance->DR = 0x0D;
 
   /* Wait until register Address byte is transmitted */
   while ((__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_TXE) == RESET) && (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_BTF) == RESET));

@@ -27,18 +27,29 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+/* Task Priorities ------------------------------------------------------------*/
+#define mainTASKCLI_PRIORITY					( tskIDLE_PRIORITY + 1 )
+/* Task Stack Allocations -----------------------------------------------------*/
+#define mainTASKCLI_STACK_SIZE		( configMINIMAL_STACK_SIZE * 2 )
 extern BaseType_t prvLaserCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvPanCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvTiltCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvBoxCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvTop(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
-
+extern BaseType_t prvAcc(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+void CLI_Task(void);
 
 CLI_Command_Definition_t xTop = {	/* Structure that defines the "echo" command line command. */
-	"top"
+	"top",
 	"top: List of the current number of tasks running in the format of NAME | NUMBER | PRIORITY | STATE | RUNNING TIME |\r\n",
 	prvTop,
 	0
+};
+CLI_Command_Definition_t xAcc = {	/* Structure that defines the "echo" command line command. */
+	"acc",
+	"acc: ""raw"" displays raw X,Y,Z Accelerometer values and ""pl""...\r\n",
+	prvAcc,
+	1
 };
 CLI_Command_Definition_t xLaser = {	/* Structure that defines the "echo" command line command. */
 	"laser",

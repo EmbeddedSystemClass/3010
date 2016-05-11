@@ -47,8 +47,8 @@ extern void s4353096_TaskAccelerometer(void) {
       /*If all semaphores are available, run multi byte read*/
       s4353096_readXYZ();
       /*If not check each semaphore individually*/
-			//GetRunTimeStats();
-			debug_printf("X: %d ,  Y: %d ,  Z: %d \n", Acc_vals.x_coord, Acc_vals.y_coord, Acc_vals.z_coord);
+			GetRunTimeStats();
+			//debug_printf("X: %d ,  Y: %d ,  Z: %d \n", Acc_vals.x_coord, Acc_vals.y_coord, Acc_vals.z_coord);
     	BRD_LEDToggle();	//Toggle LED on/off
 			vTaskDelay(10);
 			S4353096_LA_CHAN0_CLR();
@@ -400,7 +400,7 @@ extern void s4353096_accelerometer_init(void) {
 	while ((__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_TXE) == RESET) && (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_BTF) == RESET));
 	I2CHandle.Instance->CR1 |= I2C_CR1_STOP;
 
-	
+
 	/*Place Full Scale Resolution into active state*/
 	/*Place the Accelerometer into wake state*/
 	__HAL_I2C_CLEAR_FLAG(&I2CHandle, I2C_FLAG_AF);	//Clear Flags

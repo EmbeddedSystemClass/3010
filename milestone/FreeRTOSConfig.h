@@ -62,7 +62,7 @@
 
     1 tab == 4 spaces!
 */
-
+#include "board.h"
 #ifndef FREERTOS_CONFIG_H
 #define FREERTOS_CONFIG_H
 
@@ -106,7 +106,7 @@
 
 /*Set Up Timer for Run Time Stats*/
 #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() ( ulHighFrequencyTimerTicks = 0UL )
-#define portGET_RUN_TIME_COUNTER_VALUE()	ulHighFrequencyTimerTicks
+#define portGET_RUN_TIME_COUNTER_VALUE()	HAL_GetTick()
 
 /* Set the following definitions to 1 to include the API function, or zero
 to exclude the API function. */
@@ -153,6 +153,6 @@ standard names. */
 #define vPortSVCHandler SVC_Handler
 #define xPortPendSVHandler PendSV_Handler
 #define xPortSysTickHandler SysTick_Handler
-extern volatile unsigned long ulHighFrequencyTimerTicks;
+volatile unsigned long ulHighFrequencyTimerTicks;
 #endif /* FREERTOS_CONFIG_H */
 

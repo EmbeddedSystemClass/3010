@@ -31,7 +31,15 @@ extern BaseType_t prvLaserCommand(char *pcWriteBuffer, size_t xWriteBufferLen, c
 extern BaseType_t prvPanCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvTiltCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvBoxCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+extern BaseType_t prvTop(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 
+
+CLI_Command_Definition_t xTop = {	/* Structure that defines the "echo" command line command. */
+	"top"
+	"top: List of the current number of tasks running in the format of NAME | NUMBER | PRIORITY | STATE | RUNNING TIME |\r\n",
+	prvTop,
+	0
+};
 CLI_Command_Definition_t xLaser = {	/* Structure that defines the "echo" command line command. */
 	"laser",
 	"laser: Change laser to specified on or off state\r\n",

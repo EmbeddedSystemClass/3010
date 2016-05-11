@@ -139,3 +139,22 @@ extern BaseType_t prvBoxCommand(char *pcWriteBuffer, size_t xWriteBufferLen, con
 	/* Only return pdTRUE, if more strings need to be printed */
 	return pdFALSE;
 }
+extern BaseType_t prvTop(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+
+	long lParam_len;
+	const char *cCmd_string;
+
+	/* Get parameters from command string */
+	cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
+
+	/* Write command echo output string to write buffer. */
+	xWriteBufferLen = sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+  /* Set the semaphore as available if the semaphore exists*/
+	if (s4353096_SemaphoreLaser != NULL) {	/* Check if semaphore exists */
+		xSemaphoreGive(s4353096_SemaphoreLaser);		/* Give PB Semaphore from ISR*/
+		//debug_printf("Triggered \n\r");    //Print press count value
+	}
+	/* Return pdFALSE, as there are no more strings to return */
+	/* Only return pdTRUE, if more strings need to be printed */
+	return pdFALSE;
+}

@@ -34,7 +34,7 @@ void Hardware_init();
 void tim_2_init(void);
 void tim2_irqhandler (void);
 extern void GetRunTimeStats( void );
-volatile unsigned long ulHighFrequencyTimerTicks;
+//volatile unsigned long ulHighFrequencyTimerTicks;
 int main (void) {
 	BRD_init();
 	Hardware_init();
@@ -70,6 +70,7 @@ extern void GetRunTimeStats( void ) {
 TaskStatus_t *pxTaskStatusArray;
 volatile UBaseType_t uxArraySize, x;
 unsigned long ulTotalRunTime, ulStatsAsPercentage;
+char* state;
 
    /* Make sure the write buffer does not contain a string. */
 
@@ -96,27 +97,29 @@ unsigned long ulTotalRunTime, ulStatsAsPercentage;
       //{
          /* For each populated position in the pxTaskStatusArray array,
          format the raw data as human readable ASCII data. */
+				 debug_printf("Task Name \t\tTask #\tPrioriy\t\tState    \tRunning Time\n");
+				 debug_printf("--------------------------------------------------------------------------------------\n");
          for( x = 0; x < uxArraySize; x++ )
          {
 					 	/*Want to print in the below fashion*/
 						/* NAME | NUMBER | PRIORITY | STATE | RUNNING TIME |*/
 						/* Before this we have to work out the States appropriate char value*/
 						if (pxTaskStatusArray[x].eCurrentState == eReady) {
-
+							state = "Ready";
 						} else if (pxTaskStatusArray[x].eCurrentState == eBlocked) {
-
+							state = "Blocked";
 						} else if (pxTaskStatusArray[x].eCurrentState == eSuspended) {
-
-						} else if (pxTaskStatusArray[x].eCurrentState == eDeleted) {
-
+							state = "Suspended";
+						} else if (pxTaskStatusArray[x].eCurrentState == eRunning) {
+							state = "Running";
 						} else {
 							debug_printf("No State Recieved");
 						}
 
 						//debug_printf("%s\t\t%d\t\t%d\t\t%c\t\t%d",pxTaskStatusArray[x].pcTaskName,
 						//pxTaskStatusArray[x].xTaskNumber, pxTaskStatusArray[x].uxCurrentPriority, /*State value here*/, /*RunTime Here*/);
-						debug_printf("%s\t\t%d\t\t%d\t\t\n",pxTaskStatusArray[x].pcTaskName,
-						pxTaskStatusArray[x].xTaskNumber, pxTaskStatusArray[x].uxCurrentPriority);
+						debug_printf("%-11s\t\t%-2.0d\t%-2.0d\t\t%-9s\t%-lu\n",pxTaskStatusArray[x].pcTaskName,
+						pxTaskStatusArray[x].xTaskNumber, pxTaskStatusArray[x].uxCurrentPriority, state, pxTaskStatusArray[x].ulRunTimeCounter);
 
 						/* What percentage of the total run time has the task used?
             This will always be rounded down to the nearest integer.
@@ -140,6 +143,7 @@ unsigned long ulTotalRunTime, ulStatsAsPercentage;
                                  pxTaskStatusArray[ x ].ulRunTimeCounter );
             }*/
          }
+				 debug_printf("\n");
       //}
 
       /* The array is no longer needed, free the memory it consumes. */
@@ -147,50 +151,6 @@ unsigned long ulTotalRunTime, ulStatsAsPercentage;
    }
 }
 
-void tim_2_init(void) {
-	unsigned short PrescalerValue;
-	/* Timer 2 clock enable */
-__TIM2_CLK_ENABLE();
-
-/* Compute the prescaler value */
-	PrescalerValue = (uint16_t) ((SystemCoreClock /2)/1000000) - 1;		//Set clock prescaler to 50kHz - SystemCoreClock is the system clock frequency.
-
-	/* Time base configuration */
-TIM_Init.Instance = TIM2;				//Enable Timer 2
-	TIM_Init.Init.Period = 1000000/1000;			//Set period count to be 1ms, so timer interrupt occurs every 1ms.
-	TIM_Init.Init.Prescaler = PrescalerValue;	//Set presale value
-	TIM_Init.Init.ClockDivision = 0;			//Set clock division
-TIM_Init.Init.RepetitionCounter = 0;	// Set Reload Value
-	TIM_Init.Init.CounterMode = TIM_COUNTERMODE_UP;	//Set timer to count up.
-
-/* Initialise Timer */
-HAL_TIM_Base_Init(&TIM_Init);
-
-/* Set priority of Timer 2 update Interrupt [0 (HIGH priority) to 15(LOW priority)] */
-/* 	DO NOT SET INTERRUPT PRIORITY HIGHER THAN 3 */
-HAL_NVIC_SetPriority(TIM2_IRQn, 10, 0);		//Set Main priority ot 10 and sub-priority ot 0.
-
-/* Enable timer update interrupt and interrupt vector for Timer  */
-NVIC_SetVector(TIM2_IRQn, (uint32_t)&tim2_irqhandler);
-NVIC_EnableIRQ(TIM2_IRQn);
-
-/* Start Timer */
-HAL_TIM_Base_Start_IT(&TIM_Init);
-}
-
-/**
-* @brief  Timer 2 Interrupt handler
-* @param  None.
-* @retval None
-*/
-void tim2_irqhandler (void) {
-
-//Clear Update Flag
-__HAL_TIM_CLEAR_IT(&TIM_Init, TIM_IT_UPDATE);
-ulHighFrequencyTimerTicks++;		//increment counter, when the interrupt occurs
-
-
-}
 void vApplicationStackOverflowHook( xTaskHandle pxTask, signed char *pcTaskName ) {
 	/* This function will get called if a task overflows its stack.   If the
 	parameters are corrupt then inspect pxCurrentTCB to find which was the

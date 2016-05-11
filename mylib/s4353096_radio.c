@@ -46,6 +46,9 @@ static SPI_HandleTypeDef SpiHandle;
 
 unsigned char s4353096_txpacket[32];
 /*Initialises Relevent GPIO/SPI Ports and sets both FSM states to IDLE*/
+extern void s4353096_TaskAccelerometer(void) {
+
+
 extern void s4353096_radio_init(void) {
   GPIO_InitTypeDef GPIO_spi;
   /*Initialise radio FSM*/

@@ -41,13 +41,46 @@
  ******************************************************************************
  */
 /* Includes ------------------------------------------------------------------*/
+/* Scheduler includes. */
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+#include "semphr.h"
+
+#include "FreeRTOS_CLI.h"
 #include "s4353096_radio.h"
 static SPI_HandleTypeDef SpiHandle;
 
 unsigned char s4353096_txpacket[32];
 /*Initialises Relevent GPIO/SPI Ports and sets both FSM states to IDLE*/
 
+void s4353096_TaskRadio (void) {
+  unsigned char s4353096_tx_addr[] = {0x22, 0x91, 0x54, 0x43, 0x00};
+  unsigned char s4353096_rx_addr[] = {0x07, 0x35, 0x22, 0x11, 0x00};
+  unsigned char s4353096_chan = 50;
+  /*unsigned char s4353096_txpacket[32];
+  int s4353096_radio_fsmcurrentstate;
+  int s4353096_radio_rxstatus;
+  unsigned char s4353096_rx_buffer[32];
+  unsigned char s4353096_tx_buffer[32];
+  unsigned char s4353096_payload_buffer[8];
+  unsigned char s4353096_addr_get[4];*/
+  s4353096_radio_setchan(s4353096_chan);
+	s4353096_radio_settxaddress(s4353096_tx_addr);
+	s4353096_radio_setrxaddress(s4353096_rx_addr);
+  for(;;) {
+    s4353096_radio_setfsmrx();
+		s4353096_radio_fsmprocessing();
+    s4353096_radio_fsmprocessing();
+		if (s4353096_radio_getrxstatus() == 1) { //Checks if packet has been recieved
+			/*Prints recieved packet to console*/
+			s4353096_radio_getpacket(s4353096_rx_buffer);
+		} else {
 
+		}
+  }
+  vTaskDelay(10);
+}
 extern void s4353096_radio_init(void) {
   GPIO_InitTypeDef GPIO_spi;
   /*Initialise radio FSM*/
@@ -77,7 +110,7 @@ extern void s4353096_radio_fsmprocessing(void) {
       if (radio_fsm_getstate() == RADIO_FSM_IDLE_STATE) {
         if (radio_fsm_setstate(RADIO_FSM_TX_STATE) == RADIO_FSM_ERROR) {
             debug_printf("ERROR: Cannot set Radio FSM RX state\n\r");
-            HAL_Delay(100);
+            //HAL_Delay(100);
         } else {
             /*Has just been put into TX State and has yet to transmit the packet
             Toggle the LED to indicate about to transmit*/
@@ -95,7 +128,7 @@ extern void s4353096_radio_fsmprocessing(void) {
       if ((radio_fsm_getstate() == RADIO_FSM_IDLE_STATE) || (radio_fsm_getstate() == RADIO_FSM_WAIT_STATE)) {
         if (radio_fsm_setstate(RADIO_FSM_RX_STATE) == RADIO_FSM_ERROR) {
           debug_printf("ERROR: Cannot set Radio FSM RX state\n\r");
-          HAL_Delay(100);
+          //HAL_Delay(100);
         } else {
           /*The below line is possibly redundant*/
           radio_fsm_setstate(RADIO_FSM_RX_STATE);
@@ -115,7 +148,7 @@ extern void s4353096_radio_fsmprocessing(void) {
         } else {
           s4353096_radio_rxstatus = 0;
         }
-        HAL_Delay(10);
+        //HAL_Delay(10);
       } else {
 
       }

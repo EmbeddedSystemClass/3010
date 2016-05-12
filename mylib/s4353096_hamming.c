@@ -28,6 +28,19 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* Private function prototypes -----------------------------------------------*/
+/*Place the character/byte you would like to encode into c and the value of the crc into crc*/
+extern uint16_t crc_update(uint16_t crc, uint8_t c) {
+	int j;
+	crc ^= (c << 8);
+	for (j = 0; j < 8; j++) {
+		if (crc & 0x8000) {
+			crc = (crc << 1) ^ POLY;
+		} else {
+			crc = (crc << 1);
+		}
+	}
+	return(crc);
+}
 extern uint16_t hamming_byte_encoder(uint8_t input) {
 
 	uint16_t out;

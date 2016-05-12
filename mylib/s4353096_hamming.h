@@ -26,8 +26,10 @@
 #include "semphr.h"
 
 #include "FreeRTOS_CLI.h"
+#define POLY 0x1021 // CRC-CCITT
 SemaphoreHandle_t s4353096_SemaphoreHamEnc;		//Used to show the Hammming encoded value of a given hex byte
 SemaphoreHandle_t s4353096_SemaphoreHamDec;		//Used to show the Hamming decoded value of a given 16bit hex or decimal value
 extern uint16_t hamming_byte_encoder(uint8_t input);
 uint8_t hamming_hbyte_encoder(uint8_t in);
 extern uint8_t hamming_byte_decoder(uint8_t lower, uint8_t upper);
+extern uint16_t crc_update(uint16_t crc, uint8_t c);

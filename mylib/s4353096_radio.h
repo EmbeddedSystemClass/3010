@@ -60,6 +60,7 @@
  unsigned char s4353096_payload_buffer[8];
  unsigned char s4353096_addr_get[4];
 
+void s4353096_TaskRadio (void);
 extern void s4353096_radio_init(void);
 extern void s4353096_radio_fsmprocessing();
 extern void s4353096_radio_sendpacket(char	chan,	unsigned char *addr,

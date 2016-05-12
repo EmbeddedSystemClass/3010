@@ -26,6 +26,7 @@
 #include "s4353096_sysmon.h"
 #include "s4353096_cli.h"
 #include "s4353096_hamming.h"
+#include "s4353096_radio.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -33,7 +34,9 @@
 /* Private function prototypes -----------------------------------------------*/
 TIM_HandleTypeDef TIM_Init;
 void Hardware_init();
-
+TaskHandle_t HandleTaskAccelerometer;
+TaskHandle_t HandleCLI_Task;
+TaskHandle_t HandleTaskRadio;
 int main (void) {
 	BRD_init();
 	Hardware_init();
@@ -41,8 +44,9 @@ int main (void) {
 	s4353096_SemaphoreAccPl = xSemaphoreCreateBinary();
 	s4353096_SemaphoreHamEnc = xSemaphoreCreateBinary();
 	s4353096_SemaphoreHamDec = xSemaphoreCreateBinary();
-	xTaskCreate( (void *) &s4353096_TaskAccelerometer, (const signed char *) "s4353096_TaskAccelerometer", mainTASKACC_STACK_SIZE, NULL,  mainTASKACC_PRIORITY, NULL );
-	xTaskCreate( (void *) &CLI_Task, (const signed char *) "CLI_Task", mainTASKCLI_STACK_SIZE, NULL,  mainTASKCLI_PRIORITY, NULL );
+	xTaskCreate( (void *) &s4353096_TaskAccelerometer, (const signed char *) "s4353096_TaskAccelerometer", mainTASKACC_STACK_SIZE, NULL,  mainTASKACC_PRIORITY, HandleTaskAccelerometer );
+	xTaskCreate( (void *) &CLI_Task, (const signed char *) "CLI_Task", mainTASKCLI_STACK_SIZE, NULL,  mainTASKCLI_PRIORITY, HandleCLI_Task );
+	xTaskCreate( (void *) &s4353096_TaskRadio, (const signed char *) "s4353096_TaskRadio", mainTASKCLI_STACK_SIZE, NULL,  mainTASKCLI_PRIORITY, HandleTaskRadio );
 	FreeRTOS_CLIRegisterCommand(&xTop);
 	FreeRTOS_CLIRegisterCommand(&xAcc);
 	FreeRTOS_CLIRegisterCommand(&xHamenc);
@@ -70,6 +74,7 @@ void Hardware_init( void ) {
 	BRD_LEDOff();				//Turn off Blue LED
 	s4353096_sysmon_init();
 	s4353096_accelerometer_init();
+	s4353096_radio_init();
 	BRD_LEDToggle();
   portENABLE_INTERRUPTS();	//Disable interrupts
 }

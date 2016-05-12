@@ -253,6 +253,7 @@ void CLI_Task(void) {
 					/* Display CLI output string */
 					xReturned = FreeRTOS_CLIProcessCommand( cInputString, pcOutputString, configCOMMAND_INT_MAX_OUTPUT_SIZE );
 					/*Display input parameter*/
+
 					//debug_printf("Input Parameter(s): %s\n\n\r",pcOutputString);
 					vTaskDelay(5);	//Must delay between debug_printfs.
 					/*Process CLI Command here  if command doesn't go to a different task*/

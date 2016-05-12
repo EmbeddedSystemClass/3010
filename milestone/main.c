@@ -43,12 +43,14 @@ int main (void) {
 	xTaskCreate( (void *) &s4353096_TaskAccelerometer, (const signed char *) "s4353096_TaskAccelerometer", mainTASKACC_STACK_SIZE, NULL,  mainTASKACC_PRIORITY, &xHandleAccelerometer);
 	xTaskCreate( (void *) &CLI_Task, (const signed char *) "CLI_Task", mainTASKCLI_STACK_SIZE, NULL,  mainTASKCLI_PRIORITY, &xHandleCLI);
 	xTaskCreate( (void *) &s4353096_TaskRadio, (const signed char *) "s4353096_TaskRadio", mainTASKCLI_STACK_SIZE, NULL,  mainTASKCLI_PRIORITY, &xHandleRadio);
-	//GetTopList();
+	SetNameHandle();
 	FreeRTOS_CLIRegisterCommand(&xTop);
 	FreeRTOS_CLIRegisterCommand(&xAcc);
 	FreeRTOS_CLIRegisterCommand(&xHamenc);
 	FreeRTOS_CLIRegisterCommand(&xHamdec);
 	FreeRTOS_CLIRegisterCommand(&xTracking);
+	FreeRTOS_CLIRegisterCommand(&xResume);
+	FreeRTOS_CLIRegisterCommand(&xSuspend);
 	/* Start the scheduler.
 
 	NOTE : Tasks run in system mode and the scheduler runs in Supervisor mode.

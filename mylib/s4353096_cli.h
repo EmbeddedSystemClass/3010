@@ -40,8 +40,22 @@ extern BaseType_t prvAcc(char *pcWriteBuffer, size_t xWriteBufferLen, const char
 extern BaseType_t prvHamenc(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvHamdec(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvTracking(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+extern BaseType_t prvSuspend(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+extern BaseType_t prvResume(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 void CLI_Task(void);
 
+CLI_Command_Definition_t xResume = {	/* Structure that defines the "echo" command line command. */
+	"resume",
+	"resume: Resumes the task associated with the given task name\r\n",
+	prvResume,
+	1
+};
+CLI_Command_Definition_t xSuspend = {	/* Structure that defines the "echo" command line command. */
+	"suspend",
+	"suspend: Suspends the task associated with the given task name\r\n",
+	prvTracking,
+	1
+};
 CLI_Command_Definition_t xTracking = {	/* Structure that defines the "echo" command line command. */
 	"tracking",
 	"tracking: Toggles tracking based on input ""on"" or ""off""\r\n",

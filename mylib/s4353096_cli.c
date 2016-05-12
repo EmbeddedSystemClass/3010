@@ -223,6 +223,27 @@ extern BaseType_t prvHamdec(char *pcWriteBuffer, size_t xWriteBufferLen, const c
 	/* Only return pdTRUE, if more strings need to be printed */
 	return pdFALSE;
 }
+extern BaseType_t prvResume(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+
+	long lParam_len;
+	const char *cCmd_string;
+	volatile UBaseType_t uxArraySize, x;
+
+	/* Get parameters from command string */
+	cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
+
+	/* Write command echo output string to write buffer. */
+	xWriteBufferLen = sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+  uxArraySize = uxTaskGetNumberOfTasks();
+	for(x = 0; x < uxArraySize; x++) {
+		TaskValues.
+	}
+
+	/* Return pdFALSE, as there are no more strings to return */
+	/* Only return pdTRUE, if more strings need to be printed */
+	return pdFALSE;
+}
+
 extern BaseType_t prvBoxCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 
 	/* Write command echo output string to write buffer. */

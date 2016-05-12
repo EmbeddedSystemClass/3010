@@ -47,7 +47,34 @@ void s4353096_sysmon_init(void) {
   GPIO_InitStructure.Pin = LA_CHAN2_PIN;
   HAL_GPIO_Init(LA_CHAN2_GPIO_PORT, &GPIO_InitStructure);
 }
+extern void SetNameHandle(void) {
+  TaskStatus_t *pxTaskStatusArray;
+  volatile UBaseType_t uxArraySize, x;
+  unsigned long ulTotalRunTime, ulStatsAsPercentage;
+  char* state;
+  /* Make sure the write buffer does not contain a string. */
 
+  /* Take a snapshot of the number of tasks in case it changes while this
+  function is executing. */
+  uxArraySize = uxTaskGetNumberOfTasks();
+
+  /* Allocate a TaskStatus_t structure for each task.  An array could be
+  allocated statically at compile time. */
+  pxTaskStatusArray = pvPortMalloc( uxArraySize * sizeof( TaskStatus_t ) );
+  if( pxTaskStatusArray != NULL )
+  {
+     /* Generate raw status information about each task. */
+     uxArraySize = uxTaskGetSystemState( pxTaskStatusArray,
+                                uxArraySize,
+                                &ulTotalRunTime );
+     for( x = 0; x < uxArraySize; x++) {
+       TaskValues.TaskNames[x] = pxTaskStatusArray[x].pcTaskName;
+       TaskValues.TaskHandles[x] = pxTaskStatusArray[x].xHandle;
+     }
+     /* The array is no longer needed, free the memory it consumes. */
+     vPortFree( pxTaskStatusArray );
+  }
+}
 extern void GetTopList( void ) {
 TaskStatus_t *pxTaskStatusArray;
 volatile UBaseType_t uxArraySize, x;
@@ -70,12 +97,6 @@ char* state;
       uxArraySize = uxTaskGetSystemState( pxTaskStatusArray,
                                  uxArraySize,
                                  &ulTotalRunTime );
-
-      /* For percentage calculations. */
-
-      /* Avoid divide by zero errors. */
-      //if( ulTotalRunTime > 0 )
-      //{
          /* For each populated position in the pxTaskStatusArray array,
          format the raw data as human readable ASCII data. */
 				 debug_printf("Task Name \t\t\t\tTask #\tPrioriy\t\tState    \tRunning Time\n");
@@ -109,34 +130,8 @@ char* state;
 							debug_printf("No State Recieved\n");
 						}
 
-						//debug_printf("%s\t\t%d\t\t%d\t\t%c\t\t%d",pxTaskStatusArray[x].pcTaskName,
-						//pxTaskStatusArray[x].xTaskNumber, pxTaskStatusArray[x].uxCurrentPriority, /*State value here*/, /*RunTime Here*/);
-
-
-						/* What percentage of the total run time has the task used?
-            This will always be rounded down to the nearest integer.
-            ulTotalRunTimeDiv100 has already been divided by 100. */
-            ulStatsAsPercentage =
-                  pxTaskStatusArray[ x ].ulRunTimeCounter / ulTotalRunTime;
-
-            /*if( ulStatsAsPercentage > 0UL )
-            {
-               debug_printf("%s\t\t%lu\t\t%lu%%\r\n",
-                                 pxTaskStatusArray[ x ].pcTaskName,
-                                 pxTaskStatusArray[ x ].ulRunTimeCounter,
-                                 ulStatsAsPercentage );
-            }
-            else
-            {*/
-               /* If the percentage is zero here then the task has
-               consumed less than 1% of the total run time. */
-            /*   debug_printf("%s\t\t%lu\t\t<1%%\r\n",
-                                 pxTaskStatusArray[ x ].pcTaskName,
-                                 pxTaskStatusArray[ x ].ulRunTimeCounter );
-            }*/
          }
 				 debug_printf("\n\n");
-      //}
 
       /* The array is no longer needed, free the memory it consumes. */
       vPortFree( pxTaskStatusArray );

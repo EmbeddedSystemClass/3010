@@ -58,12 +58,14 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
-/*struct Tasks {
+struct Tasks {
 	TaskHandle_t TaskHandles[10];
-};*/
+  const char* TaskNames[10];
+};
 TaskHandle_t xHandleCLI;
 TaskHandle_t xHandleAccelerometer;
 TaskHandle_t xHandleRadio;
-
+struct Tasks TaskValues;
 void s4353096_sysmon_init(void);
 extern void GetTopList( void );
+extern void SetNameHandle(void);

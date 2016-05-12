@@ -15,7 +15,10 @@
 	*	decodes input bytes
   ******************************************************************************
  */
-
+/*struct Hamming {
+  uint16_t hamming_encode; //10bits for
+  uint16_t hamming_decode;
+}*/
 extern uint16_t hamming_byte_encoder(uint8_t input);
 uint8_t hamming_hbyte_encoder(uint8_t in);
 extern uint8_t hamming_byte_decoder(uint8_t lower, uint8_t upper);

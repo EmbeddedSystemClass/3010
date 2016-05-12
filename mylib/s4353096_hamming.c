@@ -182,4 +182,3 @@ uint16_t hamming_error_insertion(uint8_t error_bit, uint16_t output) {
 	/*skip error insertion value*/
 	/*else insert error*/
 }
-//uint8_t hamming_hbyte_encoder(uint8_t in)

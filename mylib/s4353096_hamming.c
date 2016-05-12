@@ -121,7 +121,6 @@ extern uint8_t hamming_byte_decoder(uint8_t lower, uint8_t upper) {
 		if (pr == p0) {
 			if (S == 0x00) {
 				/*No bit error */
-				debug_printf("No error\n");
 			} else {
 				/*2 bit error*/
 				debug_printf("2 Bit error\n");
@@ -174,8 +173,9 @@ extern uint8_t hamming_byte_decoder(uint8_t lower, uint8_t upper) {
 	C = (c_low & 0xFF) | (c_up << 8);
 	R = (lower & 0xFF) | (upper << 8);
 	E = R ^ C;
-	decode_byte = (c_up & 0xF0) | ((c_low & 0xF0 ) >> 4);
-	debug_printf("RECIEVED FROM LASER: %c - RAW: %04x (ErrMask %04x)\n", decode_byte, R, E);
+	decode_byte = (c_up & 0xF0) ^ ((c_low & 0xF0 ) >> 4);
+	return decode_byte;
+	//debug_printf("RECIEVED FROM LASER: %c - RAW: %04x (ErrMask %04x)\n", decode_byte, R, E);
 }
 /*Inserts an error into the given hex bit on the given transmit value, and returns the new error including output*/
 uint16_t hamming_error_insertion(uint8_t error_bit, uint16_t output) {

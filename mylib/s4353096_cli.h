@@ -37,8 +37,22 @@ extern BaseType_t prvTiltCommand(char *pcWriteBuffer, size_t xWriteBufferLen, co
 extern BaseType_t prvBoxCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvTop(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvAcc(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+extern BaseType_t prvHamenc(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+extern BaseType_t prvHamdec(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 void CLI_Task(void);
 
+CLI_Command_Definition_t xHamenc = {	/* Structure that defines the "echo" command line command. */
+	"hamenc",
+	"hamenc: Hamming encoded value of a 8 bit Hex value\r\n",
+	prvHamenc,
+	1
+};
+CLI_Command_Definition_t xHamdec = {	/* Structure that defines the "echo" command line command. */
+	"hamdec",
+	"hamdec: Hamming decoded value of a 16bit Hex or Decimal value\r\n",
+	prvHamdec,
+	1
+};
 CLI_Command_Definition_t xTop = {	/* Structure that defines the "echo" command line command. */
 	"top",
 	"top: List of the current number of tasks running in the format of NAME | NUMBER | PRIORITY | STATE | RUNNING TIME |\r\n",

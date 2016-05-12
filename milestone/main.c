@@ -25,6 +25,7 @@
 #include "s4353096_accelerometer.h"
 #include "s4353096_sysmon.h"
 #include "s4353096_cli.h"
+#include "s4353096_hamming.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -38,10 +39,14 @@ int main (void) {
 	Hardware_init();
 	s4353096_SemaphoreAccRaw = xSemaphoreCreateBinary();
 	s4353096_SemaphoreAccPl = xSemaphoreCreateBinary();
+	s4353096_SemaphoreHamEnc = xSemaphoreCreateBinary();
+	s4353096_SemaphoreHamDec = xSemaphoreCreateBinary();
 	xTaskCreate( (void *) &s4353096_TaskAccelerometer, (const signed char *) "s4353096_TaskAccelerometer", mainTASKACC_STACK_SIZE, NULL,  mainTASKACC_PRIORITY, NULL );
 	xTaskCreate( (void *) &CLI_Task, (const signed char *) "CLI_Task", mainTASKCLI_STACK_SIZE, NULL,  mainTASKCLI_PRIORITY, NULL );
 	FreeRTOS_CLIRegisterCommand(&xTop);
 	FreeRTOS_CLIRegisterCommand(&xAcc);
+	FreeRTOS_CLIRegisterCommand(&xHamenc);
+	FreeRTOS_CLIRegisterCommand(&xHamdec);
 	/* Start the scheduler.
 
 	NOTE : Tasks run in system mode and the scheduler runs in Supervisor mode.

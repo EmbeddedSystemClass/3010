@@ -34,23 +34,21 @@
 /* Private function prototypes -----------------------------------------------*/
 TIM_HandleTypeDef TIM_Init;
 void Hardware_init();
-TaskHandle_t HandleTaskAccelerometer;
-TaskHandle_t HandleCLI_Task;
-TaskHandle_t HandleTaskRadio;
 int main (void) {
 	BRD_init();
 	Hardware_init();
 	s4353096_SemaphoreAccRaw = xSemaphoreCreateBinary();
 	s4353096_SemaphoreAccPl = xSemaphoreCreateBinary();
-	s4353096_SemaphoreHamEnc = xSemaphoreCreateBinary();
-	s4353096_SemaphoreHamDec = xSemaphoreCreateBinary();
-	xTaskCreate( (void *) &s4353096_TaskAccelerometer, (const signed char *) "s4353096_TaskAccelerometer", mainTASKACC_STACK_SIZE, NULL,  mainTASKACC_PRIORITY, HandleTaskAccelerometer );
-	xTaskCreate( (void *) &CLI_Task, (const signed char *) "CLI_Task", mainTASKCLI_STACK_SIZE, NULL,  mainTASKCLI_PRIORITY, HandleCLI_Task );
-	xTaskCreate( (void *) &s4353096_TaskRadio, (const signed char *) "s4353096_TaskRadio", mainTASKCLI_STACK_SIZE, NULL,  mainTASKCLI_PRIORITY, HandleTaskRadio );
+	s4353096_SemaphoreTracking = xSemaphoreCreateBinary();
+	xTaskCreate( (void *) &s4353096_TaskAccelerometer, (const signed char *) "s4353096_TaskAccelerometer", mainTASKACC_STACK_SIZE, NULL,  mainTASKACC_PRIORITY, &xHandleAccelerometer);
+	xTaskCreate( (void *) &CLI_Task, (const signed char *) "CLI_Task", mainTASKCLI_STACK_SIZE, NULL,  mainTASKCLI_PRIORITY, &xHandleCLI);
+	xTaskCreate( (void *) &s4353096_TaskRadio, (const signed char *) "s4353096_TaskRadio", mainTASKCLI_STACK_SIZE, NULL,  mainTASKCLI_PRIORITY, &xHandleRadio);
+	//GetTopList();
 	FreeRTOS_CLIRegisterCommand(&xTop);
 	FreeRTOS_CLIRegisterCommand(&xAcc);
 	FreeRTOS_CLIRegisterCommand(&xHamenc);
 	FreeRTOS_CLIRegisterCommand(&xHamdec);
+	FreeRTOS_CLIRegisterCommand(&xTracking);
 	/* Start the scheduler.
 
 	NOTE : Tasks run in system mode and the scheduler runs in Supervisor mode.

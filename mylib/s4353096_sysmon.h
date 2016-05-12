@@ -21,6 +21,10 @@
 #define mainLA_CHAN1TASK2_STACK_SIZE		( configMINIMAL_STACK_SIZE * 2 )
 #define mainLA_CHAN2TASK3_STACK_SIZE		( configMINIMAL_STACK_SIZE * 2 )
 #include <stdio.h>
+/* Scheduler includes. */
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
 /*Define associated BRD defines for GPIO ports to system monitor channels*/
 #define LA_CHAN0_PIN BRD_A3_PIN
 #define LA_CHAN0_GPIO_PORT BRD_A3_GPIO_PORT
@@ -54,5 +58,12 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
+/*struct Tasks {
+	TaskHandle_t TaskHandles[10];
+};*/
+TaskHandle_t xHandleCLI;
+TaskHandle_t xHandleAccelerometer;
+TaskHandle_t xHandleRadio;
+
 void s4353096_sysmon_init(void);
 extern void GetTopList( void );

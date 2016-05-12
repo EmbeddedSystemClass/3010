@@ -39,8 +39,15 @@ extern BaseType_t prvTop(char *pcWriteBuffer, size_t xWriteBufferLen, const char
 extern BaseType_t prvAcc(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvHamenc(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvHamdec(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+extern BaseType_t prvTracking(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 void CLI_Task(void);
 
+CLI_Command_Definition_t xTracking = {	/* Structure that defines the "echo" command line command. */
+	"tracking",
+	"tracking: Toggles tracking based on input ""on"" or ""off""\r\n",
+	prvTracking,
+	1
+};
 CLI_Command_Definition_t xHamenc = {	/* Structure that defines the "echo" command line command. */
 	"hamenc",
 	"hamenc: Hamming encoded value of a 8 bit Hex value\r\n",

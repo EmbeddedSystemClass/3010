@@ -34,6 +34,7 @@
 #include "s4353096_sysmon.h"
 #include "s4353096_accelerometer.h"
 #include "s4353096_hamming.h"
+#include "s4353096_radio.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -135,7 +136,10 @@ extern BaseType_t prvHamenc(char *pcWriteBuffer, size_t xWriteBufferLen, const c
 
 	long lParam_len;
 	const char *cCmd_string;
-
+	char *ptr;
+	long encode_input_long;
+	uint8_t encode_input;
+	uint16_t encode_output;
 	/* Get parameters from command string */
 	cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
 
@@ -143,7 +147,30 @@ extern BaseType_t prvHamenc(char *pcWriteBuffer, size_t xWriteBufferLen, const c
 	xWriteBufferLen = sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
   /* Set the semaphore as available if the semaphore exists*/
   /*Give Semaphore*/
-  xSemaphoreGive(s4353096_SemaphoreHamEnc);
+	if (strlen(pcWriteBuffer) == 1) {
+		/*if the input is char*/
+		encode_input = pcWriteBuffer[0];
+		encode_output = hamming_byte_encoder(encode_input);
+		debug_printf("Encoded Value: 0x%x\n",encode_output);
+
+	} else if ((pcWriteBuffer[0] == '0') && (pcWriteBuffer[1] == 'x')) {
+		/*If the input is of the format 0x..*/
+		encode_input_long = strtoul(pcWriteBuffer, &ptr, 16);
+		encode_input = encode_input_long;
+
+		if (encode_input_long <= 0xFF) {
+			encode_output = hamming_byte_encoder(encode_input);
+			debug_printf("Encoded Value: 0x%x\n",encode_output);
+		}
+	} else {
+		/*Check if input is a valid hex byte value*/
+		encode_input_long = strtoul(pcWriteBuffer, &ptr, 16);
+		encode_input = encode_input_long;
+		if (encode_input_long <= 0xFF) {
+			encode_output = hamming_byte_encoder(encode_input);
+			debug_printf("Encoded Value: 0x%x\n",encode_output);
+		}
+	}
 	/* Return pdFALSE, as there are no more strings to return */
 	/* Only return pdTRUE, if more strings need to be printed */
 	return pdFALSE;
@@ -152,15 +179,46 @@ extern BaseType_t prvHamdec(char *pcWriteBuffer, size_t xWriteBufferLen, const c
 
 	long lParam_len;
 	const char *cCmd_string;
-
+	long decode_input_long;
+	char *ptr;
+	uint8_t decode_input_lower;
+	uint8_t decode_input_upper;
+	uint8_t decode_output;
 	/* Get parameters from command string */
 	cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
 
 	/* Write command echo output string to write buffer. */
 	xWriteBufferLen = sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
   /* Set the semaphore as available if the semaphore exists*/
-    /*Give Semaphore*/
-    xSemaphoreGive(s4353096_SemaphoreHamDec);
+	if (strlen(pcWriteBuffer) == 2) {
+		/*if the input is char*/
+		decode_input_upper = (pcWriteBuffer[0]);
+		decode_input_lower = (pcWriteBuffer[1]);
+		decode_output = hamming_byte_decoder(decode_input_lower, decode_input_upper);
+		debug_printf("Decoded Output: %c\n",decode_output);
+	} else if ((pcWriteBuffer[0] == '0') && (pcWriteBuffer[1] == 'x')) {
+		/*If the input is a valid Hex*/
+		decode_input_long = strtoul(pcWriteBuffer, &ptr, 16);
+		decode_input_upper = (decode_input_long) >> 8;
+		decode_input_lower = decode_input_long;
+		if (decode_input_long <= 0xFFFF) {
+			decode_output = hamming_byte_decoder(decode_input_lower, decode_input_upper);
+			debug_printf("Decoded Output: %c\n",decode_output);
+		} else {
+			debug_printf("Invalid Parameter Given\n");
+		}
+	} else {
+		/*Check if input is a valid decimal*/
+		decode_input_long = strtoul(pcWriteBuffer, &ptr, 10);
+		decode_input_upper = (decode_input_long) >> 8;
+		decode_input_lower = decode_input_long;
+		if (decode_input_long <= 0xFFFF) {
+			decode_output = hamming_byte_decoder(decode_input_lower, decode_input_upper);
+			debug_printf("Decoded Output: %c\n",decode_output);
+		} else {
+			debug_printf("Invalid Parameter Given\n");
+		}
+	}
 	/* Return pdFALSE, as there are no more strings to return */
 	/* Only return pdTRUE, if more strings need to be printed */
 	return pdFALSE;
@@ -208,20 +266,32 @@ extern BaseType_t prvAcc(char *pcWriteBuffer, size_t xWriteBufferLen, const char
 	return pdFALSE;
 }
 
+extern BaseType_t prvTracking(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+		long lParam_len;
+		const char *cCmd_string;
+
+		/* Get parameters from command string */
+		cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
+
+		/* Write command echo output string to write buffer. */
+		xWriteBufferLen = sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+		if (strcmp(pcWriteBuffer,"on") == 0) {
+	    /*Give Semaphore*/
+	    xSemaphoreGive(s4353096_SemaphoreTracking);
+	  } else if (strcmp(pcWriteBuffer,"off") == 0) {
+	    /*Give Semaphore*/
+	    xSemaphoreTake(s4353096_SemaphoreTracking, 10);
+	  } else {
+
+		}
+
+}
 void CLI_Task(void) {
 	char cRxedChar;
 	char cInputString[100];
 	int InputIndex = 0;
 	char *pcOutputString;
 	BaseType_t xReturned;
-	char *ptr;
-  long encode_input_long;
-	uint8_t encode_input;
-	uint16_t encode_output;
-	long decode_input_long;
-	uint8_t decode_input_lower;
-	uint8_t decode_input_upper;
-	uint8_t decode_output;
 	/* Initialise pointer to CLI output buffer. */
 	memset(cInputString, 0, sizeof(cInputString));
 	pcOutputString = FreeRTOS_CLIGetOutputBuffer();
@@ -229,16 +299,15 @@ void CLI_Task(void) {
 		/*Do Stuff Here, this is the loop*/
 		/* Receive character */
 		cRxedChar = debug_getc();
-
 		/* Process if chacater if not Null */
 		if (cRxedChar != '\0') {
 
 			/* Put byte into USB buffer */
 			debug_putc(cRxedChar);
-
+			vTaskSuspend(xHandleRadio);
 			/* Process only if return is received. */
 			if (cRxedChar == '\r') {
-
+				vTaskResume(xHandleRadio);
 				//Put new line and transmit buffer
 				debug_putc('\n');
 				debug_flush();
@@ -257,78 +326,7 @@ void CLI_Task(void) {
 					//debug_printf("Input Parameter(s): %s\n\n\r",pcOutputString);
 					vTaskDelay(5);	//Must delay between debug_printfs.
 					/*Process CLI Command here  if command doesn't go to a different task*/
-					if (s4353096_SemaphoreHamEnc != NULL) {	/* Check if semaphore exists */
-      			/* See if we can obtain the PB semaphore. If the semaphore is not available
-                 	wait 10 ticks to see if it becomes free. */
 
-      			if( xSemaphoreTake( s4353096_SemaphoreHamEnc, 10 ) == pdTRUE ) {
-              /* We were able to obtain the semaphore and can now access the shared resource. */
-							/*Check the format of the input to hamenc*/
-
-							if (strlen(pcOutputString) == 1) {
-								/*if the input is char*/
-								encode_input = pcOutputString[0];
-								encode_output = hamming_byte_encoder(encode_input);
-								debug_printf("Encoded Value: 0x%x\n",encode_output);
-
-							} else if ((pcOutputString[0] == '0') && (pcOutputString[1] == 'x')) {
-								/*If the input is of the format 0x..*/
-								encode_input_long = strtoul(pcOutputString, &ptr, 16);
-								encode_input = encode_input_long;
-
-								if (encode_input_long <= 0xFF) {
-									encode_output = hamming_byte_encoder(encode_input);
-									debug_printf("Encoded Value: 0x%x\n",encode_output);
-								}
-							} else {
-								/*Check if input is a valid hex byte value*/
-								encode_input_long = strtoul(pcOutputString, &ptr, 16);
-								encode_input = encode_input_long;
-								if (encode_input_long <= 0xFF) {
-									encode_output = hamming_byte_encoder(encode_input);
-									debug_printf("Encoded Value: 0x%x\n",encode_output);
-								}
-							}
-						}
-					}
-					if (s4353096_SemaphoreHamDec != NULL) {	/* Check if semaphore exists */
-      			/* See if we can obtain the PB semaphore. If the semaphore is not available
-                 	wait 10 ticks to see if it becomes free. */
-
-      			if( xSemaphoreTake( s4353096_SemaphoreHamDec, 10 ) == pdTRUE ) {
-              /* We were able to obtain the semaphore and can now access the shared resource. */
-							if (strlen(pcOutputString) == 2) {
-								/*if the input is char*/
-								decode_input_upper = (pcOutputString[0]);
-								decode_input_lower = (pcOutputString[1]);
-								decode_output = hamming_byte_decoder(decode_input_lower, decode_input_upper);
-								debug_printf("Decoded Output: %c\n",decode_output);
-							} else if ((pcOutputString[0] == '0') && (pcOutputString[1] == 'x')) {
-								/*If the input is a valid Hex*/
-								decode_input_long = strtoul(pcOutputString, &ptr, 16);
-								decode_input_upper = (decode_input_long) >> 8;
-								decode_input_lower = decode_input_long;
-								if (decode_input_long <= 0xFFFF) {
-									decode_output = hamming_byte_decoder(decode_input_lower, decode_input_upper);
-									debug_printf("Decoded Output: %c\n",decode_output);
-								} else {
-									debug_printf("Invalid Parameter Given\n");
-								}
-							} else {
-								/*Check if input is a valid decimal*/
-								decode_input_long = strtoul(pcOutputString, &ptr, 10);
-								decode_input_upper = (decode_input_long) >> 8;
-								decode_input_lower = decode_input_long;
-								if (decode_input_long <= 0xFFFF) {
-									decode_output = hamming_byte_decoder(decode_input_lower, decode_input_upper);
-									debug_printf("Decoded Output: %c\n",decode_output);
-								} else {
-									debug_printf("Invalid Parameter Given\n");
-								}
-							}
-						}
-
-					}
 					/*Inside while loop*/
 
 				}

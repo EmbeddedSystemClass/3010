@@ -72,7 +72,6 @@ char* state;
                                  &ulTotalRunTime );
 
       /* For percentage calculations. */
-      ulTotalRunTime /= 100UL;
 
       /* Avoid divide by zero errors. */
       //if( ulTotalRunTime > 0 )
@@ -86,6 +85,7 @@ char* state;
 					 	/*Want to print in the below fashion*/
 						/* NAME | NUMBER | PRIORITY | STATE | RUNNING TIME |*/
 						/* Before this we have to work out the States appropriate char value*/
+            //TaskValues.TaskHandles[x] = pxTaskStatusArray[x].xHandle;
 						if (pxTaskStatusArray[x].eCurrentState == eReady) {
 							state = "Ready";
               debug_printf( ANSI_COLOR_YELLOW "%-25s\t\t%-2.0d\t%-2.0d\t\t%-9s\t%-lu\n" ANSI_COLOR_RESET , pxTaskStatusArray[x].pcTaskName,

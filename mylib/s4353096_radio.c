@@ -69,15 +69,25 @@ void s4353096_TaskRadio (void) {
 	s4353096_radio_settxaddress(s4353096_tx_addr);
 	s4353096_radio_setrxaddress(s4353096_rx_addr);
   for(;;) {
-    s4353096_radio_setfsmrx();
-		s4353096_radio_fsmprocessing();
-    s4353096_radio_fsmprocessing();
-		if (s4353096_radio_getrxstatus() == 1) { //Checks if packet has been recieved
-			/*Prints recieved packet to console*/
-			s4353096_radio_getpacket(s4353096_rx_buffer);
-		} else {
+    if (s4353096_SemaphoreTracking != NULL) {	/* Check if semaphore exists */
+      /* See if we can obtain the PB semaphore. If the semaphore is not available
+            wait 10 ticks to see if it becomes free. */
 
-		}
+      if( xSemaphoreTake(s4353096_SemaphoreTracking, 10 ) == pdTRUE ) {
+        /* We were able to obtain the semaphore and can now access the shared resource. */
+        /*Check the format of the input to hamenc*/
+        s4353096_radio_setfsmrx();
+		    s4353096_radio_fsmprocessing();
+        s4353096_radio_fsmprocessing();
+		    if (s4353096_radio_getrxstatus() == 1) { //Checks if packet has been recieved
+			      /*Prints recieved packet to console*/
+	          s4353096_radio_getpacket(s4353096_rx_buffer);
+		    } else {
+
+		    }
+        xSemaphoreGive(s4353096_SemaphoreTracking);
+      }
+    }
   }
   vTaskDelay(10);
 }

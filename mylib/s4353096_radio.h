@@ -60,6 +60,7 @@
  unsigned char s4353096_payload_buffer[8];
  unsigned char s4353096_addr_get[4];
 
+SemaphoreHandle_t s4353096_SemaphoreTracking;		//Used to show the Hammming encoded value of a given hex byte
 void s4353096_TaskRadio (void);
 extern void s4353096_radio_init(void);
 extern void s4353096_radio_fsmprocessing();

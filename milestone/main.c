@@ -40,6 +40,7 @@ int main (void) {
 	s4353096_SemaphoreAccRaw = xSemaphoreCreateBinary();
 	s4353096_SemaphoreAccPl = xSemaphoreCreateBinary();
 	s4353096_SemaphoreTracking = xSemaphoreCreateBinary();
+	s4353096_SemaphoreRadioState = xSemaphoreCreateBinary();
 	xTaskCreate( (void *) &s4353096_TaskAccelerometer, (const signed char *) "s4353096_TaskAccelerometer", mainTASKACC_STACK_SIZE, NULL,  mainTASKACC_PRIORITY, &xHandleAccelerometer);
 	xTaskCreate( (void *) &CLI_Task, (const signed char *) "CLI_Task", mainTASKCLI_STACK_SIZE, NULL,  mainTASKCLI_PRIORITY, &xHandleCLI);
 	xTaskCreate( (void *) &s4353096_TaskRadio, (const signed char *) "s4353096_TaskRadio", mainTASKCLI_STACK_SIZE, NULL,  mainTASKCLI_PRIORITY, &xHandleRadio);

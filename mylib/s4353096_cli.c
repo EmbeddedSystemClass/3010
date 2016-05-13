@@ -238,6 +238,9 @@ extern BaseType_t prvResume(char *pcWriteBuffer, size_t xWriteBufferLen, const c
 	for(x = 0; x < uxArraySize; x++) {
 		if(strcmp(TaskValues.TaskNames[x], pcWriteBuffer) == 0) {
 			vTaskResume(TaskValues.TaskHandles[x]);
+			if (strcmp(pcWriteBuffer,"s4353096_TaskRadio") == 0) {
+				xSemaphoreTake(s4353096_SemaphoreRadioState,10);
+			}
 		}
 	}
 
@@ -260,6 +263,9 @@ extern BaseType_t prvSuspend(char *pcWriteBuffer, size_t xWriteBufferLen, const 
 	for(x = 0; x < uxArraySize; x++) {
 		if(strcmp(TaskValues.TaskNames[x], pcWriteBuffer) == 0) {
 			vTaskSuspend(TaskValues.TaskHandles[x]);
+			if (strcmp(pcWriteBuffer,"s4353096_TaskRadio") == 0) {
+				xSemaphoreGive(s4353096_SemaphoreRadioState);
+			}
 		}
 	}
 
@@ -339,6 +345,7 @@ void CLI_Task(void) {
 	int InputIndex = 0;
 	char *pcOutputString;
 	BaseType_t xReturned;
+	short radio_task_state;
 	/* Initialise pointer to CLI output buffer. */
 	memset(cInputString, 0, sizeof(cInputString));
 	pcOutputString = FreeRTOS_CLIGetOutputBuffer();
@@ -350,9 +357,17 @@ void CLI_Task(void) {
 		if (cRxedChar != '\0') {
 
 			/* Put byte into USB buffer */
+			if (xSemaphoreTake(s4353096_SemaphoreRadioState, 10)) {
+				radio_task_state = 0;
+				xSemaphoreGive(s4353096_SemaphoreRadioState);
+			} else {
+				radio_task_state = 1;
+				vTaskSuspend(xHandleRadio);
+			}
+			if(InputIndex == 0) {
+				debug_printf("\n");
+			}
 			debug_putc(cRxedChar);
-			vTaskSuspend(xHandleRadio);
-			debug_printf("\n");
 			/* Process only if return is received. */
 			if (cRxedChar == '\r') {
 				//Put new line and transmit buffer
@@ -361,7 +376,9 @@ void CLI_Task(void) {
 
 				/* Put null character in command input string. */
 				cInputString[InputIndex] = '\0';
-				vTaskResume(xHandleRadio);
+				if (radio_task_state == 1) {
+					vTaskResume(xHandleRadio);
+				}
 				xReturned = pdTRUE;
 				/* Process command input string. */
 				while (xReturned != pdFALSE) {

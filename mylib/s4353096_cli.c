@@ -236,7 +236,31 @@ extern BaseType_t prvResume(char *pcWriteBuffer, size_t xWriteBufferLen, const c
 	xWriteBufferLen = sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
   uxArraySize = uxTaskGetNumberOfTasks();
 	for(x = 0; x < uxArraySize; x++) {
-		TaskValues.
+		if(strcmp(TaskValues.TaskNames[x], pcWriteBuffer) == 0) {
+			vTaskResume(TaskValues.TaskHandles[x]);
+		}
+	}
+
+	/* Return pdFALSE, as there are no more strings to return */
+	/* Only return pdTRUE, if more strings need to be printed */
+	return pdFALSE;
+}
+extern BaseType_t prvSuspend(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+
+	long lParam_len;
+	const char *cCmd_string;
+	volatile UBaseType_t uxArraySize, x;
+
+	/* Get parameters from command string */
+	cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
+
+	/* Write command echo output string to write buffer. */
+	xWriteBufferLen = sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+  uxArraySize = uxTaskGetNumberOfTasks();
+	for(x = 0; x < uxArraySize; x++) {
+		if(strcmp(TaskValues.TaskNames[x], pcWriteBuffer) == 0) {
+			vTaskSuspend(TaskValues.TaskHandles[x]);
+		}
 	}
 
 	/* Return pdFALSE, as there are no more strings to return */
@@ -301,11 +325,13 @@ extern BaseType_t prvTracking(char *pcWriteBuffer, size_t xWriteBufferLen, const
 	    xSemaphoreGive(s4353096_SemaphoreTracking);
 	  } else if (strcmp(pcWriteBuffer,"off") == 0) {
 	    /*Give Semaphore*/
-	    xSemaphoreTake(s4353096_SemaphoreTracking, 10);
+	    xSemaphoreTake(s4353096_SemaphoreTracking, 1);
 	  } else {
 
 		}
-
+		/* Return pdFALSE, as there are no more strings to return */
+		/* Only return pdTRUE, if more strings need to be printed */
+		return pdFALSE;
 }
 void CLI_Task(void) {
 	char cRxedChar;
@@ -326,16 +352,16 @@ void CLI_Task(void) {
 			/* Put byte into USB buffer */
 			debug_putc(cRxedChar);
 			vTaskSuspend(xHandleRadio);
+			debug_printf("\n");
 			/* Process only if return is received. */
 			if (cRxedChar == '\r') {
-				vTaskResume(xHandleRadio);
 				//Put new line and transmit buffer
 				debug_putc('\n');
 				debug_flush();
 
 				/* Put null character in command input string. */
 				cInputString[InputIndex] = '\0';
-
+				vTaskResume(xHandleRadio);
 				xReturned = pdTRUE;
 				/* Process command input string. */
 				while (xReturned != pdFALSE) {

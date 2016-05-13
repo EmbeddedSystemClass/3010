@@ -53,7 +53,7 @@ CLI_Command_Definition_t xResume = {	/* Structure that defines the "echo" comman
 CLI_Command_Definition_t xSuspend = {	/* Structure that defines the "echo" command line command. */
 	"suspend",
 	"suspend: Suspends the task associated with the given task name\r\n",
-	prvTracking,
+	prvSuspend,
 	1
 };
 CLI_Command_Definition_t xTracking = {	/* Structure that defines the "echo" command line command. */

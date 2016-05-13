@@ -76,6 +76,7 @@ void s4353096_TaskRadio (void) {
       if( xSemaphoreTake(s4353096_SemaphoreTracking, 10 ) == pdTRUE ) {
         /* We were able to obtain the semaphore and can now access the shared resource. */
         /*Check the format of the input to hamenc*/
+        xSemaphoreGive(s4353096_SemaphoreTracking);
         s4353096_radio_setfsmrx();
 		    s4353096_radio_fsmprocessing();
         s4353096_radio_fsmprocessing();
@@ -85,7 +86,6 @@ void s4353096_TaskRadio (void) {
 		    } else {
 
 		    }
-        xSemaphoreGive(s4353096_SemaphoreTracking);
       }
     }
   }

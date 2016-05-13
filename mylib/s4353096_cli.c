@@ -157,7 +157,6 @@ extern BaseType_t prvHamenc(char *pcWriteBuffer, size_t xWriteBufferLen, const c
 		/*If the input is of the format 0x..*/
 		encode_input_long = strtoul(pcWriteBuffer, &ptr, 16);
 		encode_input = encode_input_long;
-
 		if (encode_input_long <= 0xFF) {
 			encode_output = hamming_byte_encoder(encode_input);
 			debug_printf("Encoded Value: 0x%x\n",encode_output);
@@ -184,6 +183,7 @@ extern BaseType_t prvHamdec(char *pcWriteBuffer, size_t xWriteBufferLen, const c
 	uint8_t decode_input_lower;
 	uint8_t decode_input_upper;
 	uint8_t decode_output;
+	uint16_t decode_input_8;
 	/* Get parameters from command string */
 	cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
 
@@ -199,6 +199,8 @@ extern BaseType_t prvHamdec(char *pcWriteBuffer, size_t xWriteBufferLen, const c
 	} else if ((pcWriteBuffer[0] == '0') && (pcWriteBuffer[1] == 'x')) {
 		/*If the input is a valid Hex*/
 		decode_input_long = strtoul(pcWriteBuffer, &ptr, 16);
+		decode_input_8 = decode_input_long;
+		//debug_printf("\n Hex input  %s\n", decode_input_8);
 		decode_input_upper = (decode_input_long) >> 8;
 		decode_input_lower = decode_input_long;
 		if (decode_input_long <= 0xFFFF) {
@@ -339,6 +341,50 @@ extern BaseType_t prvTracking(char *pcWriteBuffer, size_t xWriteBufferLen, const
 		/* Only return pdTRUE, if more strings need to be printed */
 		return pdFALSE;
 }
+extern BaseType_t prvCRC(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+
+	long lParam_len;
+	const char *cCmd_string;
+	char *ptr;
+	long crc_input_long;
+	int number_crc_updates;
+	uint8_t crc_hex_input[4];
+	uint16_t crc_output = 0x0000;
+	/* Get parameters from command string */
+	cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
+
+	/* Write command echo output string to write buffer. */
+	xWriteBufferLen = sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+  /* Set the semaphore as available if the semaphore exists*/
+  /*Give Semaphore*/
+
+	if ((pcWriteBuffer[0] == '0') && (pcWriteBuffer[1] == 'x')) {
+		/*If the input is of the format 0x..*/
+		crc_input_long = strtoul(pcWriteBuffer, &ptr, 16);
+		crc_hex_input[0] = ((crc_input_long & 0xFF000000) >> 24);
+		crc_hex_input[1] = ((crc_input_long & 0x00FF0000) >> 16);
+		crc_hex_input[2] = ((crc_input_long & 0x0000FF00) >> 8);
+		crc_hex_input[3] = (crc_input_long & 0x000000FF);
+		number_crc_updates = (strlen(pcWriteBuffer) - 2)/2;
+		if (number_crc_updates == 4) { /*If input is less/equal than 32-bits*/
+			for (int j = 0; j < number_crc_updates; j++) {
+				crc_output = crc_update(crc_output, crc_hex_input[j]);
+			}
+			debug_printf("CRC Value: %x\n",crc_output);
+		}
+	} else {
+			/*Input is an ASCII String*/
+			number_crc_updates = strlen(pcWriteBuffer);
+			for (int j = 0; j < number_crc_updates; j++) {
+				crc_output = crc_update(crc_output, pcWriteBuffer[j]);
+			}
+			debug_printf("CRC Value: %x\n",crc_output);
+
+	}
+	/* Return pdFALSE, as there are no more strings to return */
+	/* Only return pdTRUE, if more strings need to be printed */
+	return pdFALSE;
+}
 void CLI_Task(void) {
 	char cRxedChar;
 	char cInputString[100];
@@ -376,9 +422,9 @@ void CLI_Task(void) {
 
 				/* Put null character in command input string. */
 				cInputString[InputIndex] = '\0';
-				if (radio_task_state == 1) {
+				/*if (radio_task_state == 1) {
 					vTaskResume(xHandleRadio);
-				}
+				}*/
 				xReturned = pdTRUE;
 				/* Process command input string. */
 				while (xReturned != pdFALSE) {
@@ -387,7 +433,7 @@ void CLI_Task(void) {
 					xReturned = FreeRTOS_CLIProcessCommand( cInputString, pcOutputString, configCOMMAND_INT_MAX_OUTPUT_SIZE );
 					/*Display input parameter*/
 
-					//debug_printf("Input Parameter(s): %s\n\n\r",pcOutputString);
+					debug_printf("\n%s\n\r",pcOutputString);
 					vTaskDelay(5);	//Must delay between debug_printfs.
 					/*Process CLI Command here  if command doesn't go to a different task*/
 

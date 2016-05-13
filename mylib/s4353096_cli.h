@@ -30,7 +30,7 @@
 /* Task Priorities ------------------------------------------------------------*/
 #define mainTASKCLI_PRIORITY					( tskIDLE_PRIORITY + 1 )
 /* Task Stack Allocations -----------------------------------------------------*/
-#define mainTASKCLI_STACK_SIZE		( configMINIMAL_STACK_SIZE * 2 )
+#define mainTASKCLI_STACK_SIZE		( configMINIMAL_STACK_SIZE * 4 )
 extern BaseType_t prvLaserCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvPanCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvTiltCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
@@ -42,7 +42,15 @@ extern BaseType_t prvHamdec(char *pcWriteBuffer, size_t xWriteBufferLen, const c
 extern BaseType_t prvTracking(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvSuspend(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvResume(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+extern BaseType_t prvCRC(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 void CLI_Task(void);
+
+CLI_Command_Definition_t xCRC = {	/* Structure that defines the "echo" command line command. */
+	"crc",
+	"crc: 32-bit value (in hex) or an ASCII String\r\n",
+	prvCRC,
+	1
+};
 
 CLI_Command_Definition_t xResume = {	/* Structure that defines the "echo" command line command. */
 	"resume",

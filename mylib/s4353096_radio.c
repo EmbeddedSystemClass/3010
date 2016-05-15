@@ -58,13 +58,6 @@ void s4353096_TaskRadio (void) {
   unsigned char s4353096_tx_addr[] = {0x22, 0x91, 0x54, 0x43, 0x00};
   unsigned char s4353096_rx_addr[] = {0x07, 0x35, 0x22, 0x11, 0x00};
   unsigned char s4353096_chan = 50;
-  /*unsigned char s4353096_txpacket[32];
-  int s4353096_radio_fsmcurrentstate;
-  int s4353096_radio_rxstatus;
-  unsigned char s4353096_rx_buffer[32];
-  unsigned char s4353096_tx_buffer[32];
-  unsigned char s4353096_payload_buffer[8];
-  unsigned char s4353096_addr_get[4];*/
   s4353096_radio_setchan(s4353096_chan);
 	s4353096_radio_settxaddress(s4353096_tx_addr);
 	s4353096_radio_setrxaddress(s4353096_rx_addr);
@@ -83,6 +76,12 @@ void s4353096_TaskRadio (void) {
 		    if (s4353096_radio_getrxstatus() == 1) { //Checks if packet has been recieved
 			      /*Prints recieved packet to console*/
 	          s4353096_radio_getpacket(s4353096_rx_buffer);
+            /*Calculate and Print CRC*/
+            for(int j = 0; j < 32; j++) {
+              debug_printf("%x", s4353096_rx_buffer[j]);
+            }
+            debug_printf("\n");
+            /*Decode Packet and print*/
 		    } else {
 
 		    }

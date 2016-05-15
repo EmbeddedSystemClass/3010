@@ -41,7 +41,10 @@ extern uint16_t crc_update(uint16_t crc, uint8_t c) {
 	}
 	return(crc);
 }
+/* extern uint16_t crc_calculation(void) {
 
+	 for()
+ }*/
 
 extern uint16_t hamming_byte_encoder(uint8_t input) {
 

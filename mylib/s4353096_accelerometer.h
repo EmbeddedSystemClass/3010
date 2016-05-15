@@ -39,3 +39,4 @@ extern void GetRunTimeStats(void);
 extern void s4353096_readXYZ (void);
 extern void s4353096_TaskAccelerometer(void);
 extern void s4353096_accelerometer_init(void);
+extern int twos_complement (int number);

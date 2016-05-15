@@ -49,10 +49,13 @@ extern void s4353096_TaskAccelerometer(void) {
 				/* See if we can obtain the PB semaphore. If the semaphore is not available
 							wait 10 ticks to see if it becomes free. */
 
-				if( xSemaphoreTake( s4353096_SemaphoreAccRaw, 10 ) == pdTRUE ) {
+			//	if( xSemaphoreTake( s4353096_SemaphoreAccRaw, 10 ) == pdTRUE ) {
 					s4353096_readXYZ();
+          //Acc_vals.x_coord = twos_complement(Acc_vals.x_coord);
+        //  Acc_vals.y_coord = twos_complement(Acc_vals.y_coord);
+          //Acc_vals.z_coord = twos_complement(Acc_vals.z_coord);
 					debug_printf("X: %d ,  Y: %d ,  Z: %d \n", Acc_vals.x_coord, Acc_vals.y_coord, Acc_vals.z_coord);
-				}
+		//		}
 			}
       /*If not check each semaphore individually*/
     	BRD_LEDToggle();	//Toggle LED on/off
@@ -61,6 +64,14 @@ extern void s4353096_TaskAccelerometer(void) {
     	vTaskDelay(1);		//Delay for 1s (1000ms)
 	}
 }
+extern int twos_complement (int number) {
+  int two;
+  two = ~number;
+  two = two & 0x0FFF;
+  two = two + 1;
+  return two;
+}
+
 extern void s4353096_readXYZ (void) {
   __HAL_I2C_CLEAR_FLAG(&I2CHandle, I2C_FLAG_AF);	//Clear Flags
 

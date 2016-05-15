@@ -370,7 +370,6 @@ extern BaseType_t prvCRC(char *pcWriteBuffer, size_t xWriteBufferLen, const char
 			for (int j = 0; j < number_crc_updates; j++) {
 				crc_output = crc_update(crc_output, crc_hex_input[j]);
 			}
-			debug_printf("CRC Value: %x\n",crc_output);
 		}
 	} else {
 			/*Input is an ASCII String*/
@@ -378,9 +377,8 @@ extern BaseType_t prvCRC(char *pcWriteBuffer, size_t xWriteBufferLen, const char
 			for (int j = 0; j < number_crc_updates; j++) {
 				crc_output = crc_update(crc_output, pcWriteBuffer[j]);
 			}
-			debug_printf("CRC Value: %x\n",crc_output);
-
 	}
+	debug_printf("CRC Value: %x\n",crc_output);
 	/* Return pdFALSE, as there are no more strings to return */
 	/* Only return pdTRUE, if more strings need to be printed */
 	return pdFALSE;
@@ -422,9 +420,9 @@ void CLI_Task(void) {
 
 				/* Put null character in command input string. */
 				cInputString[InputIndex] = '\0';
-				/*if (radio_task_state == 1) {
+				if (radio_task_state == 1) {
 					vTaskResume(xHandleRadio);
-				}*/
+				}
 				xReturned = pdTRUE;
 				/* Process command input string. */
 				while (xReturned != pdFALSE) {

@@ -49,6 +49,7 @@
 
 #include "FreeRTOS_CLI.h"
 #include "s4353096_radio.h"
+#include "s4353096_hamming.h"
 static SPI_HandleTypeDef SpiHandle;
 
 unsigned char s4353096_txpacket[32];
@@ -75,13 +76,15 @@ void s4353096_TaskRadio (void) {
         s4353096_radio_fsmprocessing();
 		    if (s4353096_radio_getrxstatus() == 1) { //Checks if packet has been recieved
 			      /*Prints recieved packet to console*/
-	          s4353096_radio_getpacket(s4353096_rx_buffer);
+	          s4353096_radio_getRAEpacket(s4353096_rx_buffer);
             /*Calculate and Print CRC*/
+            debug_printf("\n");
             for(int j = 0; j < 32; j++) {
               debug_printf("%x", s4353096_rx_buffer[j]);
             }
             debug_printf("\n");
             /*Decode Packet and print*/
+
 		    } else {
 
 		    }
@@ -243,4 +246,34 @@ extern void s4353096_radio_getpacket(unsigned char *rxpacket) {
   debug_printf("\n");
   s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
   s4353096_radio_fsmprocessing();
+}
+extern void s4353096_radio_getRAEpacket(unsigned char *rxpacket) {
+  uint16_t crc_output;
+  debug_printf("RECV:");
+  /*Type*/
+  debug_printf("\nType: ");
+  for (int j = 0; j < 1; j++) {
+    debug_printf("%x", rxpacket[j]);
+  }
+  /*To Address*/
+  debug_printf("\nTo Address: ");
+  for (int j = 1; j < 5; j++) {
+    debug_printf("%x", rxpacket[j]);
+  }
+  /*From Address*/
+  debug_printf("\nFrom Address: ");
+  for (int j = 5; j < 9; j++) {
+    debug_printf("%x", rxpacket[j]);
+  }
+  /*Sequence*/
+  debug_printf("\nSequence: ");
+  for (int j = 9; j < 10; j++) {
+    debug_printf("%x", rxpacket[j]);
+  }
+  crc_output = crc_calculation(rxpacket);
+  /*CRC*/
+  debug_printf("\nCRC: %x", crc_output);
+  /*for (int j = 10; j < 12; j++) {
+    debug_printf("%x", rxpacket[j]);
+  }*/
 }

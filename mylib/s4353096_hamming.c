@@ -21,6 +21,7 @@
 #include "stm32f4xx_hal_conf.h"
 #include "debug_printf.h"
 #include "s4353096_hamming.h"
+#include <string.h>
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -41,10 +42,17 @@ extern uint16_t crc_update(uint16_t crc, uint8_t c) {
 	}
 	return(crc);
 }
-/* extern uint16_t crc_calculation(void) {
-
-	 for()
- }*/
+extern uint16_t crc_calculation(unsigned char *rxpacket) {
+	int length;
+	uint16_t crc_output = 0x0000;
+	length = 30;
+	for(int k = 0; k < length; k++){
+		crc_output = crc_update(crc_output, rxpacket[k]);
+	}
+	/*Change to LSB ORDER*/
+	crc_output = (crc_output >> 8) ^ (crc_output << 8);
+	return crc_output;
+ }
 
 extern uint16_t hamming_byte_encoder(uint8_t input) {
 

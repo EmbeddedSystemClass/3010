@@ -31,3 +31,4 @@ extern uint16_t hamming_byte_encoder(uint8_t input);
 uint8_t hamming_hbyte_encoder(uint8_t in);
 extern uint8_t hamming_byte_decoder(uint8_t lower, uint8_t upper);
 extern uint16_t crc_update(uint16_t crc, uint8_t c);
+extern uint16_t crc_calculation(unsigned char *rxpacket);

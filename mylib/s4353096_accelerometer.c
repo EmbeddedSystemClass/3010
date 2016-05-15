@@ -71,7 +71,49 @@ extern int twos_complement (int number) {
   two = two + 1;
   return two;
 }
+extern void s4353096_read_acc_register(int reg) {
+  int read_value;
+  __HAL_I2C_CLEAR_FLAG(&I2CHandle, I2C_FLAG_AF);	//Clear Flags
 
+	I2CHandle.Instance->CR1 |= I2C_CR1_START;	// Generate the START condition
+
+	/*  Wait the START condition has been correctly sent */
+	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_SB) == RESET);
+
+	/* Send Peripheral Device Write address */
+	I2CHandle.Instance->DR = __HAL_I2C_7BIT_ADD_WRITE(MMA8452Q_ADDRESS);
+
+	/* Wait for address to be acknowledged */
+	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_ADDR) == RESET);
+	__HAL_I2C_CLEAR_ADDRFLAG(&I2CHandle);		//Clear ADDR Flag
+
+	/*Set read register*/
+	I2CHandle.Instance->DR = reg;
+
+	/* Wait until register Address byte is transmitted */
+	while ((__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_TXE) == RESET) && (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_BTF) == RESET));
+
+	/* Generate the START condition, again */
+	I2CHandle.Instance->CR1 |= I2C_CR1_START;
+
+	/* Wait the START condition has been correctly sent */
+	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_SB) == RESET);
+
+	/* Send Read Address */
+	I2CHandle.Instance->DR = __HAL_I2C_7BIT_ADD_READ(MMA8452Q_ADDRESS);
+
+	/* Wait address is acknowledged */
+	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_ADDR) == RESET);
+	__HAL_I2C_CLEAR_ADDRFLAG(&I2CHandle);		//Clear ADDR Flag
+
+	/* Wait to read X_Value_MSB */
+	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_RXNE) == RESET);
+	/* Read received MSB X value */
+	read_value = (I2CHandle.Instance->DR);
+	I2CHandle.Instance->CR1 &= ~I2C_CR1_ACK;
+	I2CHandle.Instance->CR1 |= I2C_CR1_STOP;
+  return read_value;
+}
 extern void s4353096_readXYZ (void) {
   __HAL_I2C_CLEAR_FLAG(&I2CHandle, I2C_FLAG_AF);	//Clear Flags
 
@@ -88,7 +130,7 @@ extern void s4353096_readXYZ (void) {
   __HAL_I2C_CLEAR_ADDRFLAG(&I2CHandle);		//Clear ADDR Flag
 
   /*Set First read register X_OUT*/
-  I2CHandle.Instance->DR = 0x0D;
+  I2CHandle.Instance->DR = 0xX_OUT_START;
 
   /* Wait until register Address byte is transmitted */
   while ((__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_TXE) == RESET) && (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_BTF) == RESET));

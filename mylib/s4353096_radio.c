@@ -249,6 +249,9 @@ extern void s4353096_radio_getpacket(unsigned char *rxpacket) {
 }
 extern void s4353096_radio_getRAEpacket(unsigned char *rxpacket) {
   uint16_t crc_output;
+  uint8_t hamming_decoded_bytes[10];
+  uint16_t payload[5];
+  int l = 0;
   debug_printf("RECV:");
   /*Type*/
   debug_printf("\nType: ");
@@ -270,10 +273,28 @@ extern void s4353096_radio_getRAEpacket(unsigned char *rxpacket) {
   for (int j = 9; j < 10; j++) {
     debug_printf("%x", rxpacket[j]);
   }
-  crc_output = crc_calculation(rxpacket);
   /*CRC*/
-  debug_printf("\nCRC: %x", crc_output);
-  /*for (int j = 10; j < 12; j++) {
-    debug_printf("%x", rxpacket[j]);
-  }*/
+  crc_output = crc_calculation(rxpacket);
+  debug_printf("\nCRC: %x\n", crc_output);
+  /*Hamming decode*/
+  for(int p = 10; p < 30; p+=2) {
+    hamming_decoded_bytes[l] = hamming_byte_decoder(rxpacket[p], rxpacket[p+1]);
+    /*Change to MSB*/
+    if ((l % 2) == 1) {
+      payload[l/2] = (hamming_decoded_bytes[l] << 8) ^ hamming_decoded_bytes[l-1];
+    }
+    l++;
+  }
+  /*Marker ID*/
+  debug_printf("\nMarker ID: %hd", payload[0]);
+  /*X Coordinate*/
+  debug_printf("\nX Coordinate: %hd", payload[1]);
+  /*Y Coordinate*/
+  debug_printf("\nY Coordinate: %hd", payload[2]);
+  /*Width of marker*/
+  debug_printf("\nWidth of marker: %hd", payload[3]);
+  /*Height of marker*/
+  debug_printf("\nHeight of marker: %hd", payload[4]);
+  s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
+  s4353096_radio_fsmprocessing();
 }

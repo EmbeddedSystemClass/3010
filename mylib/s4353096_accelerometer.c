@@ -51,10 +51,13 @@ extern void s4353096_TaskAccelerometer(void) {
 
 			//	if( xSemaphoreTake( s4353096_SemaphoreAccRaw, 10 ) == pdTRUE ) {
 					s4353096_readXYZ();
-          //Acc_vals.x_coord = twos_complement(Acc_vals.x_coord);
-        //  Acc_vals.y_coord = twos_complement(Acc_vals.y_coord);
-          //Acc_vals.z_coord = twos_complement(Acc_vals.z_coord);
-					debug_printf("X: %d ,  Y: %d ,  Z: %d \n", Acc_vals.x_coord, Acc_vals.y_coord, Acc_vals.z_coord);
+          //debug_printf("\nIn X: %x\n", Acc_vals.x_coord);
+          Acc_vals.x_coord = twos_complement_proper(Acc_vals.x_coord); //& 0xFFFF;
+          //debug_printf("In Y: %x\n", Acc_vals.y_coord);
+          Acc_vals.y_coord = twos_complement_proper(Acc_vals.y_coord); //& 0xFFFF;
+          //debug_printf("In Z: %x\n", Acc_vals.z_coord);
+          Acc_vals.z_coord = twos_complement_proper(Acc_vals.z_coord); //& 0xFFFF;
+					debug_printf("X: %hd ,  Y: %hd ,  Z: %hd \n", Acc_vals.x_coord, Acc_vals.y_coord, Acc_vals.z_coord);
 		//		}
 			}
       /*If not check each semaphore individually*/
@@ -64,15 +67,16 @@ extern void s4353096_TaskAccelerometer(void) {
     	vTaskDelay(1);		//Delay for 1s (1000ms)
 	}
 }
-extern int twos_complement (int number) {
-  int two;
-  two = ~number;
-  two = two & 0x0FFF;
-  two = two + 1;
+extern short twos_complement_proper (short number) {
+  short two;
+  two = number;
+  two = two ^ ((two & 0x0800) << 4);
+  two = two & 0xFEFF;
+  debug_printf("%hx, \n", two);
   return two;
 }
-extern void s4353096_read_acc_register(int reg) {
-  int read_value;
+extern short s4353096_read_acc_register(int reg) {
+  short read_value;
   __HAL_I2C_CLEAR_FLAG(&I2CHandle, I2C_FLAG_AF);	//Clear Flags
 
 	I2CHandle.Instance->CR1 |= I2C_CR1_START;	// Generate the START condition
@@ -115,259 +119,15 @@ extern void s4353096_read_acc_register(int reg) {
   return read_value;
 }
 extern void s4353096_readXYZ (void) {
-  __HAL_I2C_CLEAR_FLAG(&I2CHandle, I2C_FLAG_AF);	//Clear Flags
-
-  I2CHandle.Instance->CR1 |= I2C_CR1_START;	// Generate the START condition
-
-  /*  Wait the START condition has been correctly sent */
-  while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_SB) == RESET);
-
-  /* Send Peripheral Device Write address */
-  I2CHandle.Instance->DR = __HAL_I2C_7BIT_ADD_WRITE(MMA8452Q_ADDRESS);
-
-  /* Wait for address to be acknowledged */
-  while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_ADDR) == RESET);
-  __HAL_I2C_CLEAR_ADDRFLAG(&I2CHandle);		//Clear ADDR Flag
-
-  /*Set First read register X_OUT*/
-  I2CHandle.Instance->DR = 0xX_OUT_START;
-
-  /* Wait until register Address byte is transmitted */
-  while ((__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_TXE) == RESET) && (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_BTF) == RESET));
-
-  /* Generate the START condition, again */
-  I2CHandle.Instance->CR1 |= I2C_CR1_START;
-
-  /* Wait the START condition has been correctly sent */
-  while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_SB) == RESET);
-
-  /* Send Read Address */
-  I2CHandle.Instance->DR = __HAL_I2C_7BIT_ADD_READ(MMA8452Q_ADDRESS);
-
-  /* Wait address is acknowledged */
-  while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_ADDR) == RESET);
-  __HAL_I2C_CLEAR_ADDRFLAG(&I2CHandle);		//Clear ADDR Flag
-
-  /* Wait to read X_Value_MSB */
-	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_RXNE) == RESET);
-  /* Read received MSB X value */
-  Acc_vals.x_coord = (I2CHandle.Instance->DR) << 4;
-	I2CHandle.Instance->CR1 &= ~I2C_CR1_ACK;
-	I2CHandle.Instance->CR1 |= I2C_CR1_STOP;
-
-	__HAL_I2C_CLEAR_FLAG(&I2CHandle, I2C_FLAG_AF);	//Clear Flags
-
-	I2CHandle.Instance->CR1 |= I2C_CR1_START;	// Generate the START condition
-
-	/*  Wait the START condition has been correctly sent */
-	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_SB) == RESET);
-
-	/* Send Peripheral Device Write address */
-	I2CHandle.Instance->DR = __HAL_I2C_7BIT_ADD_WRITE(MMA8452Q_ADDRESS);
-
-	/* Wait for address to be acknowledged */
-	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_ADDR) == RESET);
-	__HAL_I2C_CLEAR_ADDRFLAG(&I2CHandle);		//Clear ADDR Flag
-
-	/*Set First read register X_OUT*/
-	I2CHandle.Instance->DR = (X_OUT_START + 0x01);
-
-	/* Wait until register Address byte is transmitted */
-	while ((__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_TXE) == RESET) && (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_BTF) == RESET));
-
-	/* Generate the START condition, again */
-	I2CHandle.Instance->CR1 |= I2C_CR1_START;
-
-	/* Wait the START condition has been correctly sent */
-	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_SB) == RESET);
-
-	/* Send Read Address */
-	I2CHandle.Instance->DR = __HAL_I2C_7BIT_ADD_READ(MMA8452Q_ADDRESS);
-
-	/* Wait address is acknowledged */
-	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_ADDR) == RESET);
-	__HAL_I2C_CLEAR_ADDRFLAG(&I2CHandle);		//Clear ADDR Flag
-
-	/* Wait to read X_Value_MSB */
-	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_RXNE) == RESET);
-	/* Read received MSB X value */
-	Acc_vals.x_coord = Acc_vals.x_coord ^ ((I2CHandle.Instance->DR) >> 4);
-	I2CHandle.Instance->CR1 &= ~I2C_CR1_ACK;
-	I2CHandle.Instance->CR1 |= I2C_CR1_STOP;
-
-
-
-
-
-
-	__HAL_I2C_CLEAR_FLAG(&I2CHandle, I2C_FLAG_AF);	//Clear Flags
-
-	I2CHandle.Instance->CR1 |= I2C_CR1_START;	// Generate the START condition
-
-	/*  Wait the START condition has been correctly sent */
-	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_SB) == RESET);
-
-	/* Send Peripheral Device Write address */
-	I2CHandle.Instance->DR = __HAL_I2C_7BIT_ADD_WRITE(MMA8452Q_ADDRESS);
-
-	/* Wait for address to be acknowledged */
-	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_ADDR) == RESET);
-	__HAL_I2C_CLEAR_ADDRFLAG(&I2CHandle);		//Clear ADDR Flag
-
-	/*Set First read register X_OUT*/
-	I2CHandle.Instance->DR = Y_OUT_START;
-
-	/* Wait until register Address byte is transmitted */
-	while ((__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_TXE) == RESET) && (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_BTF) == RESET));
-
-	/* Generate the START condition, again */
-	I2CHandle.Instance->CR1 |= I2C_CR1_START;
-
-	/* Wait the START condition has been correctly sent */
-	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_SB) == RESET);
-
-	/* Send Read Address */
-	I2CHandle.Instance->DR = __HAL_I2C_7BIT_ADD_READ(MMA8452Q_ADDRESS);
-
-	/* Wait address is acknowledged */
-	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_ADDR) == RESET);
-	__HAL_I2C_CLEAR_ADDRFLAG(&I2CHandle);		//Clear ADDR Flag
-
-	/* Wait to read X_Value_MSB */
-	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_RXNE) == RESET);
-	/* Read received MSB X value */
-	Acc_vals.y_coord = (I2CHandle.Instance->DR) << 4;
-	I2CHandle.Instance->CR1 &= ~I2C_CR1_ACK;
-	I2CHandle.Instance->CR1 |= I2C_CR1_STOP;
-
-	__HAL_I2C_CLEAR_FLAG(&I2CHandle, I2C_FLAG_AF);	//Clear Flags
-
-	I2CHandle.Instance->CR1 |= I2C_CR1_START;	// Generate the START condition
-
-	/*  Wait the START condition has been correctly sent */
-	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_SB) == RESET);
-
-	/* Send Peripheral Device Write address */
-	I2CHandle.Instance->DR = __HAL_I2C_7BIT_ADD_WRITE(MMA8452Q_ADDRESS);
-
-	/* Wait for address to be acknowledged */
-	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_ADDR) == RESET);
-	__HAL_I2C_CLEAR_ADDRFLAG(&I2CHandle);		//Clear ADDR Flag
-
-	/*Set First read register X_OUT*/
-	I2CHandle.Instance->DR = (Y_OUT_START + 0x01);
-
-	/* Wait until register Address byte is transmitted */
-	while ((__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_TXE) == RESET) && (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_BTF) == RESET));
-
-	/* Generate the START condition, again */
-	I2CHandle.Instance->CR1 |= I2C_CR1_START;
-
-	/* Wait the START condition has been correctly sent */
-	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_SB) == RESET);
-
-	/* Send Read Address */
-	I2CHandle.Instance->DR = __HAL_I2C_7BIT_ADD_READ(MMA8452Q_ADDRESS);
-
-	/* Wait address is acknowledged */
-	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_ADDR) == RESET);
-	__HAL_I2C_CLEAR_ADDRFLAG(&I2CHandle);		//Clear ADDR Flag
-
-	/* Wait to read X_Value_MSB */
-	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_RXNE) == RESET);
-	/* Read received MSB X value */
-	Acc_vals.y_coord = Acc_vals.y_coord ^ ((I2CHandle.Instance->DR) >> 4);
-	I2CHandle.Instance->CR1 &= ~I2C_CR1_ACK;
-	I2CHandle.Instance->CR1 |= I2C_CR1_STOP;
-
-
-
-
-
-
-	__HAL_I2C_CLEAR_FLAG(&I2CHandle, I2C_FLAG_AF);	//Clear Flags
-
-  I2CHandle.Instance->CR1 |= I2C_CR1_START;	// Generate the START condition
-
-  /*  Wait the START condition has been correctly sent */
-  while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_SB) == RESET);
-
-  /* Send Peripheral Device Write address */
-  I2CHandle.Instance->DR = __HAL_I2C_7BIT_ADD_WRITE(MMA8452Q_ADDRESS);
-
-  /* Wait for address to be acknowledged */
-  while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_ADDR) == RESET);
-  __HAL_I2C_CLEAR_ADDRFLAG(&I2CHandle);		//Clear ADDR Flag
-
-  /*Set First read register X_OUT*/
-  I2CHandle.Instance->DR = Z_OUT_START;
-
-  /* Wait until register Address byte is transmitted */
-  while ((__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_TXE) == RESET) && (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_BTF) == RESET));
-
-  /* Generate the START condition, again */
-  I2CHandle.Instance->CR1 |= I2C_CR1_START;
-
-  /* Wait the START condition has been correctly sent */
-  while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_SB) == RESET);
-
-  /* Send Read Address */
-  I2CHandle.Instance->DR = __HAL_I2C_7BIT_ADD_READ(MMA8452Q_ADDRESS);
-
-  /* Wait address is acknowledged */
-  while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_ADDR) == RESET);
-  __HAL_I2C_CLEAR_ADDRFLAG(&I2CHandle);		//Clear ADDR Flag
-
-  /* Wait to read X_Value_MSB */
-	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_RXNE) == RESET);
-  /* Read received MSB X value */
-  Acc_vals.z_coord = (I2CHandle.Instance->DR) << 4;
-	I2CHandle.Instance->CR1 &= ~I2C_CR1_ACK;
-	I2CHandle.Instance->CR1 |= I2C_CR1_STOP;
-
-	__HAL_I2C_CLEAR_FLAG(&I2CHandle, I2C_FLAG_AF);	//Clear Flags
-
-	I2CHandle.Instance->CR1 |= I2C_CR1_START;	// Generate the START condition
-
-	/*  Wait the START condition has been correctly sent */
-	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_SB) == RESET);
-
-	/* Send Peripheral Device Write address */
-	I2CHandle.Instance->DR = __HAL_I2C_7BIT_ADD_WRITE(MMA8452Q_ADDRESS);
-
-	/* Wait for address to be acknowledged */
-	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_ADDR) == RESET);
-	__HAL_I2C_CLEAR_ADDRFLAG(&I2CHandle);		//Clear ADDR Flag
-
-	/*Set First read register X_OUT*/
-	I2CHandle.Instance->DR = (Z_OUT_START + 0x01);
-
-	/* Wait until register Address byte is transmitted */
-	while ((__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_TXE) == RESET) && (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_BTF) == RESET));
-
-	/* Generate the START condition, again */
-	I2CHandle.Instance->CR1 |= I2C_CR1_START;
-
-	/* Wait the START condition has been correctly sent */
-	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_SB) == RESET);
-
-	/* Send Read Address */
-	I2CHandle.Instance->DR = __HAL_I2C_7BIT_ADD_READ(MMA8452Q_ADDRESS);
-
-	/* Wait address is acknowledged */
-	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_ADDR) == RESET);
-	__HAL_I2C_CLEAR_ADDRFLAG(&I2CHandle);		//Clear ADDR Flag
-
-	/* Wait to read X_Value_MSB */
-	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_RXNE) == RESET);
-	/* Read received MSB X value */
-	Acc_vals.z_coord = Acc_vals.z_coord ^ ((I2CHandle.Instance->DR) >> 4);
-	I2CHandle.Instance->CR1 &= ~I2C_CR1_ACK;
-	I2CHandle.Instance->CR1 |= I2C_CR1_STOP;
-	/* Generate NACK */
-
-  /* Generate the STOP condition */
-
+  Acc_vals.x_coord = (s4353096_read_acc_register(X_OUT_START)) << 4;
+  Acc_vals.x_coord = Acc_vals.x_coord ^ (s4353096_read_acc_register(X_OUT_START + 1)) >> 4;
+  //Acc_vals.x_coord = Acc_vals.x_coord * -1;
+  Acc_vals.y_coord = (s4353096_read_acc_register(Y_OUT_START)) << 4;
+  Acc_vals.y_coord = Acc_vals.y_coord ^ (s4353096_read_acc_register(Y_OUT_START + 1)) >> 4;
+  //Acc_vals.y_coord = Acc_vals.y_coord * -1;
+  Acc_vals.z_coord = (s4353096_read_acc_register(Z_OUT_START)) << 4;
+  Acc_vals.z_coord = Acc_vals.z_coord ^ (s4353096_read_acc_register(Z_OUT_START + 1)) >> 4;
+  //Acc_vals.z_coord = Acc_vals.z_coord * -1;
 }
 
 /**

@@ -59,6 +59,10 @@
  unsigned char s4353096_tx_buffer[32];
  unsigned char s4353096_payload_buffer[8];
  unsigned char s4353096_addr_get[4];
+ int previous_x;
+ int previous_y;
+ unsigned long previous_recieved_time;
+ unsigned long current_recieved_time;
 
 SemaphoreHandle_t s4353096_SemaphoreTracking;		//Used to show the Hammming encoded value of a given hex byte
 SemaphoreHandle_t s4353096_SemaphoreRadioState;

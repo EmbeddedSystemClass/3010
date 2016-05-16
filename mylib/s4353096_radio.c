@@ -78,7 +78,7 @@ void s4353096_TaskRadio (void) {
 			      /*Prints recieved packet to console*/
 	          s4353096_radio_getRAEpacket(s4353096_rx_buffer);
             /*Calculate and Print CRC*/
-            debug_printf("\n Raw Packet Recieved: ");
+            debug_printf("\nRaw Packet Recieved: ");
             for(int j = 0; j < 32; j++) {
               debug_printf("%x", s4353096_rx_buffer[j]);
             }
@@ -92,6 +92,82 @@ void s4353096_TaskRadio (void) {
     }
   }
   vTaskDelay(10);
+}
+extern void s4353096_radio_getRAEpacket(unsigned char *rxpacket) {
+  uint16_t crc_output;
+  uint8_t hamming_decoded_bytes[10];
+  uint16_t payload[5];
+  uint16_t crc_recieved;
+  int current_x;
+  int current_y;
+  int velocity_x;
+  int velocity_y;
+  int velocity_x_decimal;
+  int velocity_y_decimal;
+  int l = 0;
+  debug_printf("RECV:");
+  /*Type*/
+  debug_printf("\nType: ");
+  for (int j = 0; j < 1; j++) {
+    debug_printf("%x", rxpacket[j]);
+  }
+  /*To Address*/
+  debug_printf("\nTo Address: ");
+  for (int j = 1; j < 5; j++) {
+    debug_printf("%x", rxpacket[j]);
+  }
+  /*From Address*/
+  debug_printf("\nFrom Address: ");
+  for (int j = 5; j < 9; j++) {
+    debug_printf("%x", rxpacket[j]);
+  }
+  /*Sequence*/
+  debug_printf("\nSequence: ");
+  for (int j = 9; j < 10; j++) {
+    debug_printf("%x", rxpacket[j]);
+  }
+  /*CRC*/
+  /*Warning, CRC is currently in LSB*/
+  crc_output = crc_calculation(rxpacket);
+  debug_printf("\nCalculated CRC: %x\n", crc_output);
+  crc_recieved = (rxpacket[31]) ^ (rxpacket[30] << 8);
+  if (crc_output != crc_recieved) {
+    debug_printf("CRC ERROR Detected\n");
+  }
+  /*Hamming decode*/
+  for(int p = 10; p < 30; p+=2) {
+    hamming_decoded_bytes[l] = hamming_byte_decoder(rxpacket[p], rxpacket[p+1]);
+    /*Change to MSB*/
+    if ((l % 2) == 1) {
+      payload[l/2] = (hamming_decoded_bytes[l] << 8) ^ hamming_decoded_bytes[l-1];
+    }
+    l++;
+  }
+  /*Calculate the Velocity*/
+  current_x = payload[1];
+  current_y = payload[2];
+  /*Calculate X Velocity*/
+  velocity_x_decimal = ((current_x - previous_x)*1000)/((current_recieved_time - previous_recieved_time)/1000);
+  velocity_x = velocity_x_decimal/1000;
+  velocity_x_decimal = velocity_x_decimal - velocity_x*1000;
+  /*Calculate Y Velocity*/
+  velocity_y_decimal = ((current_y - previous_y)*1000)/((current_recieved_time - previous_recieved_time)/1000);
+  velocity_y = velocity_y_decimal/1000;
+  velocity_y_decimal = velocity_y_decimal - velocity_y*1000;
+
+  debug_printf("\n\nTIME: %lu", current_recieved_time);
+  /*Marker ID*/
+  debug_printf("\n\nMarker ID: %hd\nX Coordinate: %hd\nY Coordinate: %hd\nWidth of marker: %hd\nHeight of marker: %hd\n", payload[0], payload[1],payload[2],payload[3],payload[4]);
+  previous_recieved_time = current_recieved_time;
+  previous_y = current_y;
+  previous_x = current_x;
+  /*Velocity of X*/
+  debug_printf("\nVelocity in X: %d.%03d pixels per millisecond\n", velocity_x, velocity_x_decimal);
+  /*Velocity of Y*/
+  debug_printf("\nVelocity in Y: %d.%03d pixels per millisecond\n", velocity_y, velocity_y_decimal);
+
+  s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
+  s4353096_radio_fsmprocessing();
 }
 extern void s4353096_radio_init(void) {
   GPIO_InitTypeDef GPIO_spi;
@@ -157,6 +233,7 @@ extern void s4353096_radio_fsmprocessing(void) {
       if (radio_fsm_getstate() == RADIO_FSM_WAIT_STATE) {
         if (radio_fsm_read(s4353096_rx_buffer) == RADIO_FSM_DONE) {
           s4353096_radio_rxstatus = 1;
+          current_recieved_time = HAL_GetTick();
         } else {
           s4353096_radio_rxstatus = 0;
         }
@@ -244,57 +321,6 @@ extern void s4353096_radio_getpacket(unsigned char *rxpacket) {
     debug_printf("%c", rxpacket[i]);
   }
   debug_printf("\n");
-  s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
-  s4353096_radio_fsmprocessing();
-}
-extern void s4353096_radio_getRAEpacket(unsigned char *rxpacket) {
-  uint16_t crc_output;
-  uint8_t hamming_decoded_bytes[10];
-  uint16_t payload[5];
-  int l = 0;
-  debug_printf("RECV:");
-  /*Type*/
-  debug_printf("\nType: ");
-  for (int j = 0; j < 1; j++) {
-    debug_printf("%x", rxpacket[j]);
-  }
-  /*To Address*/
-  debug_printf("\nTo Address: ");
-  for (int j = 1; j < 5; j++) {
-    debug_printf("%x", rxpacket[j]);
-  }
-  /*From Address*/
-  debug_printf("\nFrom Address: ");
-  for (int j = 5; j < 9; j++) {
-    debug_printf("%x", rxpacket[j]);
-  }
-  /*Sequence*/
-  debug_printf("\nSequence: ");
-  for (int j = 9; j < 10; j++) {
-    debug_printf("%x", rxpacket[j]);
-  }
-  /*CRC*/
-  crc_output = crc_calculation(rxpacket);
-  debug_printf("\nCRC: %x\n", crc_output);
-  /*Hamming decode*/
-  for(int p = 10; p < 30; p+=2) {
-    hamming_decoded_bytes[l] = hamming_byte_decoder(rxpacket[p], rxpacket[p+1]);
-    /*Change to MSB*/
-    if ((l % 2) == 1) {
-      payload[l/2] = (hamming_decoded_bytes[l] << 8) ^ hamming_decoded_bytes[l-1];
-    }
-    l++;
-  }
-  /*Marker ID*/
-  debug_printf("\nMarker ID: %hd", payload[0]);
-  /*X Coordinate*/
-  debug_printf("\nX Coordinate: %hd", payload[1]);
-  /*Y Coordinate*/
-  debug_printf("\nY Coordinate: %hd", payload[2]);
-  /*Width of marker*/
-  debug_printf("\nWidth of marker: %hd", payload[3]);
-  /*Height of marker*/
-  debug_printf("\nHeight of marker: %hd", payload[4]);
   s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
   s4353096_radio_fsmprocessing();
 }

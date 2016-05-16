@@ -24,9 +24,15 @@
 /* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 struct Accelerometer {
-  short x_coord;
-  short y_coord;
-  short z_coord;
+  int16_t x_coord;
+  int8_t x_coord_MSB;
+  uint8_t x_coord_LSB;
+  int16_t y_coord;
+  int8_t y_coord_MSB;
+  uint8_t y_coord_LSB;
+  int16_t z_coord;
+  int8_t z_coord_MSB;
+  uint8_t z_coord_LSB;
   int coord_status;
 };
 SemaphoreHandle_t s4353096_SemaphoreAccRaw;		//Used to Specify Acc output
@@ -40,4 +46,4 @@ extern void s4353096_readXYZ (void);
 extern void s4353096_TaskAccelerometer(void);
 extern void s4353096_accelerometer_init(void);
 extern short twos_complement_proper (short number);
-extern short s4353096_read_acc_register(int reg);
+extern uint8_t s4353096_read_acc_register(int reg);

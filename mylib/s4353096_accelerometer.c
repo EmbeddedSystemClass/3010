@@ -49,16 +49,16 @@ extern void s4353096_TaskAccelerometer(void) {
 				/* See if we can obtain the PB semaphore. If the semaphore is not available
 							wait 10 ticks to see if it becomes free. */
 
-			if( xSemaphoreTake( s4353096_SemaphoreAccRaw, 10 ) == pdTRUE ) {
+			//if( xSemaphoreTake( s4353096_SemaphoreAccRaw, 10 ) == pdTRUE ) {
 					s4353096_readXYZ();
           //debug_printf("\nIn X: %x\n", Acc_vals.x_coord);
-          Acc_vals.x_coord = twos_complement_proper(Acc_vals.x_coord); //& 0xFFFF;
+          //Acc_vals.x_coord = twos_complement_proper(Acc_vals.x_coord); //& 0xFFFF;
           //debug_printf("In Y: %x\n", Acc_vals.y_coord);
-          Acc_vals.y_coord = twos_complement_proper(Acc_vals.y_coord); //& 0xFFFF;
+          //Acc_vals.y_coord = twos_complement_proper(Acc_vals.y_coord); //& 0xFFFF;
           //debug_printf("In Z: %x\n", Acc_vals.z_coord);
-          Acc_vals.z_coord = twos_complement_proper(Acc_vals.z_coord); //& 0xFFFF;
+          //Acc_vals.z_coord = twos_complement_proper(Acc_vals.z_coord); //& 0xFFFF;
 					debug_printf("X: %hd ,  Y: %hd ,  Z: %hd \n", Acc_vals.x_coord, Acc_vals.y_coord, Acc_vals.z_coord);
-				}
+			//	}
 			}
       /*If not check each semaphore individually*/
     	BRD_LEDToggle();	//Toggle LED on/off
@@ -75,8 +75,8 @@ extern short twos_complement_proper (short number) {
   debug_printf("%hx, \n", two);
   return two;
 }
-extern short s4353096_read_acc_register(int reg) {
-  short read_value;
+extern uint8_t s4353096_read_acc_register(int reg) {
+  uint8_t read_value;
   __HAL_I2C_CLEAR_FLAG(&I2CHandle, I2C_FLAG_AF);	//Clear Flags
 
 	I2CHandle.Instance->CR1 |= I2C_CR1_START;	// Generate the START condition
@@ -119,15 +119,15 @@ extern short s4353096_read_acc_register(int reg) {
   return read_value;
 }
 extern void s4353096_readXYZ (void) {
-  Acc_vals.x_coord = (s4353096_read_acc_register(X_OUT_START)) << 4;
-  Acc_vals.x_coord = Acc_vals.x_coord ^ (s4353096_read_acc_register(X_OUT_START + 1)) >> 4;
-  //Acc_vals.x_coord = Acc_vals.x_coord * -1;
-  Acc_vals.y_coord = (s4353096_read_acc_register(Y_OUT_START)) << 4;
-  Acc_vals.y_coord = Acc_vals.y_coord ^ (s4353096_read_acc_register(Y_OUT_START + 1)) >> 4;
-  //Acc_vals.y_coord = Acc_vals.y_coord * -1;
-  Acc_vals.z_coord = (s4353096_read_acc_register(Z_OUT_START)) << 4;
-  Acc_vals.z_coord = Acc_vals.z_coord ^ (s4353096_read_acc_register(Z_OUT_START + 1)) >> 4;
-  //Acc_vals.z_coord = Acc_vals.z_coord * -1;
+  Acc_vals.x_coord_MSB = s4353096_read_acc_register(X_OUT_START);
+  Acc_vals.x_coord_LSB = s4353096_read_acc_register(X_OUT_START + 1);
+  Acc_vals.x_coord = (Acc_vals.x_coord_MSB) << 4 ^ (Acc_vals.x_coord_LSB >> 4);
+  Acc_vals.y_coord_MSB = s4353096_read_acc_register(Y_OUT_START);
+  Acc_vals.y_coord_LSB = s4353096_read_acc_register(Y_OUT_START + 1);
+  Acc_vals.y_coord = (Acc_vals.y_coord_MSB) << 4 ^ (Acc_vals.y_coord_LSB >> 4);
+  Acc_vals.z_coord_MSB = s4353096_read_acc_register(Z_OUT_START);
+  Acc_vals.z_coord_LSB = s4353096_read_acc_register(Z_OUT_START + 1);
+  Acc_vals.z_coord = (Acc_vals.z_coord_MSB) << 4 ^ (Acc_vals.z_coord_LSB >> 4);
 }
 
 /**

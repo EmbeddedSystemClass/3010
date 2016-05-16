@@ -78,7 +78,7 @@ void s4353096_TaskRadio (void) {
 			      /*Prints recieved packet to console*/
 	          s4353096_radio_getRAEpacket(s4353096_rx_buffer);
             /*Calculate and Print CRC*/
-            debug_printf("\n");
+            debug_printf("\n Raw Packet Recieved: ");
             for(int j = 0; j < 32; j++) {
               debug_printf("%x", s4353096_rx_buffer[j]);
             }

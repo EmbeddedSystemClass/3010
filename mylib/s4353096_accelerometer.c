@@ -27,6 +27,9 @@
 #define Y_OUT_START 0x03
 #define Z_OUT_START 0x05
 #define PL_STATUS   0x10
+#define SYS_MOD     0x0B
+#define CTRL_REG_1  0x2A
+#define PL_CFG      0x11
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 static I2C_HandleTypeDef  I2CHandle;
@@ -49,16 +52,19 @@ extern void s4353096_TaskAccelerometer(void) {
 				/* See if we can obtain the PB semaphore. If the semaphore is not available
 							wait 10 ticks to see if it becomes free. */
 
-			//if( xSemaphoreTake( s4353096_SemaphoreAccRaw, 10 ) == pdTRUE ) {
+			if( xSemaphoreTake( s4353096_SemaphoreAccRaw, 10 ) == pdTRUE ) {
 					s4353096_readXYZ();
-          //debug_printf("\nIn X: %x\n", Acc_vals.x_coord);
-          //Acc_vals.x_coord = twos_complement_proper(Acc_vals.x_coord); //& 0xFFFF;
-          //debug_printf("In Y: %x\n", Acc_vals.y_coord);
-          //Acc_vals.y_coord = twos_complement_proper(Acc_vals.y_coord); //& 0xFFFF;
-          //debug_printf("In Z: %x\n", Acc_vals.z_coord);
-          //Acc_vals.z_coord = twos_complement_proper(Acc_vals.z_coord); //& 0xFFFF;
 					debug_printf("X: %hd ,  Y: %hd ,  Z: %hd \n", Acc_vals.x_coord, Acc_vals.y_coord, Acc_vals.z_coord);
-			//	}
+
+        }
+			}
+      if (s4353096_SemaphoreAccPl != NULL) {	/* Check if semaphore exists */
+				/* See if we can obtain the PB semaphore. If the semaphore is not available
+							wait 10 ticks to see if it becomes free. */
+
+			if( xSemaphoreTake( s4353096_SemaphoreAccPl, 10 ) == pdTRUE ) {
+					s4353096_readPLBF();
+        }
 			}
       /*If not check each semaphore individually*/
     	BRD_LEDToggle();	//Toggle LED on/off
@@ -66,14 +72,6 @@ extern void s4353096_TaskAccelerometer(void) {
 			//S4353096_LA_CHAN0_CLR();
     	vTaskDelay(1);		//Delay for 1s (1000ms)
 	}
-}
-extern short twos_complement_proper (short number) {
-  short two;
-  two = number;
-  two = two ^ ((two & 0x0800) << 4);
-  two = two & 0xFEFF;
-  debug_printf("%hx, \n", two);
-  return two;
 }
 extern uint8_t s4353096_read_acc_register(int reg) {
   uint8_t read_value;
@@ -118,6 +116,40 @@ extern uint8_t s4353096_read_acc_register(int reg) {
 	I2CHandle.Instance->CR1 |= I2C_CR1_STOP;
   return read_value;
 }
+extern void s4353096_readPLBF (void) {
+  //s4353096_write_acc_register(SYS_MOD, 0x00);
+  vTaskDelay(10);
+  //s4353096_write_acc_register(SYS_MOD, 0x01);
+  Acc_vals.pl_status = s4353096_read_acc_register(PL_STATUS);
+  Acc_vals.land_port = (Acc_vals.pl_status & 0x06) >> 1;
+  Acc_vals.back_front = Acc_vals.pl_status & 0x01;
+  switch(Acc_vals.land_port) {
+    case 0x00:
+      debug_printf("|");
+      break;
+    case 0x01:
+      debug_printf("_");
+      break;
+    case 0x02:
+      debug_printf(">");
+      break;
+    case 0x03:
+      debug_printf("<");
+      break;
+    default:
+      break;
+  }
+  switch (Acc_vals.back_front) {
+    case 0x00:
+      debug_printf(" +\n");
+      break;
+    case 0x01:
+      debug_printf(" -\n");
+      break;
+    default:
+      break;
+  }
+}
 extern void s4353096_readXYZ (void) {
   Acc_vals.x_coord_MSB = s4353096_read_acc_register(X_OUT_START);
   Acc_vals.x_coord_LSB = s4353096_read_acc_register(X_OUT_START + 1);
@@ -130,6 +162,35 @@ extern void s4353096_readXYZ (void) {
   Acc_vals.z_coord = (Acc_vals.z_coord_MSB) << 4 ^ (Acc_vals.z_coord_LSB >> 4);
 }
 
+extern void s4353096_write_acc_register(uint8_t reg, uint8_t value) {
+  /*Place the Accelerometer into wake state*/
+	__HAL_I2C_CLEAR_FLAG(&I2CHandle, I2C_FLAG_AF);	//Clear Flags
+
+  I2CHandle.Instance->CR1 |= I2C_CR1_START;	// Generate the START condition
+
+  /*  Wait the START condition has been correctly sent */
+  while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_SB) == RESET);
+
+  /* Send Peripheral Device Write address */
+  I2CHandle.Instance->DR = __HAL_I2C_7BIT_ADD_WRITE(MMA8452Q_ADDRESS);
+
+  /* Wait for address to be acknowledged */
+  while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_ADDR) == RESET);
+  __HAL_I2C_CLEAR_ADDRFLAG(&I2CHandle);		//Clear ADDR Flag
+
+  /*Set First write register X_O*/
+  I2CHandle.Instance->DR = reg;
+
+  /* Wait until register Address byte is transmitted */
+  while ((__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_TXE) == RESET) && (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_BTF) == RESET));
+
+  I2CHandle.Instance->DR = value;
+
+  /* Wait to Write X_Value_MSB */
+	while ((__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_TXE) == RESET) && (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_BTF) == RESET));
+	I2CHandle.Instance->CR1 |= I2C_CR1_STOP;
+
+}
 /**
   * @brief  Initialise Hardware
   * @param  None
@@ -187,68 +248,10 @@ extern void s4353096_accelerometer_init(void) {
 	*/
 	while (HAL_I2C_GetState(&I2CHandle) != HAL_I2C_STATE_READY);
 
-
-	/*Place the Accelerometer into wake state*/
-	__HAL_I2C_CLEAR_FLAG(&I2CHandle, I2C_FLAG_AF);	//Clear Flags
-
-  I2CHandle.Instance->CR1 |= I2C_CR1_START;	// Generate the START condition
-
-  /*  Wait the START condition has been correctly sent */
-  while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_SB) == RESET);
-
-  /* Send Peripheral Device Write address */
-  I2CHandle.Instance->DR = __HAL_I2C_7BIT_ADD_WRITE(MMA8452Q_ADDRESS);
-
-  /* Wait for address to be acknowledged */
-  while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_ADDR) == RESET);
-  __HAL_I2C_CLEAR_ADDRFLAG(&I2CHandle);		//Clear ADDR Flag
-
-  /*Set First write register X_O*/
-  I2CHandle.Instance->DR = 0x0B;
-
-  /* Wait until register Address byte is transmitted */
-  while ((__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_TXE) == RESET) && (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_BTF) == RESET));
-
-
-
-
-
-  I2CHandle.Instance->DR = 0x01;
-
-  /* Wait to Write X_Value_MSB */
-	while ((__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_TXE) == RESET) && (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_BTF) == RESET));
-	I2CHandle.Instance->CR1 |= I2C_CR1_STOP;
-
-
-	/*Place Full Scale Resolution into active state*/
-	/*Place the Accelerometer into wake state*/
-	__HAL_I2C_CLEAR_FLAG(&I2CHandle, I2C_FLAG_AF);	//Clear Flags
-
-	I2CHandle.Instance->CR1 |= I2C_CR1_START;	// Generate the START condition
-
-	/*  Wait the START condition has been correctly sent */
-	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_SB) == RESET);
-
-	/* Send Peripheral Device Write address */
-	I2CHandle.Instance->DR = __HAL_I2C_7BIT_ADD_WRITE(MMA8452Q_ADDRESS);
-
-	/* Wait for address to be acknowledged */
-	while (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_ADDR) == RESET);
-	__HAL_I2C_CLEAR_ADDRFLAG(&I2CHandle);		//Clear ADDR Flag
-
-	/*Set First write register X_O*/
-	I2CHandle.Instance->DR = 0x2A;
-
-	/* Wait until register Address byte is transmitted */
-	while ((__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_TXE) == RESET) && (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_BTF) == RESET));
-
-
-
-
-
-	I2CHandle.Instance->DR = 0x01;
-
-	/* Wait to Write X_Value_MSB */
-	while ((__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_TXE) == RESET) && (__HAL_I2C_GET_FLAG(&I2CHandle, I2C_FLAG_BTF) == RESET));
-	I2CHandle.Instance->CR1 |= I2C_CR1_STOP;
+  /*Enable PLBF*/
+  s4353096_write_acc_register(PL_CFG, (1 << 6));
+  /*Place the Accelerometer into wake state*/
+	s4353096_write_acc_register(SYS_MOD, 0x01);
+  /*Place Full Scale Resolution into active state*/
+  s4353096_write_acc_register(CTRL_REG_1, 0x01);
 }

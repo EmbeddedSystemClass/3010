@@ -33,7 +33,9 @@ struct Accelerometer {
   int16_t z_coord;
   int8_t z_coord_MSB;
   uint8_t z_coord_LSB;
-  int coord_status;
+  uint8_t pl_status;
+  uint8_t land_port;
+  uint8_t back_front;
 };
 SemaphoreHandle_t s4353096_SemaphoreAccRaw;		//Used to Specify Acc output
 SemaphoreHandle_t s4353096_SemaphoreAccPl;		//Used to control laser
@@ -43,7 +45,8 @@ SemaphoreHandle_t s4353096_SemaphoreAccPl;		//Used to control laser
 #define mainTASKACC_STACK_SIZE		( configMINIMAL_STACK_SIZE * 4 )
 extern void GetRunTimeStats(void);
 extern void s4353096_readXYZ (void);
+extern void s4353096_readPLBF (void);
 extern void s4353096_TaskAccelerometer(void);
 extern void s4353096_accelerometer_init(void);
-extern short twos_complement_proper (short number);
 extern uint8_t s4353096_read_acc_register(int reg);
+extern void s4353096_write_acc_register(uint8_t reg, uint8_t value);

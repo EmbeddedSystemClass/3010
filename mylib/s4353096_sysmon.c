@@ -99,8 +99,8 @@ char* state;
                                  &ulTotalRunTime );
          /* For each populated position in the pxTaskStatusArray array,
          format the raw data as human readable ASCII data. */
-				 debug_printf("Task Name \t\t\t\tTask #\tPrioriy\t\tState    \tRunning Time\n");
-				 debug_printf("--------------------------------------------------------------------------------------\n");
+				 debug_printf("Task Name \t\t\t\tTask #\tPrioriy\t\tState    \tRunning Time (ms)\n");
+				 debug_printf("--------------------------------------------------------------------------------------------------------\n");
          for( x = 0; x < uxArraySize; x++ )
          {
 					 	/*Want to print in the below fashion*/
@@ -109,22 +109,22 @@ char* state;
             //TaskValues.TaskHandles[x] = pxTaskStatusArray[x].xHandle;
 						if (pxTaskStatusArray[x].eCurrentState == eReady) {
 							state = "Ready";
-              debug_printf( ANSI_COLOR_YELLOW "%-25s\t\t%-2.0d\t%-2.0d\t\t%-9s\t%-lu\n" ANSI_COLOR_RESET , pxTaskStatusArray[x].pcTaskName,
-  						pxTaskStatusArray[x].xTaskNumber, pxTaskStatusArray[x].uxCurrentPriority, state, pxTaskStatusArray[x].ulRunTimeCounter);
+              debug_printf( ANSI_COLOR_YELLOW "%-25s\t\t%-2.0d\t%-2.0d\t\t%-9s\t%*lu\n" ANSI_COLOR_RESET , pxTaskStatusArray[x].pcTaskName,
+  						pxTaskStatusArray[x].xTaskNumber, pxTaskStatusArray[x].uxCurrentPriority, state, 12, pxTaskStatusArray[x].ulRunTimeCounter);
 						} else if (pxTaskStatusArray[x].eCurrentState == eBlocked) {
 							state = "Blocked";
-              debug_printf( ANSI_COLOR_RED "%-25s\t\t%-2.0d\t%-2.0d\t\t%-9s\t%-lu\n" ANSI_COLOR_RESET , pxTaskStatusArray[x].pcTaskName,
-  						pxTaskStatusArray[x].xTaskNumber, pxTaskStatusArray[x].uxCurrentPriority, state, pxTaskStatusArray[x].ulRunTimeCounter);
+              debug_printf( ANSI_COLOR_RED "%-25s\t\t%-2.0d\t%-2.0d\t\t%-9s\t%*lu\n" ANSI_COLOR_RESET , pxTaskStatusArray[x].pcTaskName,
+  						pxTaskStatusArray[x].xTaskNumber, pxTaskStatusArray[x].uxCurrentPriority, state, 12, pxTaskStatusArray[x].ulRunTimeCounter);
 
 						} else if (pxTaskStatusArray[x].eCurrentState == eSuspended) {
 							state = "Suspended";
-              debug_printf( ANSI_COLOR_BLUE "%-25s\t\t%-2.0d\t%-2.0d\t\t%-9s\t%-lu\n" ANSI_COLOR_RESET , pxTaskStatusArray[x].pcTaskName,
-  						pxTaskStatusArray[x].xTaskNumber, pxTaskStatusArray[x].uxCurrentPriority, state, pxTaskStatusArray[x].ulRunTimeCounter);
+              debug_printf( ANSI_COLOR_BLUE "%-25s\t\t%-2.0d\t%-2.0d\t\t%-9s\t%*lu\n" ANSI_COLOR_RESET , pxTaskStatusArray[x].pcTaskName,
+  						pxTaskStatusArray[x].xTaskNumber, pxTaskStatusArray[x].uxCurrentPriority, state, 12, pxTaskStatusArray[x].ulRunTimeCounter);
 
 						} else if (pxTaskStatusArray[x].eCurrentState == eRunning) {
 							state = "Running";
-              debug_printf( ANSI_COLOR_GREEN "%-25s\t\t%-2.0d\t%-2.0d\t\t%-9s\t%-lu\n" ANSI_COLOR_RESET ,pxTaskStatusArray[x].pcTaskName,
-  						pxTaskStatusArray[x].xTaskNumber, pxTaskStatusArray[x].uxCurrentPriority, state, pxTaskStatusArray[x].ulRunTimeCounter);
+              debug_printf( ANSI_COLOR_GREEN "%-25s\t\t%-2.0d\t%-2.0d\t\t%-9s\t%*lu\n" ANSI_COLOR_RESET ,pxTaskStatusArray[x].pcTaskName,
+  						pxTaskStatusArray[x].xTaskNumber, pxTaskStatusArray[x].uxCurrentPriority, state, 12, pxTaskStatusArray[x].ulRunTimeCounter);
 
 						} else {
 							debug_printf("No State Recieved\n");

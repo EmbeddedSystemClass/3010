@@ -22,7 +22,7 @@
 #include "debug_printf.h"
 #include "s4353096_hamming.h"
 #include <string.h>
-
+//#define DEBUG 1
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -154,7 +154,7 @@ extern uint8_t hamming_byte_decoder(uint8_t lower, uint8_t upper) {
 		} else if (pr != p0) {
 				if (S == 0x00) {
 				/*1 Bit error in parity bit*/
-				pr = !pr;
+				p0 = !p0;
 				debug_printf("Error in Parity\n");
 			} else if (S == ed3) {
 				d3 = !d3;
@@ -200,8 +200,12 @@ extern uint8_t hamming_byte_decoder(uint8_t lower, uint8_t upper) {
 	R = (lower & 0xFF) | (upper << 8);
 	E = R ^ C;
 	decode_byte = (c_up & 0xF0) ^ ((c_low & 0xF0 ) >> 4);
+	#ifdef DEBUG
+	debug_printf("RECIEVED FROM LASER: %c - RAW: %04x (ErrMask %04x)\n", decode_byte, R, E);
+	#endif
 	return decode_byte;
-	//debug_printf("RECIEVED FROM LASER: %c - RAW: %04x (ErrMask %04x)\n", decode_byte, R, E);
+
+
 }
 /*Inserts an error into the given hex bit on the given transmit value, and returns the new error including output*/
 uint16_t hamming_error_insertion(uint8_t error_bit, uint16_t output) {

@@ -50,7 +50,7 @@ extern BaseType_t prvLaserCommand(char *pcWriteBuffer, size_t xWriteBufferLen, c
 	cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
 
 	/* Write command echo output string to write buffer. */
-	xWriteBufferLen = sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+	sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
   /* Set the semaphore as available if the semaphore exists*/
 	if (s4353096_SemaphoreLaser != NULL) {	/* Check if semaphore exists */
 		xSemaphoreGive(s4353096_SemaphoreLaser);		/* Give PB Semaphore from ISR*/
@@ -70,7 +70,7 @@ extern BaseType_t prvPanCommand(char *pcWriteBuffer, size_t xWriteBufferLen, con
 	cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
 
 	/* Write command echo output string to write buffer. */
-	xWriteBufferLen = sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+	sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
   /* Set the semaphore as available if the semaphore exists*/
 	if (strcmp(pcWriteBuffer,"left") == 0) {
     /*Give Semaphore*/
@@ -106,7 +106,7 @@ extern BaseType_t prvTiltCommand(char *pcWriteBuffer, size_t xWriteBufferLen, co
 	cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
 
 	/* Write command echo output string to write buffer. */
-	xWriteBufferLen = sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+	sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
   /* Set the semaphore as available if the semaphore exists*/
 	if (strcmp(pcWriteBuffer,"up") == 0) {
     /*Give Semaphore*/
@@ -144,7 +144,7 @@ extern BaseType_t prvHamenc(char *pcWriteBuffer, size_t xWriteBufferLen, const c
 	cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
 
 	/* Write command echo output string to write buffer. */
-	xWriteBufferLen = sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+	sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
   /* Set the semaphore as available if the semaphore exists*/
   /*Give Semaphore*/
 	if (strlen(pcWriteBuffer) == 1) {
@@ -183,12 +183,11 @@ extern BaseType_t prvHamdec(char *pcWriteBuffer, size_t xWriteBufferLen, const c
 	uint8_t decode_input_lower;
 	uint8_t decode_input_upper;
 	uint8_t decode_output;
-	uint16_t decode_input_8;
 	/* Get parameters from command string */
 	cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
 
 	/* Write command echo output string to write buffer. */
-	xWriteBufferLen = sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+	sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
   /* Set the semaphore as available if the semaphore exists*/
 	if (strlen(pcWriteBuffer) == 2) {
 		/*if the input is char*/
@@ -199,7 +198,6 @@ extern BaseType_t prvHamdec(char *pcWriteBuffer, size_t xWriteBufferLen, const c
 	} else if ((pcWriteBuffer[0] == '0') && (pcWriteBuffer[1] == 'x')) {
 		/*If the input is a valid Hex*/
 		decode_input_long = strtoul(pcWriteBuffer, &ptr, 16);
-		decode_input_8 = decode_input_long;
 		//debug_printf("\n Hex input  %s\n", decode_input_8);
 		decode_input_upper = (decode_input_long) >> 8;
 		decode_input_lower = decode_input_long;
@@ -235,7 +233,7 @@ extern BaseType_t prvResume(char *pcWriteBuffer, size_t xWriteBufferLen, const c
 	cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
 
 	/* Write command echo output string to write buffer. */
-	xWriteBufferLen = sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+	sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
   uxArraySize = uxTaskGetNumberOfTasks();
 	for(x = 0; x < uxArraySize; x++) {
 		if(strcmp(TaskValues.TaskNames[x], pcWriteBuffer) == 0) {
@@ -260,7 +258,7 @@ extern BaseType_t prvSuspend(char *pcWriteBuffer, size_t xWriteBufferLen, const 
 	cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
 
 	/* Write command echo output string to write buffer. */
-	xWriteBufferLen = sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+	sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
   uxArraySize = uxTaskGetNumberOfTasks();
 	for(x = 0; x < uxArraySize; x++) {
 		if(strcmp(TaskValues.TaskNames[x], pcWriteBuffer) == 0) {
@@ -279,7 +277,7 @@ extern BaseType_t prvSuspend(char *pcWriteBuffer, size_t xWriteBufferLen, const 
 extern BaseType_t prvBoxCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 
 	/* Write command echo output string to write buffer. */
-	xWriteBufferLen = sprintf((char *) pcWriteBuffer, "\n");
+	sprintf((char *) pcWriteBuffer, "\n");
   /* Set the semaphore as available if the semaphore exists*/
   xSemaphoreGive(s4353096_SemaphoreBox);
 	/* Return pdFALSE, as there are no more strings to return */
@@ -288,7 +286,7 @@ extern BaseType_t prvBoxCommand(char *pcWriteBuffer, size_t xWriteBufferLen, con
 }
 extern BaseType_t prvTop(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 
-	xWriteBufferLen = sprintf((char *) pcWriteBuffer, "\n");
+	sprintf((char *) pcWriteBuffer, "\n");
 	GetTopList();
 	/* Return pdFALSE, as there are no more strings to return */
 	/* Only return pdTRUE, if more strings need to be printed */
@@ -303,7 +301,7 @@ extern BaseType_t prvAcc(char *pcWriteBuffer, size_t xWriteBufferLen, const char
 	cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
 
 	/* Write command echo output string to write buffer. */
-	xWriteBufferLen = sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+	sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
   /* Set the semaphore as available if the semaphore exists*/
 	if (strcmp(pcWriteBuffer,"raw") == 0) {
     /*Give Semaphore*/
@@ -327,7 +325,7 @@ extern BaseType_t prvTracking(char *pcWriteBuffer, size_t xWriteBufferLen, const
 		cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
 
 		/* Write command echo output string to write buffer. */
-		xWriteBufferLen = sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+		sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
 		if (strcmp(pcWriteBuffer,"on") == 0) {
 	    /*Give Semaphore*/
 	    xSemaphoreGive(s4353096_SemaphoreTracking);
@@ -354,7 +352,7 @@ extern BaseType_t prvCRC(char *pcWriteBuffer, size_t xWriteBufferLen, const char
 	cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
 
 	/* Write command echo output string to write buffer. */
-	xWriteBufferLen = sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+	sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
   /* Set the semaphore as available if the semaphore exists*/
   /*Give Semaphore*/
 

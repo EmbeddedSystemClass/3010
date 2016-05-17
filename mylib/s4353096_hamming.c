@@ -196,11 +196,13 @@ extern uint8_t hamming_byte_decoder(uint8_t lower, uint8_t upper) {
 			c_low = decode_byte;
 		}
 	}
-	//C = (c_low & 0xFF) | (c_up << 8);
-	//R = (lower & 0xFF) | (upper << 8);
-	//E = R ^ C;
+	#ifdef DEBUG
+	C = (c_low & 0xFF) | (c_up << 8);
+	R = (lower & 0xFF) | (upper << 8);
+	E = R ^ C;
+	debug_printf("RECIEVED FROM LASER: %c - RAW: %04x (ErrMask %04x)\n", decode_byte, R, E);
+	#endif
 	decode_byte = (c_up & 0xF0) ^ ((c_low & 0xF0 ) >> 4);
-	//debug_printf("RECIEVED FROM LASER: %c - RAW: %04x (ErrMask %04x)\n", decode_byte, R, E);
 	return decode_byte;
 }
 /*Inserts an error into the given hex bit on the given transmit value, and returns the new error including output*/

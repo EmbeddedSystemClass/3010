@@ -39,7 +39,7 @@
  *                                          ONLY be called when
  *                                          s4353096_radio_getrxstatus() == 1.
  *
- * s4353096_TaskRadio() -
+ * s4353096_TaskRadio() - The main function for the Radio Task
  ******************************************************************************
  */
  /* Includes ------------------------------------------------------------------*/
@@ -63,7 +63,7 @@
  #define mainTASKRADIO_PRIORITY					( tskIDLE_PRIORITY + 1 )
  /* Task Stack Allocations -----------------------------------------------------*/
  #define mainTASKRADIO_STACK_SIZE		( configMINIMAL_STACK_SIZE * 4 )
-
+ /*Global Variables for radio*/
  int s4353096_radio_fsmcurrentstate;
  int s4353096_radio_rxstatus;
  unsigned char s4353096_rx_buffer[32];
@@ -74,9 +74,11 @@
  int previous_y;
  unsigned long previous_recieved_time;
  unsigned long current_recieved_time;
+/*Semephore Definitions*/
+SemaphoreHandle_t s4353096_SemaphoreTracking; //CLI Semephore to enable/disable Radio Recieve
+SemaphoreHandle_t s4353096_SemaphoreRadioState; //Tracks whether the Radio has been enabled or disabled for Suspension upon key recieve
 
-SemaphoreHandle_t s4353096_SemaphoreTracking;
-SemaphoreHandle_t s4353096_SemaphoreRadioState;
+/*Function Prototypes*/
 void s4353096_TaskRadio (void);
 extern void s4353096_radio_init(void);
 extern void s4353096_radio_fsmprocessing();

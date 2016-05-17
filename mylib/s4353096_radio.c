@@ -100,10 +100,10 @@ void s4353096_TaskRadio (void) {
 }
 /*Print out values*/
 extern void s4353096_radio_getRAEpacket(unsigned char *rxpacket) {
-  uint16_t crc_output;
+  uint16_t crc_output; //Calculated CRC of the Recieved Packet
   uint8_t hamming_decoded_bytes[10];
   uint16_t payload[5];
-  uint16_t crc_recieved;
+  uint16_t crc_recieved; //CRC recieved in the packet
   int current_x;
   int current_y;
   int velocity_x;
@@ -112,69 +112,75 @@ extern void s4353096_radio_getRAEpacket(unsigned char *rxpacket) {
   int velocity_y_decimal;
   int l = 0;
   debug_printf("RECV:");
-  /*Type*/
-  debug_printf("\nType: ");
-  for (int j = 0; j < 1; j++) {
-    debug_printf("%x", rxpacket[j]);
-  }
-  /*To Address*/
+  /*Print the recieved Type*/
+  debug_printf("\nType: %x", rxpacket[0]);
+
+  /*Increment through and print the Destination address*/
   debug_printf("\nTo Address: ");
-  for (int j = 1; j < 5; j++) {
+  for (int j = 4; j >= 1; j--) {
     debug_printf("%x", rxpacket[j]);
   }
-  /*From Address*/
+  /*Increment through and print the Transmission address*/
   debug_printf("\nFrom Address: ");
-  for (int j = 5; j < 9; j++) {
+  for (int j = 8; j >= 5; j--) {
     debug_printf("%x", rxpacket[j]);
   }
-  /*Sequence*/
-  debug_printf("\nSequence: ");
-  for (int j = 9; j < 10; j++) {
-    debug_printf("%x", rxpacket[j]);
-  }
+  /*Print the recieved Type Sequence*/
+  debug_printf("\nSequence: %x", rxpacket[9]);
+
   /*CRC*/
   /*Warning, CRC is currently in LSB*/
-  crc_output = crc_calculation(rxpacket);
+  crc_output = crc_calculation(rxpacket); //Calculate the crc of the 30byte packet
+  /*Print out the calculated CRC*/
   debug_printf("\nCalculated CRC: %x\n", crc_output);
   crc_recieved = (rxpacket[31]) ^ (rxpacket[30] << 8);
+
+  /*Compare the Calculated CRC to the Recieved CRC*/
   if (crc_output != crc_recieved) {
     debug_printf("CRC ERROR Detected\n");
   }
-  /*Hamming decode*/
+
+  /*Increment through the rx payload and hamming decode each 2 bytes*/
   for(int p = 10; p < 30; p+=2) {
     hamming_decoded_bytes[l] = hamming_byte_decoder(rxpacket[p], rxpacket[p+1]);
-    /*Change to MSB*/
+
+    /*Change order of bytes to MSB*/
     if ((l % 2) == 1) {
       payload[l/2] = (hamming_decoded_bytes[l] << 8) ^ hamming_decoded_bytes[l-1];
     }
     l++;
   }
+
   /*Calculate the Velocity*/
   current_x = payload[1];
   current_y = payload[2];
+
   /*Calculate X Velocity*/
   velocity_x_decimal = ((current_x - previous_x)*1000)/((current_recieved_time - previous_recieved_time)/1000);
   velocity_x = velocity_x_decimal/1000;
   velocity_x_decimal = velocity_x_decimal - velocity_x*1000;
+
   /*Calculate Y Velocity*/
   velocity_y_decimal = ((current_y - previous_y)*1000)/((current_recieved_time - previous_recieved_time)/1000);
   velocity_y = velocity_y_decimal/1000;
   velocity_y_decimal = velocity_y_decimal - velocity_y*1000;
 
-  debug_printf("\n\nTIME: %lu", current_recieved_time);
-  /*Marker ID*/
+  /*Print out the Marker Id, Marker Width and height, Marker Coordinates*/
   debug_printf("\n\nMarker ID: %hd\nX Coordinate: %hd\nY Coordinate: %hd\nWidth of marker: %hd\nHeight of marker: %hd\n", payload[0], payload[1],payload[2],payload[3],payload[4]);
+  /*Set current time and position so that the next calculation uses these values*/
   previous_recieved_time = current_recieved_time;
   previous_y = current_y;
   previous_x = current_x;
-  /*Velocity of X*/
+  /*Print the Velocity of X*/
   debug_printf("\nVelocity in X: %d.%03d pixels per millisecond\n", velocity_x, velocity_x_decimal);
-  /*Velocity of Y*/
+  /*Print the Velocity of Y*/
   debug_printf("\nVelocity in Y: %d.%03d pixels per millisecond\n", velocity_y, velocity_y_decimal);
-
+  /*Set FSM back to IDLE STATE and process this new fsm state*/
   s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
   s4353096_radio_fsmprocessing();
 }
+
+/*Initialise radio (GPIO, SPI, etc)*/
 extern void s4353096_radio_init(void) {
   GPIO_InitTypeDef GPIO_spi;
   /*Initialise radio FSM*/
@@ -186,10 +192,12 @@ extern void s4353096_radio_init(void) {
 
 /*Processes the current state*/
 extern void s4353096_radio_fsmprocessing(void) {
+
   //Receiving FSM
   switch(s4353096_radio_fsmcurrentstate) {
     case S4353096_IDLE_STATE:	//Idle state for reading current channel
       radio_fsm_setstate(RADIO_FSM_IDLE_STATE);
+
       /* Get current channel , if radio FSM is in IDLE State */
       if (radio_fsm_getstate() == RADIO_FSM_IDLE_STATE) {
         s4353096_radio_rxstatus = 0;
@@ -200,11 +208,12 @@ extern void s4353096_radio_fsmprocessing(void) {
       }
       break;
     case S4353096_TX_STATE:	//TX state for writing packet to be sent.
+
         /* Put radio FSM in TX state, if radio FSM is in IDLE state */
       if (radio_fsm_getstate() == RADIO_FSM_IDLE_STATE) {
+
         if (radio_fsm_setstate(RADIO_FSM_TX_STATE) == RADIO_FSM_ERROR) {
             debug_printf("ERROR: Cannot set Radio FSM RX state\n\r");
-            //HAL_Delay(100);
         } else {
             /*Has just been put into TX State and has yet to transmit the packet
             Toggle the LED to indicate about to transmit*/
@@ -218,11 +227,12 @@ extern void s4353096_radio_fsmprocessing(void) {
       }
       break;
     case S4353096_RX_STATE:
-        /* Put radio FSM in RX state, if radio FSM is in IDLE or in waiting state */
+
+      /* Put radio FSM in RX state, if radio FSM is in IDLE or in waiting state */
       if ((radio_fsm_getstate() == RADIO_FSM_IDLE_STATE) || (radio_fsm_getstate() == RADIO_FSM_WAIT_STATE)) {
+
         if (radio_fsm_setstate(RADIO_FSM_RX_STATE) == RADIO_FSM_ERROR) {
           debug_printf("ERROR: Cannot set Radio FSM RX state\n\r");
-          //HAL_Delay(100);
         } else {
           /*The below line is possibly redundant*/
           radio_fsm_setstate(RADIO_FSM_RX_STATE);
@@ -235,15 +245,16 @@ extern void s4353096_radio_fsmprocessing(void) {
       }
       break;
     case S4353096_WAITING_STATE:	//Waiting state for reading received packet.
+
       /* Check if radio FSM is in WAITING STATE */
       if (radio_fsm_getstate() == RADIO_FSM_WAIT_STATE) {
+
         if (radio_fsm_read(s4353096_rx_buffer) == RADIO_FSM_DONE) {
           s4353096_radio_rxstatus = 1;
           current_recieved_time = HAL_GetTick();
         } else {
           s4353096_radio_rxstatus = 0;
         }
-        //HAL_Delay(10);
       } else {
 
       }
@@ -256,8 +267,10 @@ extern void s4353096_radio_fsmprocessing(void) {
 extern void s4353096_radio_sendpacket(char	chan,	unsigned char *addr,
   unsigned char *txpacket) {
     unsigned char s4353096_student_number[] = {0x43, 0x53, 0x09, 0x60};
+
     /*Construction of transmittion packet*/
     for (int i = 0; i < 16; i++) {
+
       if (i == 0) {
         s4353096_txpacket[i] = 0x20;
       } else if (i < 5) {
@@ -319,10 +332,14 @@ extern int s4353096_radio_getrxstatus(void) {
 /*Prints the recieved packet to the console*/
 extern void s4353096_radio_getpacket(unsigned char *rxpacket) {
   debug_printf("RECV:");
+
+  /*Print the Trasmit Address Maybe*/
   for (int j = 5; j < 9; j++) {
     debug_printf("%x", rxpacket[j]);
   }
+
   debug_printf(">");
+  /*Print the payload*/
   for (int i = 9; i < 16; i++) {
     debug_printf("%c", rxpacket[i]);
   }

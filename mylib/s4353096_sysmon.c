@@ -47,6 +47,8 @@ void s4353096_sysmon_init(void) {
   GPIO_InitStructure.Pin = LA_CHAN2_PIN;
   HAL_GPIO_Init(LA_CHAN2_GPIO_PORT, &GPIO_InitStructure);
 }
+
+/*Associate Task names with handles*/
 extern void SetNameHandle(void) {
   TaskStatus_t *pxTaskStatusArray;
   volatile UBaseType_t uxArraySize, x;
@@ -61,12 +63,15 @@ extern void SetNameHandle(void) {
   /* Allocate a TaskStatus_t structure for each task.  An array could be
   allocated statically at compile time. */
   pxTaskStatusArray = pvPortMalloc( uxArraySize * sizeof( TaskStatus_t ) );
+
   if( pxTaskStatusArray != NULL )
   {
      /* Generate raw status information about each task. */
      uxArraySize = uxTaskGetSystemState( pxTaskStatusArray,
                                 uxArraySize,
                                 &ulTotalRunTime );
+
+     /*Associate Task Names with Handles*/
      for( x = 0; x < uxArraySize; x++) {
        TaskValues.TaskNames[x] = pxTaskStatusArray[x].pcTaskName;
        TaskValues.TaskHandles[x] = pxTaskStatusArray[x].xHandle;
@@ -75,6 +80,8 @@ extern void SetNameHandle(void) {
      vPortFree( pxTaskStatusArray );
   }
 }
+
+/*Generate the top list*/
 extern void GetTopList( void ) {
 TaskStatus_t *pxTaskStatusArray;
 volatile UBaseType_t uxArraySize, x;
@@ -99,14 +106,16 @@ char* state;
                                  &ulTotalRunTime );
          /* For each populated position in the pxTaskStatusArray array,
          format the raw data as human readable ASCII data. */
-				 debug_printf("Task Name \t\t\t\tTask #\tPrioriy\t\tState    \tRunning Time (ms)\n");
+				 debug_printf("Task Name \t\t\t\tTask #\tPrioriy\t\tState    \tRunning Time (us)\n");
 				 debug_printf("--------------------------------------------------------------------------------------------------------\n");
+
+         /*Print Each task's values*/
          for( x = 0; x < uxArraySize; x++ )
          {
 					 	/*Want to print in the below fashion*/
 						/* NAME | NUMBER | PRIORITY | STATE | RUNNING TIME |*/
 						/* Before this we have to work out the States appropriate char value*/
-            //TaskValues.TaskHandles[x] = pxTaskStatusArray[x].xHandle;
+
 						if (pxTaskStatusArray[x].eCurrentState == eReady) {
 							state = "Ready";
               debug_printf( ANSI_COLOR_YELLOW "%-25s\t\t%-2.0d\t%-2.0d\t\t%-9s\t%*lu\n" ANSI_COLOR_RESET , pxTaskStatusArray[x].pcTaskName,

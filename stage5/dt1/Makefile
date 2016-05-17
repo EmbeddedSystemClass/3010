@@ -5,6 +5,7 @@
 
 #location of freertos source files
 FREERTOS_PATH=$(NP2_ROOT)/src/FreeRTOS
+CLI_PATH=$(NP2_ROOT)/src/FreeRTOSplus/FreeRTOS-Plus-CLI
 
 #Name of project
 PROJ_NAME=main
@@ -16,7 +17,7 @@ MYLIB=$(HOME)/repo/mylib
 CFLAGS += -I$(MYLIB)
 
 #Extra files from the src folder must ONLY be added to LIBSRCS
-LIBSRCS = $(FREERTOS_PATH)/portable/MemMang/heap_1.c
+LIBSRCS = $(FREERTOS_PATH)/portable/MemMang/heap_3.c
 
 ###################################################
 ROOT=$(shell pwd)
@@ -28,6 +29,9 @@ OBJS=$(SRCS:.c=.o)
 .PHONY: $(shell mkdir -p obj) lib proj all depend
 all: proj
 
+#Include Cli
+include $(CLI_PATH)/Makefile.freertoscli
+
 #Include freertos makefile
 include $(NP2_ROOT)/src/FreeRTOS/Makefile.freertos
 
@@ -37,6 +41,8 @@ include $(NP2_ROOT)/src/peripherals/nrf24l01plus/Makefile.nrf24l01plus
 
 #Include np2 makefile - NOTE MUST BE LAST TO INCLUDE
 include $(NP2_ROOT)/src/boards/netduinoplus2/Makefile.np2
+
+
 
 
 lib:

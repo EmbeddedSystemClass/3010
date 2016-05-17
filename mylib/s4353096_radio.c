@@ -98,7 +98,7 @@ void s4353096_TaskRadio (void) {
   }
   vTaskDelay(10);
 }
-/*Print out values
+/*Print out values*/
 extern void s4353096_radio_getRAEpacket(unsigned char *rxpacket) {
   uint16_t crc_output;
   uint8_t hamming_decoded_bytes[10];

@@ -102,11 +102,8 @@
 #define configCHECK_FOR_STACK_OVERFLOW	2
 #define configUSE_RECURSIVE_MUTEXES		1
 #define configQUEUE_REGISTRY_SIZE		0
-#define configGENERATE_RUN_TIME_STATS	1
+#define configGENERATE_RUN_TIME_STATS	0
 
-/*Set Up Timer for Run Time Stats*/
-#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() ( ulHighFrequencyTimerTicks = 0UL )
-#define portGET_RUN_TIME_COUNTER_VALUE()	HAL_GetTick()
 
 /* Set the following definitions to 1 to include the API function, or zero
 to exclude the API function. */
@@ -153,6 +150,5 @@ standard names. */
 #define vPortSVCHandler SVC_Handler
 #define xPortPendSVHandler PendSV_Handler
 #define xPortSysTickHandler SysTick_Handler
-volatile unsigned long ulHighFrequencyTimerTicks;
 #endif /* FREERTOS_CONFIG_H */
 

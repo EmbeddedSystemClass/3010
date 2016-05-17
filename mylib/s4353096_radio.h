@@ -39,7 +39,7 @@
  *                                          ONLY be called when
  *                                          s4353096_radio_getrxstatus() == 1.
  *
- * s4353096_TaskRadio() - 
+ * s4353096_TaskRadio() -
  ******************************************************************************
  */
  /* Includes ------------------------------------------------------------------*/
@@ -48,7 +48,11 @@
  #include "debug_printf.h"
  #include "radio_fsm.h"
  #include "nrf24l01plus.h"
- #include "FreeRTOS_CLI.h"
+
+ #include "FreeRTOS.h"
+ #include "task.h"
+ #include "queue.h"
+ #include "semphr.h"
  /* Private typedef -----------------------------------------------------------*/
  /* Private define ------------------------------------------------------------*/
  #define S4353096_IDLE_STATE 0

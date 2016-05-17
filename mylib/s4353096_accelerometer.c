@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    s4353096_accelerometer.c
+  * @file    mylib/s4353096_accelerometer.c
   * @author  Steffen Mitchell
   * @date    02052016
   * @brief   Accelerometer Task file

@@ -13,12 +13,13 @@
 	* byte
   * extern uint8_t hamming_byte_decoder(uint8_t lower, uint8_t upper) - Hamming
 	*	decodes input bytes
+	* extern uint16_t crc_update(uint16_t crc, uint8_t c) - Place the character/byte
+	*													you would like to update the crc value with
+	* extern uint16_t crc_calculation(unsigned char *rxpacket) - Calculates the CRC
+	*																						of 30 bytes in the recieved packet
+	*
   ******************************************************************************
  */
-/*struct Hamming {
-  uint16_t hamming_encode; //10bits for
-  uint16_t hamming_decode;
-}*/
 /* Scheduler includes. */
 #include "FreeRTOS.h"
 #include "task.h"

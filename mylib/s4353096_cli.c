@@ -51,10 +51,10 @@ extern BaseType_t prvLaserCommand(char *pcWriteBuffer, size_t xWriteBufferLen, c
 
 	/* Write command echo output string to write buffer. */
 	sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+
   /* Set the semaphore as available if the semaphore exists*/
 	if (s4353096_SemaphoreLaser != NULL) {	/* Check if semaphore exists */
 		xSemaphoreGive(s4353096_SemaphoreLaser);		/* Give PB Semaphore from ISR*/
-		//debug_printf("Triggered \n\r");    //Print press count value
 	}
 	/* Return pdFALSE, as there are no more strings to return */
 	/* Only return pdTRUE, if more strings need to be printed */
@@ -71,6 +71,7 @@ extern BaseType_t prvPanCommand(char *pcWriteBuffer, size_t xWriteBufferLen, con
 
 	/* Write command echo output string to write buffer. */
 	sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+
   /* Set the semaphore as available if the semaphore exists*/
 	if (strcmp(pcWriteBuffer,"left") == 0) {
     /*Give Semaphore*/
@@ -79,11 +80,14 @@ extern BaseType_t prvPanCommand(char *pcWriteBuffer, size_t xWriteBufferLen, con
     /*Give Semaphore*/
     xSemaphoreGive(s4353096_SemaphorePanRight);
   } else {
+
     /*Check if value is a valid integer and if it is send it to the queue*/
     if ((atoi(pcWriteBuffer) != 0) || (pcWriteBuffer[0] == '0')) {
       /*Valid integer, send to queue*/
       SendPosition.set_angle_pan = atoi(pcWriteBuffer);
+
       if (s4353096_QueuePan != NULL) {	/* Check if queue exists */
+
 				if( xQueueSendToBack(s4353096_QueuePan, ( void * ) &SendPosition, ( portTickType ) 10 ) != pdPASS ) {
 					debug_printf("Failed to post the message, after 10 ticks.\n\r");
 				}
@@ -107,6 +111,7 @@ extern BaseType_t prvTiltCommand(char *pcWriteBuffer, size_t xWriteBufferLen, co
 
 	/* Write command echo output string to write buffer. */
 	sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+
   /* Set the semaphore as available if the semaphore exists*/
 	if (strcmp(pcWriteBuffer,"up") == 0) {
     /*Give Semaphore*/
@@ -115,11 +120,14 @@ extern BaseType_t prvTiltCommand(char *pcWriteBuffer, size_t xWriteBufferLen, co
     /*Give Semaphore*/
     xSemaphoreGive(s4353096_SemaphoreTiltDown);
   } else {
+
     /*Check if value is a valid integer and if it is send it to the queue*/
     if ((atoi(pcWriteBuffer) != 0) || (pcWriteBuffer[0] == '0')) {
       /*Valid integer, send to queue*/
       SendPosition.set_angle_tilt = atoi(pcWriteBuffer);
+
       if (s4353096_QueueTilt != NULL) {	/* Check if queue exists */
+
 				if( xQueueSendToBack(s4353096_QueueTilt, ( void * ) &SendPosition, ( portTickType ) 10 ) != pdPASS ) {
 					debug_printf("Failed to post the message, after 10 ticks.\n\r");
 				}
@@ -145,8 +153,8 @@ extern BaseType_t prvHamenc(char *pcWriteBuffer, size_t xWriteBufferLen, const c
 
 	/* Write command echo output string to write buffer. */
 	sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+
   /* Set the semaphore as available if the semaphore exists*/
-  /*Give Semaphore*/
 	if (strlen(pcWriteBuffer) == 1) {
 		/*if the input is char*/
 		encode_input = pcWriteBuffer[0];
@@ -157,6 +165,8 @@ extern BaseType_t prvHamenc(char *pcWriteBuffer, size_t xWriteBufferLen, const c
 		/*If the input is of the format 0x..*/
 		encode_input_long = strtoul(pcWriteBuffer, &ptr, 16);
 		encode_input = encode_input_long;
+
+		/*Check if Hex value is less than 8bits*/
 		if (encode_input_long <= 0xFF) {
 			encode_output = hamming_byte_encoder(encode_input);
 			debug_printf("Encoded Value: 0x%x\n",encode_output);
@@ -165,6 +175,8 @@ extern BaseType_t prvHamenc(char *pcWriteBuffer, size_t xWriteBufferLen, const c
 		/*Check if input is a valid hex byte value*/
 		encode_input_long = strtoul(pcWriteBuffer, &ptr, 16);
 		encode_input = encode_input_long;
+
+		/*Check if Hex value is less than 8bits*/
 		if (encode_input_long <= 0xFF) {
 			encode_output = hamming_byte_encoder(encode_input);
 			debug_printf("Encoded Value: 0x%x\n",encode_output);
@@ -188,6 +200,7 @@ extern BaseType_t prvHamdec(char *pcWriteBuffer, size_t xWriteBufferLen, const c
 
 	/* Write command echo output string to write buffer. */
 	sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+
   /* Set the semaphore as available if the semaphore exists*/
 	if (strlen(pcWriteBuffer) == 2) {
 		/*if the input is char*/
@@ -198,9 +211,10 @@ extern BaseType_t prvHamdec(char *pcWriteBuffer, size_t xWriteBufferLen, const c
 	} else if ((pcWriteBuffer[0] == '0') && (pcWriteBuffer[1] == 'x')) {
 		/*If the input is a valid Hex*/
 		decode_input_long = strtoul(pcWriteBuffer, &ptr, 16);
-		//debug_printf("\n Hex input  %s\n", decode_input_8);
 		decode_input_upper = (decode_input_long) >> 8;
 		decode_input_lower = decode_input_long;
+
+		/*Check if Hex value is less than 16bits*/
 		if (decode_input_long <= 0xFFFF) {
 			decode_output = hamming_byte_decoder(decode_input_lower, decode_input_upper);
 			debug_printf("Decoded Output: %c\n",decode_output);
@@ -212,6 +226,8 @@ extern BaseType_t prvHamdec(char *pcWriteBuffer, size_t xWriteBufferLen, const c
 		decode_input_long = strtoul(pcWriteBuffer, &ptr, 10);
 		decode_input_upper = (decode_input_long) >> 8;
 		decode_input_lower = decode_input_long;
+
+		/*Check if decimal value is less than 16bits*/
 		if (decode_input_long <= 0xFFFF) {
 			decode_output = hamming_byte_decoder(decode_input_lower, decode_input_upper);
 			debug_printf("Decoded Output: %c\n",decode_output);
@@ -235,9 +251,14 @@ extern BaseType_t prvResume(char *pcWriteBuffer, size_t xWriteBufferLen, const c
 	/* Write command echo output string to write buffer. */
 	sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
   uxArraySize = uxTaskGetNumberOfTasks();
+
+	/*Increment through the array of task names and find the matching task name to the parameter
+		input and resume that task handle*/
 	for(x = 0; x < uxArraySize; x++) {
+
 		if(strcmp(TaskValues.TaskNames[x], pcWriteBuffer) == 0) {
 			vTaskResume(TaskValues.TaskHandles[x]);
+
 			if (strcmp(pcWriteBuffer,"s4353096_TaskRadio") == 0) {
 				xSemaphoreTake(s4353096_SemaphoreRadioState,10);
 			}
@@ -260,9 +281,14 @@ extern BaseType_t prvSuspend(char *pcWriteBuffer, size_t xWriteBufferLen, const 
 	/* Write command echo output string to write buffer. */
 	sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
   uxArraySize = uxTaskGetNumberOfTasks();
+
+	/*Increment through the array of task names and find the matching task name to the parameter
+		input and suspend that task handle*/
 	for(x = 0; x < uxArraySize; x++) {
+
 		if(strcmp(TaskValues.TaskNames[x], pcWriteBuffer) == 0) {
 			vTaskSuspend(TaskValues.TaskHandles[x]);
+
 			if (strcmp(pcWriteBuffer,"s4353096_TaskRadio") == 0) {
 				xSemaphoreGive(s4353096_SemaphoreRadioState);
 			}
@@ -302,6 +328,7 @@ extern BaseType_t prvAcc(char *pcWriteBuffer, size_t xWriteBufferLen, const char
 
 	/* Write command echo output string to write buffer. */
 	sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+
   /* Set the semaphore as available if the semaphore exists*/
 	if (strcmp(pcWriteBuffer,"raw") == 0) {
     /*Give Semaphore*/
@@ -326,6 +353,7 @@ extern BaseType_t prvTracking(char *pcWriteBuffer, size_t xWriteBufferLen, const
 
 		/* Write command echo output string to write buffer. */
 		sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+
 		if (strcmp(pcWriteBuffer,"on") == 0) {
 	    /*Give Semaphore*/
 	    xSemaphoreGive(s4353096_SemaphoreTracking);
@@ -353,8 +381,6 @@ extern BaseType_t prvCRC(char *pcWriteBuffer, size_t xWriteBufferLen, const char
 
 	/* Write command echo output string to write buffer. */
 	sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
-  /* Set the semaphore as available if the semaphore exists*/
-  /*Give Semaphore*/
 
 	if ((pcWriteBuffer[0] == '0') && (pcWriteBuffer[1] == 'x')) {
 		/*If the input is of the format 0x..*/
@@ -364,7 +390,10 @@ extern BaseType_t prvCRC(char *pcWriteBuffer, size_t xWriteBufferLen, const char
 		crc_hex_input[2] = ((crc_input_long & 0x0000FF00) >> 8);
 		crc_hex_input[3] = (crc_input_long & 0x000000FF);
 		number_crc_updates = (strlen(pcWriteBuffer) - 2)/2;
+
 		if (number_crc_updates == 4) { /*If input is less/equal than 32-bits*/
+
+			/*Update crc*/
 			for (int j = 0; j < number_crc_updates; j++) {
 				crc_output = crc_update(crc_output, crc_hex_input[j]);
 			}
@@ -372,6 +401,8 @@ extern BaseType_t prvCRC(char *pcWriteBuffer, size_t xWriteBufferLen, const char
 	} else {
 			/*Input is an ASCII String*/
 			number_crc_updates = strlen(pcWriteBuffer);
+
+			/*Update crc*/
 			for (int j = 0; j < number_crc_updates; j++) {
 				crc_output = crc_update(crc_output, pcWriteBuffer[j]);
 			}
@@ -391,25 +422,32 @@ void CLI_Task(void) {
 	/* Initialise pointer to CLI output buffer. */
 	memset(cInputString, 0, sizeof(cInputString));
 	pcOutputString = FreeRTOS_CLIGetOutputBuffer();
-	for (;;) {     //Set LA Channel 0
-		/*Do Stuff Here, this is the loop*/
+
+	/*Main loop for CLI Task*/
+	for (;;) {
 		/* Receive character */
 		cRxedChar = debug_getc();
+
 		/* Process if chacater if not Null */
 		if (cRxedChar != '\0') {
 
-			/* Put byte into USB buffer */
+			/*If Radio Task is currently Suspended*/
 			if (xSemaphoreTake(s4353096_SemaphoreRadioState, 10)) {
 				radio_task_state = 0;
 				xSemaphoreGive(s4353096_SemaphoreRadioState);
 			} else {
+				/*Suspend the radio task temporarily until input has been returned*/
 				radio_task_state = 1;
 				vTaskSuspend(xHandleRadio);
 			}
+
+			/*If input is recieved and no input has been previously recieved*/
 			if(InputIndex == 0) {
 				debug_printf("\n");
 			}
+			/* Put byte into USB buffer */
 			debug_putc(cRxedChar);
+
 			/* Process only if return is received. */
 			if (cRxedChar == '\r') {
 				//Put new line and transmit buffer
@@ -418,25 +456,22 @@ void CLI_Task(void) {
 
 				/* Put null character in command input string. */
 				cInputString[InputIndex] = '\0';
+
+				/*Resume Radio Task if it was resumed before cli input began*/
 				if (radio_task_state == 1) {
 					vTaskResume(xHandleRadio);
 				}
 				xReturned = pdTRUE;
+
 				/* Process command input string. */
 				while (xReturned != pdFALSE) {
 					/* Returns pdFALSE, when all strings have been returned */
 					/* Display CLI output string */
 					xReturned = FreeRTOS_CLIProcessCommand( cInputString, pcOutputString, configCOMMAND_INT_MAX_OUTPUT_SIZE );
 					/*Display input parameter*/
-
 					debug_printf("\n%s\n\r",pcOutputString);
 					vTaskDelay(5);	//Must delay between debug_printfs.
-					/*Process CLI Command here  if command doesn't go to a different task*/
-
-					/*Inside while loop*/
-
 				}
-				/*Outside while loops*/
 				memset(cInputString, 0, sizeof(cInputString));
 				InputIndex = 0;
 
@@ -459,6 +494,7 @@ void CLI_Task(void) {
 
 				} else {
 					debug_flush();		//Transmit USB buffer
+
 					/* A character was entered.  Add it to the string
 						 entered so far.  When a \n is entered the complete
 						 string will be passed to the command interpreter. */
@@ -469,8 +505,6 @@ void CLI_Task(void) {
 				}
 			}
 		}
-		/*Normal Things Here*/
-		//vTaskDelayUntil( &xLastWakeTime1, xFrequency1 );                //Extra Task Delay of 3ms
 		vTaskDelay(1);                																	// Mandatory Delay
 	}
 }

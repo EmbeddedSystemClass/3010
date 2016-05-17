@@ -196,8 +196,8 @@ extern uint8_t hamming_byte_decoder(uint8_t lower, uint8_t upper) {
 			c_low = decode_byte;
 		}
 	}
-	C = (c_low & 0xFF) | (c_up << 8);
-	R = (lower & 0xFF) | (upper << 8);
+	//C = (c_low & 0xFF) | (c_up << 8);
+	//R = (lower & 0xFF) | (upper << 8);
 	//E = R ^ C;
 	decode_byte = (c_up & 0xF0) ^ ((c_low & 0xF0 ) >> 4);
 	//debug_printf("RECIEVED FROM LASER: %c - RAW: %04x (ErrMask %04x)\n", decode_byte, R, E);

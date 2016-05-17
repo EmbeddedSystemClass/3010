@@ -1,12 +1,25 @@
 /**
   ******************************************************************************
-  * @file    ex8_i2c.c
-  * @author  MDS
+  * @file    s4353096_accelerometer.c
+  * @author  Steffen Mitchell
   * @date    02052016
-  * @brief   I2C example with the MMA8462Q. Reads and displays the WHO_AM_I reg.
-  *			 See the MMA8462 Datasheet (p15)
+  * @brief   Accelerometer Task file
   ******************************************************************************
+  * EXTERNAL FUNCTIONS
+  ******************************************************************************
+  * s4353096_TaskAccelerometer() - The function for the Accelerometer Task
   *
+  * s4353096_read_acc_register(int reg) - Returns the read value of the given register
+  *
+  * s4353096_readPLBF() - Prints the current orientation of the accelerometer read from the PL_STATUS register
+  *
+  * s4353096_readXYZ() - Reads the raw values for X,Y,Z and assigns them to associated variables
+  *
+  * s4353096_write_acc_register(uint8_t reg, uint8_t value) - Write value to the given register
+  *
+  * s4353096_accelerometer_init() - Initialise I2C, GPIO PINS. Enable PL orientation and XYZ Raw values and place the
+  *                                 Accelerometer into wake state
+  ******************************************************************************
   */
 
 /* Includes ------------------------------------------------------------------*/
@@ -37,22 +50,18 @@ struct Accelerometer Acc_vals;
 /* Private function prototypes -----------------------------------------------*/
 
 
-/**
-  * @brief  Main program
-  * @param  None
-  * @retval None
-  */
+/*The main function for the Accelerometer Task*/
 extern void s4353096_TaskAccelerometer(void) {
-		//S4353096_LA_CHAN0_CLR();
+    /*Main loop for Accelerometer Task*/
   	for(;;) {
-			//S4353096_LA_CHAN0_SET();
-      /*Read From the X,Y & Z Registers*/
-      /*If all semaphores are available, run multi byte read*/
+
+
 			if (s4353096_SemaphoreAccRaw != NULL) {	/* Check if semaphore exists */
 				/* See if we can obtain the PB semaphore. If the semaphore is not available
 							wait 10 ticks to see if it becomes free. */
 
-			if( xSemaphoreTake( s4353096_SemaphoreAccRaw, 10 ) == pdTRUE ) {
+			  if( xSemaphoreTake( s4353096_SemaphoreAccRaw, 10 ) == pdTRUE ) {
+          /*Read Raw 12-bit values from the X,Y & Z Registers*/
 					s4353096_readXYZ();
 					debug_printf("X: %hd ,  Y: %hd ,  Z: %hd \n", Acc_vals.x_coord, Acc_vals.y_coord, Acc_vals.z_coord);
 
@@ -62,19 +71,20 @@ extern void s4353096_TaskAccelerometer(void) {
 				/* See if we can obtain the PB semaphore. If the semaphore is not available
 							wait 10 ticks to see if it becomes free. */
 
-			if( xSemaphoreTake( s4353096_SemaphoreAccPl, 10 ) == pdTRUE ) {
+			  if( xSemaphoreTake( s4353096_SemaphoreAccPl, 10 ) == pdTRUE ) {
+          /*Read and print orientation of accelerometer*/
 					s4353096_readPLBF();
         }
 			}
-      /*If not check each semaphore individually*/
     	BRD_LEDToggle();	//Toggle LED on/off
 			vTaskDelay(10);
-			//S4353096_LA_CHAN0_CLR();
     	vTaskDelay(1);		//Delay for 1s (1000ms)
 	}
 }
+/*Returns the read value of the given register*/
 extern uint8_t s4353096_read_acc_register(int reg) {
   uint8_t read_value;
+
   __HAL_I2C_CLEAR_FLAG(&I2CHandle, I2C_FLAG_AF);	//Clear Flags
 
 	I2CHandle.Instance->CR1 |= I2C_CR1_START;	// Generate the START condition
@@ -116,13 +126,13 @@ extern uint8_t s4353096_read_acc_register(int reg) {
 	I2CHandle.Instance->CR1 |= I2C_CR1_STOP;
   return read_value;
 }
+/*Prints the current orientation of the accelerometer read from the PL_STATUS register*/
 extern void s4353096_readPLBF (void) {
-  //s4353096_write_acc_register(SYS_MOD, 0x00);
-  vTaskDelay(10);
-  //s4353096_write_acc_register(SYS_MOD, 0x01);
   Acc_vals.pl_status = s4353096_read_acc_register(PL_STATUS);
-  Acc_vals.land_port = (Acc_vals.pl_status & 0x06) >> 1;
-  Acc_vals.back_front = Acc_vals.pl_status & 0x01;
+  Acc_vals.land_port = (Acc_vals.pl_status & 0x06) >> 1; //Extract the bits associated with portrait/landscape orientation
+  Acc_vals.back_front = Acc_vals.pl_status & 0x01; //Extract the bits associated with front/back orientation
+
+  /*Represents the value of land_port as a landscape/portrait orientation*/
   switch(Acc_vals.land_port) {
     case 0x00:
       debug_printf("|");
@@ -139,6 +149,8 @@ extern void s4353096_readPLBF (void) {
     default:
       break;
   }
+
+  /*Represents the value of back_front as a front/back orientation*/
   switch (Acc_vals.back_front) {
     case 0x00:
       debug_printf(" +\n");
@@ -150,18 +162,24 @@ extern void s4353096_readPLBF (void) {
       break;
   }
 }
+/*Reads the raw values for X,Y,Z and assigns them to associated variables*/
 extern void s4353096_readXYZ (void) {
+  /*Read X MSB & LSB Registers & combine bytes to form correct signed int value*/
   Acc_vals.x_coord_MSB = s4353096_read_acc_register(X_OUT_START);
   Acc_vals.x_coord_LSB = s4353096_read_acc_register(X_OUT_START + 1);
   Acc_vals.x_coord = (Acc_vals.x_coord_MSB) << 4 ^ (Acc_vals.x_coord_LSB >> 4);
+
+  /*Read Y MSB & LSB Registers & combine bytes to form correct signed int value*/
   Acc_vals.y_coord_MSB = s4353096_read_acc_register(Y_OUT_START);
   Acc_vals.y_coord_LSB = s4353096_read_acc_register(Y_OUT_START + 1);
   Acc_vals.y_coord = (Acc_vals.y_coord_MSB) << 4 ^ (Acc_vals.y_coord_LSB >> 4);
+
+  /*Read Z MSB & LSB Registers & combine bytes to form correct signed int value*/
   Acc_vals.z_coord_MSB = s4353096_read_acc_register(Z_OUT_START);
   Acc_vals.z_coord_LSB = s4353096_read_acc_register(Z_OUT_START + 1);
   Acc_vals.z_coord = (Acc_vals.z_coord_MSB) << 4 ^ (Acc_vals.z_coord_LSB >> 4);
 }
-
+/*Write value to the given register*/
 extern void s4353096_write_acc_register(uint8_t reg, uint8_t value) {
   /*Place the Accelerometer into wake state*/
 	__HAL_I2C_CLEAR_FLAG(&I2CHandle, I2C_FLAG_AF);	//Clear Flags
@@ -191,11 +209,8 @@ extern void s4353096_write_acc_register(uint8_t reg, uint8_t value) {
 	I2CHandle.Instance->CR1 |= I2C_CR1_STOP;
 
 }
-/**
-  * @brief  Initialise Hardware
-  * @param  None
-  * @retval None
-  */
+/*Initialise I2C, GPIO PINS. Enable PL orientation and XYZ Raw values and place the
+Accelerometer into wake state*/
 extern void s4353096_accelerometer_init(void) {
 
 	GPIO_InitTypeDef  GPIO_InitStructure;
@@ -246,6 +261,7 @@ extern void s4353096_accelerometer_init(void) {
 	* transfer, but application may perform other tasks while transfer operation
 	* is ongoing.
 	*/
+  /*Wait until I2C is ready*/
 	while (HAL_I2C_GetState(&I2CHandle) != HAL_I2C_STATE_READY);
 
   /*Enable PLBF*/

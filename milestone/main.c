@@ -1,9 +1,9 @@
 /**
   ******************************************************************************
-  * @file    stage6/main.c
+  * @file    milestone/main.c
   * @author  Steffen Mitchell
   * @date    04022015
-  * @brief   FreeRTOS sysmon tester.
+  * @brief   Main file for milestone.
   ******************************************************************************
   *
   */
@@ -21,7 +21,7 @@
 #include "queue.h"
 #include "semphr.h"
 #include "FreeRTOS_CLI.h"
-
+/* My Lib Includes*/
 #include "s4353096_accelerometer.h"
 #include "s4353096_sysmon.h"
 #include "s4353096_cli.h"
@@ -37,14 +37,22 @@ void Hardware_init();
 int main (void) {
 	BRD_init();
 	Hardware_init();
+
+	/*Initialise all Semaphores*/
 	s4353096_SemaphoreAccRaw = xSemaphoreCreateBinary();
 	s4353096_SemaphoreAccPl = xSemaphoreCreateBinary();
 	s4353096_SemaphoreTracking = xSemaphoreCreateBinary();
 	s4353096_SemaphoreRadioState = xSemaphoreCreateBinary();
+
+	/*Create All Tasks*/
 	xTaskCreate( (void *) &s4353096_TaskAccelerometer, (const signed char *) "s4353096_TaskAccelerometer", mainTASKACC_STACK_SIZE, NULL,  mainTASKACC_PRIORITY, &xHandleAccelerometer);
 	xTaskCreate( (void *) &CLI_Task, (const signed char *) "CLI_Task", mainTASKCLI_STACK_SIZE, NULL,  mainTASKCLI_PRIORITY, &xHandleCLI);
-	xTaskCreate( (void *) &s4353096_TaskRadio, (const signed char *) "s4353096_TaskRadio", mainTASKCLI_STACK_SIZE, NULL,  mainTASKCLI_PRIORITY, &xHandleRadio);
+	xTaskCreate( (void *) &s4353096_TaskRadio, (const signed char *) "s4353096_TaskRadio", mainTASKRADIO_STACK_SIZE, NULL,  mainTASKRADIO_PRIORITY, &xHandleRadio);
+
+	/*Assign the task handles to their respective string values in an array*/
 	SetNameHandle();
+
+	/*Initialise all CLI commands*/
 	FreeRTOS_CLIRegisterCommand(&xTop);
 	FreeRTOS_CLIRegisterCommand(&xAcc);
 	FreeRTOS_CLIRegisterCommand(&xHamenc);
@@ -64,7 +72,7 @@ int main (void) {
 	vTaskStartScheduler();
 
 	/* We should never get here as control is now taken by the scheduler. */
-  	return 0;
+  return 0;
 }
 
 /*Initialise Hardware (i.e Lightbar, Pushbutton, sysmon)*/

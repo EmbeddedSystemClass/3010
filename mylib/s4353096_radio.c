@@ -55,6 +55,7 @@ static SPI_HandleTypeDef SpiHandle;
 unsigned char s4353096_txpacket[32];
 /*Initialises Relevent GPIO/SPI Ports and sets both FSM states to IDLE*/
 
+/*The main function for the Radio Task*/
 void s4353096_TaskRadio (void) {
   unsigned char s4353096_tx_addr[] = {0x22, 0x91, 0x54, 0x43, 0x00};
   unsigned char s4353096_rx_addr[] = {0x07, 0x35, 0x22, 0x11, 0x00};
@@ -62,7 +63,9 @@ void s4353096_TaskRadio (void) {
   s4353096_radio_setchan(s4353096_chan);
 	s4353096_radio_settxaddress(s4353096_tx_addr);
 	s4353096_radio_setrxaddress(s4353096_rx_addr);
+  /*Main loop for Radio Task*/
   for(;;) {
+
     if (s4353096_SemaphoreTracking != NULL) {	/* Check if semaphore exists */
       /* See if we can obtain the PB semaphore. If the semaphore is not available
             wait 10 ticks to see if it becomes free. */
@@ -74,16 +77,18 @@ void s4353096_TaskRadio (void) {
         s4353096_radio_setfsmrx();
 		    s4353096_radio_fsmprocessing();
         s4353096_radio_fsmprocessing();
-		    if (s4353096_radio_getrxstatus() == 1) { //Checks if packet has been recieved
+
+        if (s4353096_radio_getrxstatus() == 1) { //Checks if packet has been recieved
 			      /*Prints recieved packet to console*/
 	          s4353096_radio_getRAEpacket(s4353096_rx_buffer);
-            /*Calculate and Print CRC*/
+            /*Print the raw packet*/
             debug_printf("\nRaw Packet Recieved: ");
+
+            /*Increment through raw packet and print each byte*/
             for(int j = 0; j < 32; j++) {
               debug_printf("%x", s4353096_rx_buffer[j]);
             }
             debug_printf("\n");
-            /*Decode Packet and print*/
 
 		    } else {
 
@@ -93,6 +98,7 @@ void s4353096_TaskRadio (void) {
   }
   vTaskDelay(10);
 }
+/*Print out values
 extern void s4353096_radio_getRAEpacket(unsigned char *rxpacket) {
   uint16_t crc_output;
   uint8_t hamming_decoded_bytes[10];

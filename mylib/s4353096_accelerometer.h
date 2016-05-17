@@ -1,10 +1,9 @@
 /**
   ******************************************************************************
-  * @file    ex8_i2c.c
-  * @author  MDS
+  * @file    s4353096_accelerometer.c
+  * @author  Steffen Mitchell
   * @date    02052016
-  * @brief   I2C example with the MMA8462Q. Reads and displays the WHO_AM_I reg.
-  *			 See the MMA8462 Datasheet (p15)
+  * @brief   Accelerometer Task file
   ******************************************************************************
   *
   */

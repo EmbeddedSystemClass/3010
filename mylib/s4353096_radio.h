@@ -35,9 +35,11 @@
  *
  * s4353096_radio_getpacket(unsigned char *rxpacket)
  *                                        - function to recieve a packet, when
-                                            s4353096_radio_status is 1. Must
-                                            ONLY be called when
-                                            s4353096_radio_getrxstatus() == 1.
+ *                                          s4353096_radio_status is 1. Must
+ *                                          ONLY be called when
+ *                                          s4353096_radio_getrxstatus() == 1.
+ *
+ * s4353096_TaskRadio() - 
  ******************************************************************************
  */
  /* Includes ------------------------------------------------------------------*/
@@ -46,12 +48,17 @@
  #include "debug_printf.h"
  #include "radio_fsm.h"
  #include "nrf24l01plus.h"
+ #include "FreeRTOS_CLI.h"
  /* Private typedef -----------------------------------------------------------*/
  /* Private define ------------------------------------------------------------*/
  #define S4353096_IDLE_STATE 0
  #define S4353096_RX_STATE 1
  #define S4353096_TX_STATE 2
  #define S4353096_WAITING_STATE 3
+ /* Task Priorities ------------------------------------------------------------*/
+ #define mainTASKRADIO_PRIORITY					( tskIDLE_PRIORITY + 1 )
+ /* Task Stack Allocations -----------------------------------------------------*/
+ #define mainTASKRADIO_STACK_SIZE		( configMINIMAL_STACK_SIZE * 4 )
 
  int s4353096_radio_fsmcurrentstate;
  int s4353096_radio_rxstatus;
@@ -64,7 +71,7 @@
  unsigned long previous_recieved_time;
  unsigned long current_recieved_time;
 
-SemaphoreHandle_t s4353096_SemaphoreTracking;		//Used to show the Hammming encoded value of a given hex byte
+SemaphoreHandle_t s4353096_SemaphoreTracking;
 SemaphoreHandle_t s4353096_SemaphoreRadioState;
 void s4353096_TaskRadio (void);
 extern void s4353096_radio_init(void);

@@ -62,7 +62,7 @@
  /* Task Priorities ------------------------------------------------------------*/
  #define mainTASKRADIO_PRIORITY					( tskIDLE_PRIORITY + 1 )
  /* Task Stack Allocations -----------------------------------------------------*/
- #define mainTASKRADIO_STACK_SIZE		( configMINIMAL_STACK_SIZE * 4 )
+ #define mainTASKRADIO_STACK_SIZE		( configMINIMAL_STACK_SIZE * 6 )
  /*Global Variables for radio*/
  int s4353096_radio_fsmcurrentstate;
  int s4353096_radio_rxstatus;

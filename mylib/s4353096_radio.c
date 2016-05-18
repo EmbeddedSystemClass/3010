@@ -58,8 +58,8 @@ unsigned char s4353096_txpacket[32];
 /*The main function for the Radio Task*/
 void s4353096_TaskRadio (void) {
   unsigned char s4353096_tx_addr[] = {0x22, 0x91, 0x54, 0x43, 0x00};
-  unsigned char s4353096_rx_addr[] = {0x07, 0x35, 0x22, 0x11, 0x00};
-  unsigned char s4353096_chan = 50;
+  unsigned char s4353096_rx_addr[] = {0x32, 0x34, 0x22, 0x11, 0x00};
+  unsigned char s4353096_chan = 43;
   s4353096_radio_setchan(s4353096_chan);
 	s4353096_radio_settxaddress(s4353096_tx_addr);
 	s4353096_radio_setrxaddress(s4353096_rx_addr);

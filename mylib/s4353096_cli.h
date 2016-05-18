@@ -30,7 +30,7 @@
 /* Task Priorities ------------------------------------------------------------*/
 #define mainTASKCLI_PRIORITY					( tskIDLE_PRIORITY + 1 )
 /* Task Stack Allocations -----------------------------------------------------*/
-#define mainTASKCLI_STACK_SIZE		( configMINIMAL_STACK_SIZE * 4 )
+#define mainTASKCLI_STACK_SIZE		( configMINIMAL_STACK_SIZE * 6 )
 
 /* Private function prototypes -----------------------------------------------*/
 extern BaseType_t prvLaserCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);

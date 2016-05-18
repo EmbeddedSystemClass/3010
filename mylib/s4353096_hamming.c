@@ -153,13 +153,14 @@ extern uint8_t hamming_byte_decoder(uint8_t lower, uint8_t upper) {
 		s2 = d0 ^ d2 ^ d3 ^ h2;
 		S = (s0 << 0) | (s1 << 1) | (s2 << 2);
 		/*Set Various Error Values*/
-		ed0 = (1 << 0) | (1 << 1) | (0 << 2);
-		ed1 = (1 << 0) | (0 << 1) | (1 << 2);
-		ed2 = (0 << 0) | (1 << 1) | (1 << 2);
-		ed3 = (1 << 0) | (1 << 1) | (1 << 2);
-		eh0 = (0 << 0) | (0 << 1) | (1 << 2);
+		ed1 = (1 << 0) | (1 << 1) | (0 << 2);
+		ed2 = (1 << 0) | (0 << 1) | (1 << 2);
+		ed3 = (0 << 0) | (1 << 1) | (1 << 2);
+		ed0 = (1 << 0) | (1 << 1) | (1 << 2);
+		eh2 = (0 << 0) | (0 << 1) | (1 << 2);
 		eh1 = (0 << 0) | (1 << 1) | (0 << 2);
-		eh2 = (1 << 0) | (0 << 1) | (0 << 2);
+		eh0 = (1 << 0) | (0 << 1) | (0 << 2);
+/*Try opposite direction*/
 
 		/*Calculate the parity bit based on the decode_byte*/
 		for (z = 1; z<8; z++)
@@ -178,35 +179,35 @@ extern uint8_t hamming_byte_decoder(uint8_t lower, uint8_t upper) {
 
 				if (S == 0x00) {
 				/*1 Bit error in parity bit*/
-				p0 = !p0;
+				p0 = (~p0 & 0x1);
 				debug_printf("Error in Parity\n");
 			} else if (S == ed3) {
-				d3 = !d3;
+				d3 = (~d3 & 0x1);
 				/*Error in D3*/
 				debug_printf("Error in D3\n");
 			} else if (S == ed2) {
-				d2 = !d2;
+				d2 = (~d2 & 0x1);
 				/*Error in D2*/
 				debug_printf("Error in D2\n");
 			} else if (S == ed1) {
 				/*Error in D1*/
-				d1 = !d1;
+				d1 = (~d1 & 0x1);
 				debug_printf("Error in D1\n");
 			} else if (S == ed0) {
 				/*Error in D0*/
-				d0 = !d0;
+				d0 = (~d0 & 0x1);
 				debug_printf("Error in D0\n");
 			} else if (S == eh2) {
 				/*Error in H2*/
-				h2 = !h2;
+				h2 = (~h2 & 0x1);
 				debug_printf("Error in H2\n");
 			} else if (S == eh1) {
 				/*Error in H1*/
-				h1 = !h1;
+				h1 = (~h1 & 0x1);
 				debug_printf("Error in H1\n");
 			} else if (S == eh0) {
 				/*Error in H0*/
-				h0 = !h0;
+				h0 = (~h0 & 0x1);
 				debug_printf("Error in H0\n");
 			}
 		}

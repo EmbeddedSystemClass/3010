@@ -41,6 +41,25 @@
 /* Private function prototypes -----------------------------------------------*/
 struct PanTilt SendPosition;
 
+
+extern BaseType_t prvRFChanSetCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+
+	long lParam_len;
+	const char *cCmd_string;
+
+	/* Get parameters from command string */
+	cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
+
+
+	if ((atoi(cCmd_string) != 0)
+  /* Set the semaphore as available if the semaphore exists*/
+	if (s4353096_SemaphoreLaser != NULL) {	/* Check if semaphore exists */
+		xSemaphoreGive(s4353096_SemaphoreLaser);		/* Give PB Semaphore from ISR*/
+	}
+	/* Return pdFALSE, as there are no more strings to return */
+	/* Only return pdTRUE, if more strings need to be printed */
+	return pdFALSE;
+}
 extern BaseType_t prvLaserCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 
 	long lParam_len;

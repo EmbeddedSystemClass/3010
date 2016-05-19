@@ -64,16 +64,32 @@
  /* Task Stack Allocations -----------------------------------------------------*/
  #define mainTASKRADIO_STACK_SIZE		( configMINIMAL_STACK_SIZE * 6 )
  /*Global Variables for radio*/
- int s4353096_radio_fsmcurrentstate;
- int s4353096_radio_rxstatus;
- unsigned char s4353096_rx_buffer[32];
- unsigned char s4353096_tx_buffer[32];
- unsigned char s4353096_payload_buffer[8];
- unsigned char s4353096_addr_get[4];
- int previous_x;
- int previous_y;
- unsigned long previous_recieved_time;
- unsigned long current_recieved_time;
+ struct Radio {
+   int s4353096_radio_fsmcurrentstate;
+   int s4353096_radio_rxstatus;
+   unsigned char s4353096_rx_buffer[32];
+   unsigned char s4353096_tx_packet[32];
+   unsigned char s4353096_rx_addr_orb[] = {0x32, 0x34, 0x22, 0x11, 0x00};
+   unsigned char s4353096_rx_addr_rover[] = {0x46, 0x33, 0x22, 0x11, 0x00};
+   unsigned char s4353096_tx_addr[] = s4353096_rx_addr_rover;
+   unsigned char s4353096_chan_rover = 46;
+   unsigned char s4353096_chan_orb = 43;
+
+};
+struct Packet {
+  unsigned char s4353096_rx_buffer[32];
+  unsigned char s4353096_tx_packet[32];
+  unsigned char s4353096_chan;
+};
+
+
+struct Radio radio_vars;
+   int previous_x;
+   int previous_y;
+   unsigned long previous_recieved_time;
+   unsigned long current_recieved_time;
+   unsigned char s4353096_payload_buffer[8];
+   unsigned char s4353096_addr_get[4];
 /*Semephore Definitions*/
 SemaphoreHandle_t s4353096_SemaphoreTracking; //CLI Semephore to enable/disable Radio Recieve
 SemaphoreHandle_t s4353096_SemaphoreRadioState; //Tracks whether the Radio has been enabled or disabled for Suspension upon key recieve

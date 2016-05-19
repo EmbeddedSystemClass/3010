@@ -31,7 +31,7 @@
  * s4353096_radio_setfsmrx() - Set Radio FSM into	RX mode
  *
  * int s4353096_radio_getrxstatus() - Function to check when packet is recieved.
- *                                    Returns value of s4353096_radio_rxstatus
+ *                                    Returns value of radio_vars.s4353096_radio_rxstatus
  *
  * s4353096_radio_getpacket(unsigned char *rxpacket)
  *                                        - function to recieve a packet, when
@@ -52,17 +52,18 @@
 #include "s4353096_hamming.h"
 static SPI_HandleTypeDef SpiHandle;
 
-unsigned char s4353096_txpacket[32];
+
 /*Initialises Relevent GPIO/SPI Ports and sets both FSM states to IDLE*/
 
 /*The main function for the Radio Task*/
 void s4353096_TaskRadio (void) {
-  unsigned char s4353096_tx_addr[] = {0x22, 0x91, 0x54, 0x43, 0x00};
-  unsigned char s4353096_rx_addr[] = {0x32, 0x34, 0x22, 0x11, 0x00};
-  unsigned char s4353096_chan = 43;
-  s4353096_radio_setchan(s4353096_chan);
-	s4353096_radio_settxaddress(s4353096_tx_addr);
-	s4353096_radio_setrxaddress(s4353096_rx_addr);
+
+  s4353096_radio_setchan(radio_vars.s4353096_chan);
+	s4353096_radio_settxaddress(radio_vars.s4353096_tx_addr);
+  /*Set ORB Recieve Addr*/
+	s4353096_radio_setrxaddress(radio_vars.s4353096_rx_addr_orb, NRF24L01P_RX_ADDR_P0);
+  /*Set Rover Recieve Addr*/
+  s4353096_radio_setrxaddress(radio_vars.s4353096_rx_addr_rover, NRF24L01P_RX_ADDR_P1);
   /*Main loop for Radio Task*/
   for(;;) {
 
@@ -80,13 +81,13 @@ void s4353096_TaskRadio (void) {
 
         if (s4353096_radio_getrxstatus() == 1) { //Checks if packet has been recieved
 			      /*Prints recieved packet to console*/
-	          s4353096_radio_getRAEpacket(s4353096_rx_buffer);
+	          s4353096_radio_getRAEpacket(radio_vars.s4353096_rx_buffer);
             /*Print the raw packet*/
             debug_printf("\nRaw Packet Recieved: ");
 
             /*Increment through raw packet and print each byte*/
             for(int j = 0; j < 32; j++) {
-              debug_printf("%x", s4353096_rx_buffer[j]);
+              debug_printf("%x", radio_vars.s4353096_rx_buffer[j]);
             }
             debug_printf("\n");
 
@@ -98,6 +99,37 @@ void s4353096_TaskRadio (void) {
   }
   vTaskDelay(10);
 }
+
+/*Constructs the transmission packet and transmits it if the FSM's are in the
+  TX state*/
+extern void s4353096_radio_sendpacket(char	chan,	unsigned char *addr,
+  unsigned char *txpacket) {
+    unsigned char s4353096_student_number[] = {0x43, 0x53, 0x09, 0x60};
+
+    /*Construction of transmittion packet*/
+    for (int i = 0; i < 16; i++) {
+
+      if (i == 0) {
+        s4353096_txpacket[i] = 0x20;
+      } else if (i < 5) {
+        s4353096_txpacket[i] = addr[(i-1)];
+      } else if (i < 9) {
+        s4353096_txpacket[i] = s4353096_student_number[(i-5)];
+      } else if (i < 16) {
+        s4353096_txpacket[i] = txpacket[(i-9)];
+      } else {
+        debug_printf("ERROR with Packaging\n");
+      }
+    }
+      /*Debug Statement to check format of packet sent*/
+      #ifdef DEBUG
+        for (int j = 0; j < 16; j++) {
+          debug_printf("%x",s4353096_txpacket[j]);
+        }
+        debug_printf("\n");
+      #endif
+}
+
 /*Print out values*/
 extern void s4353096_radio_getRAEpacket(unsigned char *rxpacket) {
   uint16_t crc_output; //Calculated CRC of the Recieved Packet
@@ -176,7 +208,7 @@ extern void s4353096_radio_getRAEpacket(unsigned char *rxpacket) {
   /*Print the Velocity of Y*/
   debug_printf("\nVelocity in Y: %d.%03d pixels per millisecond\n", velocity_y, velocity_y_decimal);
   /*Set FSM back to IDLE STATE and process this new fsm state*/
-  s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
+  radio_vars.s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
   s4353096_radio_fsmprocessing();
 }
 
@@ -187,20 +219,20 @@ extern void s4353096_radio_init(void) {
   radio_fsm_init();
   /*Set radio FSM sate to IDLE*/
   radio_fsm_setstate(RADIO_FSM_IDLE_STATE);
-  s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
+  radio_vars.s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
 }
 
 /*Processes the current state*/
 extern void s4353096_radio_fsmprocessing(void) {
 
   //Receiving FSM
-  switch(s4353096_radio_fsmcurrentstate) {
+  switch(radio_vars.s4353096_radio_fsmcurrentstate) {
     case S4353096_IDLE_STATE:	//Idle state for reading current channel
       radio_fsm_setstate(RADIO_FSM_IDLE_STATE);
 
       /* Get current channel , if radio FSM is in IDLE State */
       if (radio_fsm_getstate() == RADIO_FSM_IDLE_STATE) {
-        s4353096_radio_rxstatus = 0;
+        radio_vars.s4353096_radio_rxstatus = 0;
       } else {
           /* if error occurs, set state back to IDLE state */
           debug_printf("ERROR: Radio FSM not in Idle state\n\r");
@@ -217,7 +249,7 @@ extern void s4353096_radio_fsmprocessing(void) {
         } else {
             /*Has just been put into TX State and has yet to transmit the packet
             Toggle the LED to indicate about to transmit*/
-            radio_fsm_write(s4353096_txpacket);
+            radio_fsm_write(radio_vars.s4353096_tx_packet);
             BRD_LEDToggle();
         }
       } else {
@@ -236,7 +268,7 @@ extern void s4353096_radio_fsmprocessing(void) {
         } else {
           /*The below line is possibly redundant*/
           radio_fsm_setstate(RADIO_FSM_RX_STATE);
-          s4353096_radio_fsmcurrentstate = S4353096_WAITING_STATE;		//set next state as Waiting state
+          radio_vars.s4353096_radio_fsmcurrentstate = S4353096_WAITING_STATE;		//set next state as Waiting state
         }
       } else {
         /* if error occurs, set state back to IDLE state */
@@ -249,47 +281,17 @@ extern void s4353096_radio_fsmprocessing(void) {
       /* Check if radio FSM is in WAITING STATE */
       if (radio_fsm_getstate() == RADIO_FSM_WAIT_STATE) {
 
-        if (radio_fsm_read(s4353096_rx_buffer) == RADIO_FSM_DONE) {
-          s4353096_radio_rxstatus = 1;
+        if (radio_fsm_read(radio_vars.s4353096_rx_buffer) == RADIO_FSM_DONE) {
+          radio_vars.s4353096_radio_rxstatus = 1;
           current_recieved_time = HAL_GetTick();
         } else {
-          s4353096_radio_rxstatus = 0;
+          radio_vars.s4353096_radio_rxstatus = 0;
         }
       } else {
 
       }
       break;
   }
-}
-
-/*Constructs the transmission packet and transmits it if the FSM's are in the
-  TX state*/
-extern void s4353096_radio_sendpacket(char	chan,	unsigned char *addr,
-  unsigned char *txpacket) {
-    unsigned char s4353096_student_number[] = {0x43, 0x53, 0x09, 0x60};
-
-    /*Construction of transmittion packet*/
-    for (int i = 0; i < 16; i++) {
-
-      if (i == 0) {
-        s4353096_txpacket[i] = 0x20;
-      } else if (i < 5) {
-        s4353096_txpacket[i] = addr[(i-1)];
-      } else if (i < 9) {
-        s4353096_txpacket[i] = s4353096_student_number[(i-5)];
-      } else if (i < 16) {
-        s4353096_txpacket[i] = txpacket[(i-9)];
-      } else {
-        debug_printf("ERROR with Packaging\n");
-      }
-    }
-      /*Debug Statement to check format of packet sent*/
-      #ifdef DEBUG
-        for (int j = 0; j < 16; j++) {
-          debug_printf("%x",s4353096_txpacket[j]);
-        }
-        debug_printf("\n");
-      #endif
 }
 
 /*Retrieves the channel from the RF_CHAN Register on the Transciever*/
@@ -314,19 +316,19 @@ extern void s4353096_radio_settxaddress(unsigned char *addr) {
   radio_fsm_buffer_write(NRF24L01P_TX_ADDR, addr, 5);
 }
 
-/*Writes the rx address to the RX_ADDR Register on the Transciever*/
-extern void s4353096_radio_setrxaddress(unsigned char *addr) {
-  radio_fsm_buffer_write(NRF24L01P_RX_ADDR_P0, addr, 5);
+/*Writes the rx address to the RX_ADDR_P1 Register on the Transciever*/
+extern void s4353096_radio_setrxaddress(unsigned char *addr, uint8_t reg) {
+  radio_fsm_buffer_write(reg, addr, 5);
 }
 /*Sets s4353096_fsm and RADIO_FSM to rx state*/
 extern void s4353096_radio_setfsmrx(void) {
-  s4353096_radio_fsmcurrentstate = S4353096_RX_STATE;
+  radio_vars.s4353096_radio_fsmcurrentstate = S4353096_RX_STATE;
   radio_fsm_setstate(RADIO_FSM_RX_STATE);
 }
 /*Check if a packet has been recieved and if it has put it in the rx_buffer.
   Returns 1 for recieved and 0 for not recieved.*/
 extern int s4353096_radio_getrxstatus(void) {
-  return s4353096_radio_rxstatus;
+  return radio_vars.s4353096_radio_rxstatus;
 }
 
 /*Prints the recieved packet to the console*/
@@ -344,6 +346,6 @@ extern void s4353096_radio_getpacket(unsigned char *rxpacket) {
     debug_printf("%c", rxpacket[i]);
   }
   debug_printf("\n");
-  s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
+  radio_vars.s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
   s4353096_radio_fsmprocessing();
 }

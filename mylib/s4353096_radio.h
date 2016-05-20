@@ -69,12 +69,13 @@
    int s4353096_radio_rxstatus;
    unsigned char s4353096_rx_buffer[32];
    unsigned char s4353096_tx_packet[32];
-   unsigned char s4353096_rx_addr_orb[] = {0x32, 0x34, 0x22, 0x11, 0x00};
-   unsigned char s4353096_rx_addr_rover[] = {0x46, 0x33, 0x22, 0x11, 0x00};
-   unsigned char s4353096_tx_addr[] = s4353096_rx_addr_rover;
-   unsigned char s4353096_chan_rover = 46;
-   unsigned char s4353096_chan_orb = 43;
-
+   unsigned char s4353096_rx_addr_orb[5]; //= {0x32, 0x34, 0x22, 0x11, 0x00};
+   unsigned char s4353096_rx_addr_rover[5]; //= {0x46, 0x33, 0x22, 0x11, 0x00};
+   unsigned char s4353096_tx_addr[5]; //= s4353096_rx_addr_rover;
+   unsigned char s4353096_chan_rover; //= 46;
+   unsigned char s4353096_chan_orb; //= 43;
+   unsigned char next_sequence; //= 0x00;
+   unsigned char passkey; //= 0x00;
 };
 struct Packet {
   unsigned char s4353096_rx_buffer[32];
@@ -84,6 +85,7 @@ struct Packet {
 
 
 struct Radio radio_vars;
+struct Packet radio_side_communication;
    int previous_x;
    int previous_y;
    unsigned long previous_recieved_time;
@@ -107,5 +109,5 @@ extern void s4353096_radio_settxaddress(unsigned char *addr);
 extern void s4353096_radio_setfsmrx(void);
 extern int s4353096_radio_getrxstatus(void);
 extern void s4353096_radio_getpacket(unsigned char *rxpacket);
-extern void s4353096_radio_setrxaddress(unsigned char *addr);
+extern void s4353096_radio_setrxaddress(unsigned char *addr, uint8_t reg);
 extern void s4353096_radio_getRAEpacket(unsigned char *rxpacket);

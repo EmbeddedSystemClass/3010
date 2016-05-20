@@ -35,26 +35,29 @@
 #include "s4353096_accelerometer.h"
 #include "s4353096_hamming.h"
 #include "s4353096_radio.h"
+#include "s4353096_rover.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 struct PanTilt SendPosition;
 
+extern BaseType_t prvGetSensor(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 
-extern BaseType_t prvRFChanSetCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
-
-	long lParam_len;
-	const char *cCmd_string;
-
-	/* Get parameters from command string */
-	cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
-
-
-	if ((atoi(cCmd_string) != 0)
   /* Set the semaphore as available if the semaphore exists*/
-	if (s4353096_SemaphoreLaser != NULL) {	/* Check if semaphore exists */
-		xSemaphoreGive(s4353096_SemaphoreLaser);		/* Give PB Semaphore from ISR*/
+	if (s4353096_SemaphoreGetSensor != NULL) {	/* Check if semaphore exists */
+		xSemaphoreGive(s4353096_SemaphoreGetSensor);		/* Give PB Semaphore from ISR*/
+	}
+	/* Return pdFALSE, as there are no more strings to return */
+	/* Only return pdTRUE, if more strings need to be printed */
+	return pdFALSE;
+}
+
+extern BaseType_t prvGetPassKey(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+
+  /* Set the semaphore as available if the semaphore exists*/
+	if (s4353096_SemaphoreGetPassKey != NULL) {	/* Check if semaphore exists */
+		xSemaphoreGive(s4353096_SemaphoreGetPassKey);		/* Give PB Semaphore from ISR*/
 	}
 	/* Return pdFALSE, as there are no more strings to return */
 	/* Only return pdTRUE, if more strings need to be printed */
@@ -236,7 +239,7 @@ extern BaseType_t prvHamdec(char *pcWriteBuffer, size_t xWriteBufferLen, const c
 		/*Check if Hex value is less than 16bits*/
 		if (decode_input_long <= 0xFFFF) {
 			decode_output = hamming_byte_decoder(decode_input_lower, decode_input_upper);
-			debug_printf("Decoded Output: %c\n",decode_output);
+			debug_printf("Decoded Output: %x\n",decode_output);
 		} else {
 			debug_printf("Invalid Parameter Given\n");
 		}

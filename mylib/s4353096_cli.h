@@ -45,9 +45,25 @@ extern BaseType_t prvTracking(char *pcWriteBuffer, size_t xWriteBufferLen, const
 extern BaseType_t prvSuspend(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvResume(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvCRC(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+extern BaseType_t prvGetPassKey(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+extern BaseType_t prvGetSensor(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+
 void CLI_Task(void);
 
 /*CLI Command Definitions*/
+CLI_Command_Definition_t xGetSensor = {	/* Structure that defines the "crc" command line command. */
+	"getsensor",
+	"getsensor: 32-bit value (in hex) or an ASCII String\r\n",
+	prvGetSensor,
+	0
+};
+
+CLI_Command_Definition_t xGetPassKey = {	/* Structure that defines the "crc" command line command. */
+	"getpasskey",
+	"getpasskey: 32-bit value (in hex) or an ASCII String\r\n",
+	prvGetPassKey,
+	0
+};
 CLI_Command_Definition_t xCRC = {	/* Structure that defines the "crc" command line command. */
 	"crc",
 	"crc: 32-bit value (in hex) or an ASCII String\r\n",

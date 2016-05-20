@@ -50,23 +50,32 @@
 #include "FreeRTOS_CLI.h"
 #include "s4353096_radio.h"
 #include "s4353096_hamming.h"
+#include "s4353096_rover.h"
+#include <stdio.h>
+#include <string.h>
 static SPI_HandleTypeDef SpiHandle;
-
 
 /*Initialises Relevent GPIO/SPI Ports and sets both FSM states to IDLE*/
 
 /*The main function for the Radio Task*/
 void s4353096_TaskRadio (void) {
-
-  s4353096_radio_setchan(radio_vars.s4353096_chan);
+  static unsigned char s4353096_rx_addr_orb[5] = {0x32, 0x34, 0x22, 0x11, 0x00};
+  static unsigned char s4353096_rx_addr_rover[5] = {0x51, 0x33, 0x22, 0x11, 0x00};
+  memcpy(radio_vars.s4353096_rx_addr_orb, s4353096_rx_addr_orb, sizeof(s4353096_rx_addr_orb));
+  memcpy(radio_vars.s4353096_rx_addr_rover, s4353096_rx_addr_rover, sizeof(s4353096_rx_addr_rover));
+  memcpy(radio_vars.s4353096_tx_addr, s4353096_rx_addr_rover, sizeof(s4353096_rx_addr_rover));
+  radio_vars.s4353096_chan_rover = 51;
+  radio_vars.s4353096_chan_orb = 43;
+  radio_vars.next_sequence = 0x00;
+  radio_vars.passkey = 0x00;
+  s4353096_radio_setchan(radio_vars.s4353096_chan_rover);
 	s4353096_radio_settxaddress(radio_vars.s4353096_tx_addr);
   /*Set ORB Recieve Addr*/
-	s4353096_radio_setrxaddress(radio_vars.s4353096_rx_addr_orb, NRF24L01P_RX_ADDR_P0);
+	s4353096_radio_setrxaddress(radio_vars.s4353096_rx_addr_rover, NRF24L01P_RX_ADDR_P0);
   /*Set Rover Recieve Addr*/
-  s4353096_radio_setrxaddress(radio_vars.s4353096_rx_addr_rover, NRF24L01P_RX_ADDR_P1);
+  //s4353096_radio_setrxaddress(radio_vars.s4353096_rx_addr_rover, NRF24L01P_RX_ADDR_P1);
   /*Main loop for Radio Task*/
   for(;;) {
-
     if (s4353096_SemaphoreTracking != NULL) {	/* Check if semaphore exists */
       /* See if we can obtain the PB semaphore. If the semaphore is not available
             wait 10 ticks to see if it becomes free. */
@@ -75,25 +84,62 @@ void s4353096_TaskRadio (void) {
         /* We were able to obtain the semaphore and can now access the shared resource. */
         /*Check the format of the input to hamenc*/
         xSemaphoreGive(s4353096_SemaphoreTracking);
-        s4353096_radio_setfsmrx();
-		    s4353096_radio_fsmprocessing();
-        s4353096_radio_fsmprocessing();
+        if (s4353096_QueueRoverTransmit != NULL) {	/* Check if queue exists */
+                  /* Check for item received - block atmost for 10 ticks */
+          if (xQueueReceive(s4353096_QueueRoverTransmit, &radio_side_communication, 10 )) {
+            debug_printf("In Recieve\n");
+            radio_vars.s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
+            s4353096_radio_fsmprocessing();
+            s4353096_radio_setchan(radio_vars.s4353096_chan_rover);
+            /*Transmit the Packet*/
+            radio_vars.s4353096_radio_fsmcurrentstate = S4353096_TX_STATE;
+            /*Set Transmit Packet as Rover Packet*/
+            memcpy(radio_vars.s4353096_tx_packet, radio_side_communication.s4353096_tx_packet, sizeof(radio_side_communication.s4353096_tx_packet));
+            s4353096_radio_fsmprocessing();
+            debug_printf("Before loop Recieve\n");
+            /*Wait for packet from rover*/
+            while(s4353096_radio_getrxstatus() == 0) {
+              /*Loop until a packet has been recieved*/
+              s4353096_radio_setfsmrx();
+  		        s4353096_radio_fsmprocessing();
+              s4353096_radio_fsmprocessing();
+              //debug_printf("In Loop\n");
+              if (s4353096_radio_getrxstatus() == 1) {
+                memcpy(radio_side_communication.s4353096_rx_buffer, radio_vars.s4353096_rx_buffer, sizeof(radio_vars.s4353096_rx_buffer));
+                if (s4353096_QueueRoverRecieve != NULL) {	/* Check if queue exists */
+                  /*Send the recieved packet to a Queue*/
+                  if( xQueueSendToBack(s4353096_QueueRoverRecieve, ( void * ) &radio_side_communication, ( portTickType ) 10 ) != pdPASS ) {
+                    debug_printf("BFailed to post the message, after 10 ticks.\n\r");
+                  }
+                }
+              }
+            }
+            radio_vars.s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
+            s4353096_radio_fsmprocessing();
+            debug_printf("Got Here\n");
+            //s4353096_radio_setchan(radio_vars.s4353096_chan_orb);
+        } /*else {
+          s4353096_radio_setfsmrx();
+		      s4353096_radio_fsmprocessing();
+          s4353096_radio_fsmprocessing();
 
-        if (s4353096_radio_getrxstatus() == 1) { //Checks if packet has been recieved
+          if (s4353096_radio_getrxstatus() == 1) { *///Checks if packet has been recieved
 			      /*Prints recieved packet to console*/
-	          s4353096_radio_getRAEpacket(radio_vars.s4353096_rx_buffer);
+	          //s4353096_radio_getRAEpacket(radio_vars.s4353096_rx_buffer);
             /*Print the raw packet*/
-            debug_printf("\nRaw Packet Recieved: ");
+            //debug_printf("\nRaw Packet Recieved: ");
 
             /*Increment through raw packet and print each byte*/
-            for(int j = 0; j < 32; j++) {
+            /*for(int j = 0; j < 32; j++) {
               debug_printf("%x", radio_vars.s4353096_rx_buffer[j]);
             }
             debug_printf("\n");
 
-		    } else {
+		      } else {
 
-		    }
+		      }
+        }*/
+      }
       }
     }
   }
@@ -110,13 +156,13 @@ extern void s4353096_radio_sendpacket(char	chan,	unsigned char *addr,
     for (int i = 0; i < 16; i++) {
 
       if (i == 0) {
-        s4353096_txpacket[i] = 0x20;
+        txpacket[i] = 0x20;
       } else if (i < 5) {
-        s4353096_txpacket[i] = addr[(i-1)];
+        txpacket[i] = addr[(i-1)];
       } else if (i < 9) {
-        s4353096_txpacket[i] = s4353096_student_number[(i-5)];
+        txpacket[i] = s4353096_student_number[(i-5)];
       } else if (i < 16) {
-        s4353096_txpacket[i] = txpacket[(i-9)];
+        txpacket[i] = txpacket[(i-9)];
       } else {
         debug_printf("ERROR with Packaging\n");
       }

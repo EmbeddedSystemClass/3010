@@ -26,6 +26,10 @@
 #include "queue.h"
 #include "semphr.h"
 #include "FreeRTOS_CLI.h"
-
-#include "s4353096_radio.h"
-#include "s4353096_hamming.h"
+SemaphoreHandle_t s4353096_SemaphoreGetPassKey;
+SemaphoreHandle_t s4353096_SemaphoreGetSensor;
+QueueHandle_t s4353096_QueueRoverTransmit;
+QueueHandle_t s4353096_QueueRoverRecieve;
+extern void recieve_rover_packet (uint8_t *recieved_packet);
+extern void send_rover_packet (uint8_t *payload, uint8_t packet_type);
+extern void s4353096_TaskRover(void);

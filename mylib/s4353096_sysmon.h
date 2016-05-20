@@ -65,6 +65,7 @@ struct Tasks {
 TaskHandle_t xHandleCLI;
 TaskHandle_t xHandleAccelerometer;
 TaskHandle_t xHandleRadio;
+TaskHandle_t xHandleRover;
 struct Tasks TaskValues;
 void s4353096_sysmon_init(void);
 extern void GetTopList( void );

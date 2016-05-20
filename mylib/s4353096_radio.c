@@ -60,14 +60,15 @@ static SPI_HandleTypeDef SpiHandle;
 /*The main function for the Radio Task*/
 void s4353096_TaskRadio (void) {
   static unsigned char s4353096_rx_addr_orb[5] = {0x32, 0x34, 0x22, 0x11, 0x00};
-  static unsigned char s4353096_rx_addr_rover[5] = {0x51, 0x33, 0x22, 0x11, 0x00};
+  static unsigned char s4353096_rx_addr_rover[5] = {0x48, 0x33, 0x22, 0x11, 0x00};
   memcpy(radio_vars.s4353096_rx_addr_orb, s4353096_rx_addr_orb, sizeof(s4353096_rx_addr_orb));
   memcpy(radio_vars.s4353096_rx_addr_rover, s4353096_rx_addr_rover, sizeof(s4353096_rx_addr_rover));
   memcpy(radio_vars.s4353096_tx_addr, s4353096_rx_addr_rover, sizeof(s4353096_rx_addr_rover));
-  radio_vars.s4353096_chan_rover = 51;
+  radio_vars.s4353096_chan_rover = 48;
   radio_vars.s4353096_chan_orb = 43;
   radio_vars.next_sequence = 0x00;
   radio_vars.passkey = 0x00;
+  int p = 0;
   s4353096_radio_setchan(radio_vars.s4353096_chan_rover);
 	s4353096_radio_settxaddress(radio_vars.s4353096_tx_addr);
   /*Set ORB Recieve Addr*/
@@ -76,6 +77,7 @@ void s4353096_TaskRadio (void) {
   //s4353096_radio_setrxaddress(radio_vars.s4353096_rx_addr_rover, NRF24L01P_RX_ADDR_P1);
   /*Main loop for Radio Task*/
   for(;;) {
+    p = 0;
     if (s4353096_SemaphoreTracking != NULL) {	/* Check if semaphore exists */
       /* See if we can obtain the PB semaphore. If the semaphore is not available
             wait 10 ticks to see if it becomes free. */
@@ -98,8 +100,9 @@ void s4353096_TaskRadio (void) {
             s4353096_radio_fsmprocessing();
             debug_printf("Before loop Recieve\n");
             /*Wait for packet from rover*/
-            while(s4353096_radio_getrxstatus() == 0) {
+            while(s4353096_radio_getrxstatus() == 0 && (p < 80000)) {
               /*Loop until a packet has been recieved*/
+              p++;
               s4353096_radio_setfsmrx();
   		        s4353096_radio_fsmprocessing();
               s4353096_radio_fsmprocessing();

@@ -35,6 +35,7 @@ struct Packet rover_communication;
 
 extern void s4353096_TaskRover(void) {
   uint8_t getpass[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  uint8_t motor[] = {100, 100, 0x5A};
   for(;;) {
     if (s4353096_QueueRoverRecieve != NULL) {	/* Check if queue exists */
               /* Check for item received - block atmost for 10 ticks */
@@ -56,6 +57,11 @@ extern void s4353096_TaskRover(void) {
 
       if( xSemaphoreTake(s4353096_SemaphoreGetPassKey, 10 ) == pdTRUE ) {
         send_rover_packet (getpass, 0x30);
+      }
+    }
+    if (s4353096_SemaphoreSendMotor != NULL) {
+      if( xSemaphoreTake(s4353096_SemaphoreSendMotor, 10 ) == pdTRUE ) {
+        send_rover_packet( motor, 0x32);
       }
     }
   vTaskDelay(500);
@@ -118,18 +124,22 @@ extern void send_rover_packet (uint8_t *payload, uint8_t packet_type) {
   rover_communication.s4353096_tx_packet[9] = radio_vars.next_sequence;
   radio_vars.next_sequence = radio_vars.next_sequence + 0x01;
 
+  for (int h = 11; h < 30; h+=2) {
+    hamming_encoded_byte = hamming_byte_encoder(payload[(h/2) - 5]);
+    /*LSB Format*/
+    rover_communication.s4353096_tx_packet[h] = (hamming_encoded_byte & 0x00FF);
+    rover_communication.s4353096_tx_packet[h+1] = (hamming_encoded_byte & 0xFF00) >> 8;
+  }
   /*Hamming encode the payload and put it into the trasnmit packet*/
-  for (int i = 0; i < 40; i += 2) {
-    if (i == 0) {
+  /*for (int i = 0; i < 40; i += 2) {
+    if (i == 0) {*/
     /*Pass Key here from rover struct*/
-      hamming_encoded_byte = 0x00;//hamming_byte_encoder(radio_vars.passkey);
+/*hamming_encoded_byte = 0x00;//hamming_byte_encoder(radio_vars.passkey);
     } else {
       hamming_encoded_byte = hamming_byte_encoder(payload[(i/2) - 1]);
     }
-    /*LSB Format*/
-    rover_communication.s4353096_tx_packet[i+10] = (hamming_encoded_byte & 0x00FF);
-    rover_communication.s4353096_tx_packet[i+11] = (hamming_encoded_byte & 0xFF00) >> 8;
-  }
+
+  }*/
   rover_communication.s4353096_tx_packet[10] = radio_vars.passkey;
   /*Calculate the crc and place it at the end of tx packet*/
   crc_calculated = crc_calculation(rover_communication.s4353096_tx_packet);

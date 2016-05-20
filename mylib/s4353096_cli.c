@@ -42,6 +42,16 @@
 /* Private function prototypes -----------------------------------------------*/
 struct PanTilt SendPosition;
 
+extern BaseType_t prvSendMotor(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+
+  /* Set the semaphore as available if the semaphore exists*/
+	if (s4353096_SemaphoreSendMotor != NULL) {	/* Check if semaphore exists */
+		xSemaphoreGive(s4353096_SemaphoreSendMotor);		/* Give PB Semaphore from ISR*/
+	}
+	/* Return pdFALSE, as there are no more strings to return */
+	/* Only return pdTRUE, if more strings need to be printed */
+	return pdFALSE;
+}
 extern BaseType_t prvGetSensor(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 
   /* Set the semaphore as available if the semaphore exists*/

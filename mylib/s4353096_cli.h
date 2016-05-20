@@ -47,10 +47,18 @@ extern BaseType_t prvResume(char *pcWriteBuffer, size_t xWriteBufferLen, const c
 extern BaseType_t prvCRC(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvGetPassKey(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvGetSensor(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
-
+extern BaseType_t prvSendMotor(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 void CLI_Task(void);
 
+
+
 /*CLI Command Definitions*/
+CLI_Command_Definition_t xSendMotor = {	/* Structure that defines the "crc" command line command. */
+	"sendmotor",
+	"sendmotor: 32-bit value (in hex) or an ASCII String\r\n",
+	prvSendMotor,
+	0
+};
 CLI_Command_Definition_t xGetSensor = {	/* Structure that defines the "crc" command line command. */
 	"getsensor",
 	"getsensor: 32-bit value (in hex) or an ASCII String\r\n",

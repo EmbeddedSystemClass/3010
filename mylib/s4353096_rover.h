@@ -28,6 +28,7 @@
 #include "FreeRTOS_CLI.h"
 SemaphoreHandle_t s4353096_SemaphoreGetPassKey;
 SemaphoreHandle_t s4353096_SemaphoreGetSensor;
+SemaphoreHandle_t s4353096_SemaphoreSendMotor;
 QueueHandle_t s4353096_QueueRoverTransmit;
 QueueHandle_t s4353096_QueueRoverRecieve;
 extern void recieve_rover_packet (uint8_t *recieved_packet);

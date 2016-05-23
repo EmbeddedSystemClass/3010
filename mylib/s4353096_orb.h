@@ -27,27 +27,18 @@
 #include "semphr.h"
 #include "FreeRTOS_CLI.h"
 
-#ifdef ROVERDEFINES
-#define ROVER46CHAN 46
-unsigned char ROVER46ADDR[] = {0x46, 0x33, 0x22, 0x11, 0x00};
-#define ROVER47CHAN 47
-unsigned char ROVER47ADDR[] = {0x47, 0x33, 0x22, 0x11, 0x00};
-#define ROVER48CHAN 48
-unsigned char ROVER48ADDR[] = {0x48, 0x33, 0x22, 0x11, 0x00};
-#define ROVER49CHAN 49
-unsigned char ROVER49ADDR[] = {0x49, 0x33, 0x22, 0x11, 0x00};
-#define ROVER51CHAN 51
-unsigned char ROVER51ADDR[] = {0x51, 0x33, 0x22, 0x11, 0x00};
-#define ROVER52CHAN 52
-unsigned char ROVER52ADDR[] = {0x52, 0x33, 0x22, 0x11, 0x00};
-#define ROVER53CHAN 53
-unsigned char ROVER53ADDR[] = {0x53, 0x33, 0x22, 0x11, 0x00};
-#endif
-SemaphoreHandle_t s4353096_SemaphoreGetPassKey;
-SemaphoreHandle_t s4353096_SemaphoreGetSensor;
-SemaphoreHandle_t s4353096_SemaphoreSendMotor;
-QueueHandle_t s4353096_QueueRoverTransmit;
-QueueHandle_t s4353096_QueueRoverRecieve;
-extern void recieve_rover_packet (uint8_t *recieved_packet);
-extern void send_rover_packet (uint8_t *payload, uint8_t packet_type);
-extern void s4353096_TaskRover(void);
+
+#define ORB1CHAN 43
+unsigned char ORB1ADDR[] = {0x31, 0x34, 0x22, 0x11, 0x00};
+#define ORB2CHAN 43
+unsigned char ORB2ADDR[] = {0x32, 0x34, 0x22, 0x11, 0x00};
+#define ORB3CHAN 44
+unsigned char ORB3ADDR[] = {0x43, 0x34, 0x22, 0x11, 0x00};
+#define ORB4CHAN 44
+unsigned char ORB4ADDR[] = {0x44, 0x34, 0x22, 0x11, 0x00};
+#define ORB5CHAN 45
+unsigned char ORB5ADDR[] = {0x55, 0x34, 0x22, 0x11, 0x00};
+#define ORB6CHAN 45
+unsigned char ORB6ADDR[] = {0x56, 0x34, 0x22, 0x11, 0x00};
+#define ORB7CHAN 50
+unsigned char ORB7ADDR[] = {0x07, 0x35, 0x22, 0x11, 0x00};

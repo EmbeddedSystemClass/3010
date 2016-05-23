@@ -109,5 +109,5 @@ extern void s4353096_radio_settxaddress(unsigned char *addr);
 extern void s4353096_radio_setfsmrx(void);
 extern int s4353096_radio_getrxstatus(void);
 extern void s4353096_radio_getpacket(unsigned char *rxpacket);
-extern void s4353096_radio_setrxaddress(unsigned char *addr, uint8_t reg);
+extern void s4353096_radio_setrxaddress(unsigned char *addr);
 extern void s4353096_radio_getRAEpacket(unsigned char *rxpacket);

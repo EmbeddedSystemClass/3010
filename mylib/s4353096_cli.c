@@ -35,12 +35,131 @@
 #include "s4353096_accelerometer.h"
 #include "s4353096_hamming.h"
 #include "s4353096_radio.h"
+#define ROVERDEFINES 1
 #include "s4353096_rover.h"
+#include "s4353096_orb.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 struct PanTilt SendPosition;
+
+extern BaseType_t prvRFChanSet(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+
+	long lParam_len;
+	const char *cCmd_string1;
+	const char *cCmd_string2;
+	int value;
+
+	cCmd_string1 = FreeRTOS_CLIGetParameter(pcCommandString, 2, &lParam_len);
+	if(atoi(cCmd_string1) != 0) {
+		value = atoi(cCmd_string1);
+	} else {
+		value = 0;
+	}
+	/* Get parameters from command string */
+	cCmd_string2 = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
+	/* Write command echo output string to write buffer. */
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
+	strncat( pcWriteBuffer, cCmd_string2, lParam_len);
+	if (strcmp(pcWriteBuffer,"rover") == 0) {
+		switch(value) {
+			case 46:
+				memcpy(radio_vars.s4353096_rx_addr_rover, ROVER46ADDR, sizeof(ROVER46ADDR));
+				memcpy(radio_vars.s4353096_tx_addr, ROVER46ADDR, sizeof(ROVER46ADDR));
+				radio_vars.s4353096_chan_rover = ROVER46CHAN;
+				break;
+			case 47:
+				memcpy(radio_vars.s4353096_rx_addr_rover, ROVER47ADDR, sizeof(ROVER47ADDR));
+				memcpy(radio_vars.s4353096_tx_addr, ROVER47ADDR, sizeof(ROVER47ADDR));
+				radio_vars.s4353096_chan_rover = ROVER47CHAN;
+				break;
+			case 48:
+				memcpy(radio_vars.s4353096_rx_addr_rover, ROVER48ADDR, sizeof(ROVER48ADDR));
+				memcpy(radio_vars.s4353096_tx_addr, ROVER48ADDR, sizeof(ROVER48ADDR));
+				radio_vars.s4353096_chan_rover = ROVER48CHAN;
+				break;
+			case 49:
+				memcpy(radio_vars.s4353096_rx_addr_rover, ROVER49ADDR, sizeof(ROVER49ADDR));
+				memcpy(radio_vars.s4353096_tx_addr, ROVER49ADDR, sizeof(ROVER49ADDR));
+				radio_vars.s4353096_chan_rover = ROVER49CHAN;
+				break;
+			case 51:
+				memcpy(radio_vars.s4353096_rx_addr_rover, ROVER51ADDR, sizeof(ROVER51ADDR));
+				memcpy(radio_vars.s4353096_tx_addr, ROVER51ADDR, sizeof(ROVER51ADDR));
+				radio_vars.s4353096_chan_rover = ROVER51CHAN;
+				break;
+			case 52:
+				memcpy(radio_vars.s4353096_rx_addr_rover, ROVER52ADDR, sizeof(ROVER52ADDR));
+				memcpy(radio_vars.s4353096_tx_addr, ROVER52ADDR, sizeof(ROVER52ADDR));
+				radio_vars.s4353096_chan_rover = ROVER52CHAN;
+				break;
+			case 53:
+				memcpy(radio_vars.s4353096_rx_addr_rover, ROVER53ADDR, sizeof(ROVER53ADDR));
+				memcpy(radio_vars.s4353096_tx_addr, ROVER53ADDR, sizeof(ROVER53ADDR));
+				radio_vars.s4353096_chan_rover = ROVER53CHAN;
+				break;
+			default:
+				debug_printf("\nInvalid Rover ID\n");
+				break;
+		}
+	} else if (strcmp(pcWriteBuffer,"ORB") == 0) {
+			debug_printf("In ORB\n");
+			switch(value) {
+				case 1:
+					memcpy(radio_vars.s4353096_rx_addr_orb, ORB1ADDR, sizeof(ORB1ADDR));
+					radio_vars.s4353096_chan_orb = ORB1CHAN;
+					break;
+				case 2:
+					memcpy(radio_vars.s4353096_rx_addr_orb, ORB2ADDR, sizeof(ORB2ADDR));
+					radio_vars.s4353096_chan_orb = ORB2CHAN;
+					break;
+				case 3:
+					memcpy(radio_vars.s4353096_rx_addr_orb, ORB3ADDR, sizeof(ORB3ADDR));
+					radio_vars.s4353096_chan_orb = ORB3CHAN;
+					break;
+				case 4:
+					memcpy(radio_vars.s4353096_rx_addr_orb, ORB4ADDR, sizeof(ORB4ADDR));
+					radio_vars.s4353096_chan_orb = ORB4CHAN;
+					break;
+				case 5:
+					memcpy(radio_vars.s4353096_rx_addr_orb, ORB5ADDR, sizeof(ORB5ADDR));
+					radio_vars.s4353096_chan_orb = ORB5CHAN;
+					break;
+				case 6:
+					memcpy(radio_vars.s4353096_rx_addr_orb, ORB6ADDR, sizeof(ORB6ADDR));
+					radio_vars.s4353096_chan_orb = ORB6CHAN;
+					break;
+				case 7:
+					memcpy(radio_vars.s4353096_rx_addr_orb, ORB7ADDR, sizeof(ORB7ADDR));
+					radio_vars.s4353096_chan_orb = ORB7CHAN;
+					break;
+				default:
+					debug_printf("\nInvalid ORB ID\n");
+					break;
+			}
+
+	} else {
+		debug_printf("\nInvalid parameters\n");
+	}
+
+
+
+	/* Return pdFALSE, as there are no more strings to return */
+	/* Only return pdTRUE, if more strings need to be printed */
+	return pdFALSE;
+}
+
+extern BaseType_t prvGetTime(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+
+  /* Set the semaphore as available if the semaphore exists*/
+	if (s4353096_SemaphoreGetTime != NULL) {	/* Check if semaphore exists */
+		xSemaphoreGive(s4353096_SemaphoreGetTime);		/* Give PB Semaphore from ISR*/
+	}
+	/* Return pdFALSE, as there are no more strings to return */
+	/* Only return pdTRUE, if more strings need to be printed */
+	return pdFALSE;
+}
 
 extern BaseType_t prvSendMotor(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 

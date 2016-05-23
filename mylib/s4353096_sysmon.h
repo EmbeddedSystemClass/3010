@@ -62,6 +62,7 @@ struct Tasks {
 	TaskHandle_t TaskHandles[10];
   const char* TaskNames[10];
 };
+SemaphoreHandle_t s4353096_SemaphoreGetTime;
 TaskHandle_t xHandleCLI;
 TaskHandle_t xHandleAccelerometer;
 TaskHandle_t xHandleRadio;

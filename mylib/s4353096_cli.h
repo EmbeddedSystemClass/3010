@@ -48,11 +48,25 @@ extern BaseType_t prvCRC(char *pcWriteBuffer, size_t xWriteBufferLen, const char
 extern BaseType_t prvGetPassKey(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvGetSensor(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvSendMotor(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+extern BaseType_t prvRFChanSet(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+extern BaseType_t prvGetTime(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 void CLI_Task(void);
 
 
 
 /*CLI Command Definitions*/
+CLI_Command_Definition_t xRFChanSet = {	/* Structure that defines the "crc" command line command. */
+	"rfchanset",
+	"rfchanset: Set the ORB or Rover Channel & Addresses\r\n",
+	prvRFChanSet,
+	2
+};
+CLI_Command_Definition_t xGetTime = {	/* Structure that defines the "crc" command line command. */
+	"gettime",
+	"gettime: 32-bit value (in hex) or an ASCII String\r\n",
+	prvGetTime,
+	0
+};
 CLI_Command_Definition_t xSendMotor = {	/* Structure that defines the "crc" command line command. */
 	"sendmotor",
 	"sendmotor: 32-bit value (in hex) or an ASCII String\r\n",

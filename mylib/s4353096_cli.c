@@ -42,7 +42,26 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
+//struct Tasks TaskValues;
 struct PanTilt SendPosition;
+#define ROVER46CHAN 46
+unsigned char ROVER46ADDR[] = {0x46, 0x33, 0x22, 0x11, 0x00};
+#define ROVER47CHAN 47
+unsigned char ROVER47ADDR[] = {0x47, 0x33, 0x22, 0x11, 0x00};
+#define ROVER48CHAN 48
+unsigned char ROVER48ADDR[] = {0x48, 0x33, 0x22, 0x11, 0x00};
+#define ROVER49CHAN 49
+unsigned char ROVER49ADDR[] = {0x49, 0x33, 0x22, 0x11, 0x00};
+#define ROVER51CHAN 51
+unsigned char ROVER51ADDR[] = {0x51, 0x33, 0x22, 0x11, 0x00};
+#define ROVER52CHAN 52
+unsigned char ROVER52ADDR[] = {0x52, 0x33, 0x22, 0x11, 0x00};
+#define ROVER53CHAN 53
+unsigned char ROVER53ADDR[] = {0x53, 0x33, 0x22, 0x11, 0x00};
+
+/*extern BaseType_t prv(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+
+}*/
 
 extern BaseType_t prvRFChanSet(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 
@@ -151,11 +170,11 @@ extern BaseType_t prvRFChanSet(char *pcWriteBuffer, size_t xWriteBufferLen, cons
 }
 
 extern BaseType_t prvGetTime(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
-
+	get_system_time();
+	debug_printf("Current Time: %d.%02d\n", TaskValues.system_time, TaskValues.system_time_decimal);
   /* Set the semaphore as available if the semaphore exists*/
-	if (s4353096_SemaphoreGetTime != NULL) {	/* Check if semaphore exists */
-		xSemaphoreGive(s4353096_SemaphoreGetTime);		/* Give PB Semaphore from ISR*/
-	}
+
+
 	/* Return pdFALSE, as there are no more strings to return */
 	/* Only return pdTRUE, if more strings need to be printed */
 	return pdFALSE;
@@ -174,6 +193,8 @@ extern BaseType_t prvSendMotor(char *pcWriteBuffer, size_t xWriteBufferLen, cons
 extern BaseType_t prvGetSensor(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 
   /* Set the semaphore as available if the semaphore exists*/
+	get_system_time();
+	debug_printf("Time: %d.%02d\n", TaskValues.system_time, TaskValues.system_time_decimal);
 	if (s4353096_SemaphoreGetSensor != NULL) {	/* Check if semaphore exists */
 		xSemaphoreGive(s4353096_SemaphoreGetSensor);		/* Give PB Semaphore from ISR*/
 	}

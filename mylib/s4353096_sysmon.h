@@ -25,6 +25,8 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
+#include "semphr.h"
+//#include "semphr.h"
 /*Define associated BRD defines for GPIO ports to system monitor channels*/
 #define LA_CHAN0_PIN BRD_A3_PIN
 #define LA_CHAN0_GPIO_PORT BRD_A3_GPIO_PORT
@@ -61,6 +63,8 @@
 struct Tasks {
 	TaskHandle_t TaskHandles[10];
   const char* TaskNames[10];
+	long system_time_decimal;
+	int system_time;
 };
 SemaphoreHandle_t s4353096_SemaphoreGetTime;
 TaskHandle_t xHandleCLI;
@@ -71,3 +75,4 @@ struct Tasks TaskValues;
 void s4353096_sysmon_init(void);
 extern void GetTopList( void );
 extern void SetNameHandle(void);
+extern int get_system_time(void);

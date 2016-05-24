@@ -13,13 +13,13 @@
 #include "board.h"
 #include "stm32f4xx_hal_conf.h"
 #include "debug_printf.h"
-#include "s4353096_sysmon.h"
-
-/* Scheduler includes. */
-#include "FreeRTOS.h"
-#include "task.h"
-#include "queue.h"
 #include <stdio.h>
+#include "s4353096_sysmon.h"
+/* Scheduler includes. */
+//#include "FreeRTOS.h"
+//#include "task.h"
+//#include "queue.h"
+
 
 
 /* Private typedef -----------------------------------------------------------*/
@@ -29,6 +29,11 @@ GPIO_InitTypeDef  GPIO_InitStructure;
 /* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 
+extern int get_system_time(void) {
+  TaskValues.system_time_decimal = HAL_GetTick();
+	TaskValues.system_time = TaskValues.system_time_decimal/1000000;
+	TaskValues.system_time_decimal = TaskValues.system_time_decimal - TaskValues.system_time*100;
+}
 /*Initialise the system monitor pins*/
 void s4353096_sysmon_init(void) {
   /*Enable Clocks*/

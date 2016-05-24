@@ -85,6 +85,7 @@ void s4353096_TaskRadio (void) {
       if( xSemaphoreTake(s4353096_SemaphoreTracking, 10 ) == pdTRUE ) {
         /* We were able to obtain the semaphore and can now access the shared resource. */
         /*Check the format of the input to hamenc*/
+        speed_duration_calculation(132);
         xSemaphoreGive(s4353096_SemaphoreTracking);
         if (s4353096_QueueRoverTransmit != NULL) {	/* Check if queue exists */
                   /* Check for item received - block atmost for 10 ticks */

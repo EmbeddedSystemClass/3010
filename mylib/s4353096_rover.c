@@ -20,6 +20,7 @@
 #include "debug_printf.h"
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 /* Scheduler includes. */
 #include "FreeRTOS.h"
 #include "task.h"
@@ -33,7 +34,7 @@
 
 struct Packet rover_communication;
 
-extern void s4353096_TaskRover(void) {
+extern void s4353096_TaskRadioProcessing(void) {
   uint8_t getpass[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
   uint8_t motor[] = {100, 100, 0x5A};
   for(;;) {
@@ -157,4 +158,55 @@ extern void send_rover_packet (uint8_t *payload, uint8_t packet_type) {
       debug_printf("AFailed to post the message, after 10 ticks.\n\r");
     }
   }
+}
+
+extern void s4353096_TaskRover(void) {
+
+  for(;;){
+    /*if Motor Forward or backward*/
+  }
+}
+/*Initialise velocity_values*/
+void calibration_velocity_init(void) {
+  Calibrate.velocity[0] = 26;//
+  Calibrate.velocity[1] = 52;//
+  Calibrate.velocity[2] = 104;
+  Calibrate.velocity[3] = 78;
+  Calibrate.velocity[4] = 33;
+  Calibrate.velocity[5] = 150;
+  Calibrate.velocity[6] = 22;
+  Calibrate.velocity[7] = 0.0;
+  Calibrate.velocity[8] = 0.0;
+  Calibrate.velocity[9] = 0.0;
+}
+/*Largest speed is 80*/
+void calibration_velocity_calculation(void) {
+  int velocity_element;
+  velocity_element = (Calibrate.testing_speed - 40)/5;
+  Calibrate.velocity[velocity_element] = Calibrate.testing_distance/Calibrate.testing_duration;
+}
+
+/*For determining the duration and speed required to best atain a given distance*/
+extern void speed_duration_calculation(int distance) {
+  int distance_difference;
+  float calculated_distance;
+  int number_of_speeds = 9;
+  Calibrate.closest_difference = 1000; //Something large that will be imediatly changed on first item
+  Calibrate.closest_distance = 0; //Initialise the closest distance
+  /*Loop to increment speed*/
+  for (int i = 0; i < number_of_speeds; i++){
+    /*Loop to increment duration from 0 - 7.5*/
+    for (int j = 0; j < 16; j++) {
+      calculated_distance = (0.5*j*Calibrate.velocity[i]);
+      distance_difference = abs(distance - calculated_distance);
+      if (distance_difference < Calibrate.closest_difference) {
+        /*If the calculated distance better matches the desired distance*/
+        Calibrate.closest_speed = (i*5) + 40; //Calculates the value of speed for the associated velocity
+        Calibrate.closest_duration = j*0.5;
+        Calibrate.closest_difference = distance_difference;
+        Calibrate.closest_distance = calculated_distance;
+      }
+    }
+  }
+  debug_printf("Closest D: %f, S: %d, Du: %f, Dif: %f", Calibrate.closest_distance, Calibrate.closest_speed, Calibrate.closest_duration, Calibrate.closest_difference);
 }

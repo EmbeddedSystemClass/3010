@@ -54,7 +54,7 @@ int main (void) {
 	xTaskCreate( (void *) &s4353096_TaskAccelerometer, (const signed char *) "s4353096_TaskAccelerometer", mainTASKACC_STACK_SIZE, NULL,  mainTASKACC_PRIORITY, &xHandleAccelerometer);
 	xTaskCreate( (void *) &CLI_Task, (const signed char *) "CLI_Task", mainTASKCLI_STACK_SIZE, NULL,  mainTASKCLI_PRIORITY, &xHandleCLI);
 	xTaskCreate( (void *) &s4353096_TaskRadio, (const signed char *) "s4353096_TaskRadio", mainTASKRADIO_STACK_SIZE, NULL,  mainTASKRADIO_PRIORITY + 3, &xHandleRadio);
-	xTaskCreate( (void *) &s4353096_TaskRadioProcessing, (const signed char *) "s4353096_TaskRadioProcessing", mainTASKRADIO_STACK_SIZE, NULL,  mainTASKRADIO_PRIORITY + 3, &xHandleRover);
+	xTaskCreate( (void *) &s4353096_TaskRadioProcessing, (const signed char *) "s4353096_TaskRadioProcessing", mainTASKRADIO_STACK_SIZE, NULL,  mainTASKRADIO_PRIORITY + 3, &xHandleRadioProcessing);
 	/*Assign the task handles to their respective string values in an array*/
 	SetNameHandle();
 
@@ -71,6 +71,8 @@ int main (void) {
 	FreeRTOS_CLIRegisterCommand(&xGetSensor);
 	FreeRTOS_CLIRegisterCommand(&xSendMotor);
 	FreeRTOS_CLIRegisterCommand(&xRFChanSet);
+	FreeRTOS_CLIRegisterCommand(&xGetTime);
+	FreeRTOS_CLIRegisterCommand(&xForward);
 	/* Start the scheduler.
 
 	NOTE : Tasks run in system mode and the scheduler runs in Supervisor mode.
@@ -95,6 +97,7 @@ void Hardware_init( void ) {
 	s4353096_sysmon_init();
 	s4353096_accelerometer_init();
 	s4353096_radio_init();
+	calibration_velocity_init();
 	BRD_LEDToggle();
   portENABLE_INTERRUPTS();	//Disable interrupts
 }

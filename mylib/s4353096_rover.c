@@ -167,7 +167,7 @@ extern void s4353096_TaskRover(void) {
   }
 }
 /*Initialise velocity_values*/
-void calibration_velocity_init(void) {
+extern void calibration_velocity_init(void) {
   Calibrate.velocity[0] = 26;//
   Calibrate.velocity[1] = 52;//
   Calibrate.velocity[2] = 104;
@@ -180,7 +180,7 @@ void calibration_velocity_init(void) {
   Calibrate.velocity[9] = 0.0;
 }
 /*Largest speed is 80*/
-void calibration_velocity_calculation(void) {
+extern void calibration_velocity_calculation(void) {
   int velocity_element;
   velocity_element = (Calibrate.testing_speed - 40)/5;
   Calibrate.velocity[velocity_element] = Calibrate.testing_distance/Calibrate.testing_duration;
@@ -202,11 +202,17 @@ extern void speed_duration_calculation(int distance) {
       if (distance_difference < Calibrate.closest_difference) {
         /*If the calculated distance better matches the desired distance*/
         Calibrate.closest_speed = (i*5) + 40; //Calculates the value of speed for the associated velocity
-        Calibrate.closest_duration = j*0.5;
+        Calibrate.closest_duration = j;
         Calibrate.closest_difference = distance_difference;
         Calibrate.closest_distance = calculated_distance;
       }
     }
   }
-  debug_printf("Closest D: %f, S: %d, Du: %f, Dif: %f", Calibrate.closest_distance, Calibrate.closest_speed, Calibrate.closest_duration, Calibrate.closest_difference);
+  Calibrate.motor_payload[0] = (Calibrate.closest_speed*Calibrate.motor_left);
+  Calibrate.motor_payload[1] = (Calibrate.closest_speed*Calibrate.motor_right);
+  /*Duration*/
+  Calibrate.motor_payload[2] = (Calibrate.closest_duration) << 4;
+  /*Direction*/
+  /*Done in another function*/
+  debug_printf("Closest D: %d, S: %d, Du: %d, Dif: %d\n", Calibrate.closest_distance, Calibrate.closest_speed, Calibrate.closest_duration/2, Calibrate.closest_difference);
 }

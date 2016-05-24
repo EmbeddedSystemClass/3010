@@ -85,7 +85,6 @@ void s4353096_TaskRadio (void) {
       if( xSemaphoreTake(s4353096_SemaphoreTracking, 10 ) == pdTRUE ) {
         /* We were able to obtain the semaphore and can now access the shared resource. */
         /*Check the format of the input to hamenc*/
-        speed_duration_calculation(132);
         xSemaphoreGive(s4353096_SemaphoreTracking);
         if (s4353096_QueueRoverTransmit != NULL) {	/* Check if queue exists */
                   /* Check for item received - block atmost for 10 ticks */
@@ -101,6 +100,8 @@ void s4353096_TaskRadio (void) {
             /*Set Transmit Packet as Rover Packet*/
             memcpy(radio_vars.s4353096_tx_packet, radio_side_communication.s4353096_tx_packet, sizeof(radio_side_communication.s4353096_tx_packet));
             s4353096_radio_fsmprocessing();
+            /*radio_vars.s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
+            s4353096_radio_fsmprocessing();*/
             debug_printf("Before loop Recieve\n");
             /*Wait for packet from rover*/
             while(s4353096_radio_getrxstatus() == 0 && (p < 80000)) {
@@ -109,7 +110,7 @@ void s4353096_TaskRadio (void) {
               s4353096_radio_setfsmrx();
   		        s4353096_radio_fsmprocessing();
               s4353096_radio_fsmprocessing();
-              //debug_printf("In Loop\n");
+              debug_printf("In Loop\n");
               if (s4353096_radio_getrxstatus() == 1) {
                 memcpy(radio_side_communication.s4353096_rx_buffer, radio_vars.s4353096_rx_buffer, sizeof(radio_vars.s4353096_rx_buffer));
                 if (s4353096_QueueRoverRecieve != NULL) {	/* Check if queue exists */
@@ -298,7 +299,7 @@ extern void s4353096_radio_fsmprocessing(void) {
       if (radio_fsm_getstate() == RADIO_FSM_IDLE_STATE) {
 
         if (radio_fsm_setstate(RADIO_FSM_TX_STATE) == RADIO_FSM_ERROR) {
-            debug_printf("ERROR: Cannot set Radio FSM RX state\n\r");
+            debug_printf("ERROR: Cannot set Radio FSM TX state\n\r");
         } else {
             /*Has just been put into TX State and has yet to transmit the packet
             Toggle the LED to indicate about to transmit*/

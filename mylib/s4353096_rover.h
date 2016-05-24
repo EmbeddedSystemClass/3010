@@ -44,17 +44,20 @@ unsigned char ROVER52ADDR[] = {0x52, 0x33, 0x22, 0x11, 0x00};
 #define ROVER53CHAN 53
 unsigned char ROVER53ADDR[] = {0x53, 0x33, 0x22, 0x11, 0x00};
 #endif*/
+#define FORWARD 0x10
+#define BACKWARD 0x01
 struct Rover {
-  float velocity[10];
+  int velocity[10];
   int desired_distance;
-  int testing_duration; //Start with 1.5
+  float testing_duration; //Start with 1.5
   int testing_speed;
-  float testing_distance; //so that division results in a float
-  int motor_calibrate_left;
-  int motor_calibrate_right;
+  int testing_distance; //so that division results in a float
+  int motor_left;
+  int motor_right;
   int battery_calibrate;
   int closest_distance;
   int closest_difference;
+  uint8_t motor_payload[3];
   int closest_speed;
   int closest_duration;
 };
@@ -68,6 +71,6 @@ QueueHandle_t s4353096_QueueRoverRecieve;
 extern void recieve_rover_packet (uint8_t *recieved_packet);
 extern void send_rover_packet (uint8_t *payload, uint8_t packet_type);
 extern void s4353096_TaskRadioProcessing(void);
-void calibration_velocity_init(void);
-void calibration_velocity_calculation(void);
+extern void calibration_velocity_init(void);
+extern void calibration_velocity_calculation(void);
 extern void speed_duration_calculation(int distance);

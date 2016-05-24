@@ -59,9 +59,29 @@ unsigned char ROVER52ADDR[] = {0x52, 0x33, 0x22, 0x11, 0x00};
 #define ROVER53CHAN 53
 unsigned char ROVER53ADDR[] = {0x53, 0x33, 0x22, 0x11, 0x00};
 
-/*extern BaseType_t prv(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+extern BaseType_t prvForward(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+	long lParam_len;
+	const char *cCmd_string;
+	int distance;
+	uint8_t motor_payload;
+	/* Get parameters from command string */
+	cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
 
-}*/
+	debug_printf("%s", cCmd_string);
+	if(atoi(cCmd_string) != 0) {
+		distance = atoi(cCmd_string);
+	} else {
+		distance = 0;
+	}
+	speed_duration_calculation(distance);
+	Calibrate.motor_payload[2] = Calibrate.motor_payload[2] | FORWARD << 2 | FORWARD;
+	send_rover_packet(Calibrate.motor_payload, 0x32);
+	/*Perform Transmit Forward here*/
+
+	/* Return pdFALSE, as there are no more strings to return */
+	/* Only return pdTRUE, if more strings need to be printed */
+	return pdFALSE;
+}
 
 extern BaseType_t prvRFChanSet(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 

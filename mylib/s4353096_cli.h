@@ -50,11 +50,18 @@ extern BaseType_t prvGetSensor(char *pcWriteBuffer, size_t xWriteBufferLen, cons
 extern BaseType_t prvSendMotor(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvRFChanSet(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvGetTime(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+extern BaseType_t prvForward(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 void CLI_Task(void);
 
 
 
 /*CLI Command Definitions*/
+CLI_Command_Definition_t xForward = {	/* Structure that defines the "crc" command line command. */
+	"forward",
+	"forward: Move the rover forward a specified distance in mm\n",
+	prvForward,
+	1
+};
 CLI_Command_Definition_t xRFChanSet = {	/* Structure that defines the "crc" command line command. */
 	"rfchanset",
 	"rfchanset: Set the ORB or Rover Channel & Addresses\r\n",

@@ -26,7 +26,6 @@
 #include "task.h"
 #include "queue.h"
 #include "semphr.h"
-//#include "semphr.h"
 /*Define associated BRD defines for GPIO ports to system monitor channels*/
 #define LA_CHAN0_PIN BRD_A3_PIN
 #define LA_CHAN0_GPIO_PORT BRD_A3_GPIO_PORT
@@ -70,7 +69,7 @@ SemaphoreHandle_t s4353096_SemaphoreGetTime;
 TaskHandle_t xHandleCLI;
 TaskHandle_t xHandleAccelerometer;
 TaskHandle_t xHandleRadio;
-TaskHandle_t xHandleRover;
+TaskHandle_t xHandleRadioProcessing;
 struct Tasks TaskValues;
 void s4353096_sysmon_init(void);
 extern void GetTopList( void );

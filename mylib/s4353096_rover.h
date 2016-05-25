@@ -64,6 +64,7 @@ struct Rover Calibrate;
 SemaphoreHandle_t s4353096_SemaphoreGetPassKey;
 SemaphoreHandle_t s4353096_SemaphoreGetSensor;
 SemaphoreHandle_t s4353096_SemaphoreSendMotor;
+SemaphoreHandle_t s4353096_SemaphoreRecieveRovers;
 QueueHandle_t s4353096_QueueRoverTransmit;
 QueueHandle_t s4353096_QueueRoverRecieve;
 

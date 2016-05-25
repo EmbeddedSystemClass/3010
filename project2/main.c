@@ -48,8 +48,10 @@ int main (void) {
 	s4353096_SemaphoreGetSensor = xSemaphoreCreateBinary();
 	s4353096_SemaphoreSendMotor = xSemaphoreCreateBinary();
 	s4353096_SemaphoreGetTime = xSemaphoreCreateBinary();
+	s4353096_SemaphoreRecieveRovers = xSemaphoreCreateBinary();
 	s4353096_QueueRoverTransmit = xQueueCreate(10, sizeof(radio_side_communication));
 	s4353096_QueueRoverRecieve = xQueueCreate(10, sizeof(radio_side_communication));
+
 	/*Create All Tasks*/
 	xTaskCreate( (void *) &s4353096_TaskAccelerometer, (const signed char *) "s4353096_TaskAccelerometer", mainTASKACC_STACK_SIZE, NULL,  mainTASKACC_PRIORITY, &xHandleAccelerometer);
 	xTaskCreate( (void *) &CLI_Task, (const signed char *) "CLI_Task", mainTASKCLI_STACK_SIZE, NULL,  mainTASKCLI_PRIORITY, &xHandleCLI);
@@ -73,6 +75,7 @@ int main (void) {
 	FreeRTOS_CLIRegisterCommand(&xRFChanSet);
 	FreeRTOS_CLIRegisterCommand(&xGetTime);
 	FreeRTOS_CLIRegisterCommand(&xForward);
+	FreeRTOS_CLIRegisterCommand(&xRecieveRovers);
 	/* Start the scheduler.
 
 	NOTE : Tasks run in system mode and the scheduler runs in Supervisor mode.

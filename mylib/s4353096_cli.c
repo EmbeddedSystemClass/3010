@@ -88,7 +88,29 @@ unsigned char ROVER53ADDR[] = {0x53, 0x33, 0x22, 0x11, 0x00};
 	/* Only return pdTRUE, if more strings need to be printed */
 /*	return pdFALSE;
 }*/
+extern BaseType_t prvRecieveRovers(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+		long lParam_len;
+		const char *cCmd_string;
 
+		/* Get parameters from command string */
+		cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
+
+		/* Write command echo output string to write buffer. */
+		sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+
+		if (strcmp(pcWriteBuffer,"on") == 0) {
+	    /*Give Semaphore*/
+	    xSemaphoreGive(s4353096_SemaphoreRecieveRovers);
+	  } else if (strcmp(pcWriteBuffer,"off") == 0) {
+	    /*Give Semaphore*/
+	    xSemaphoreTake(s4353096_SemaphoreRecieveRovers, 1);
+	  } else {
+
+		}
+		/* Return pdFALSE, as there are no more strings to return */
+		/* Only return pdTRUE, if more strings need to be printed */
+		return pdFALSE;
+}
 extern BaseType_t prvForward(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 	long lParam_len;
 	const char *cCmd_string;

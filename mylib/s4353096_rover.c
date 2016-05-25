@@ -127,7 +127,7 @@ extern void send_rover_packet (uint8_t *payload, uint8_t packet_type) {
 
   for (int h = 11; h < 30; h+=2) {
     hamming_encoded_byte = hamming_byte_encoder(payload[(h/2) - 5]);
-    debug_printf("\nPayload: %x, Hamming Byte: %x", payload[(h/2) - 5], hamming_encoded_byte);
+    //debug_printf("\nPayload: %x, Hamming Byte: %x", payload[(h/2) - 5], hamming_encoded_byte);
     /*LSB Format*/
     rover_communication.s4353096_tx_packet[h] = (hamming_encoded_byte & 0x00FF);
     rover_communication.s4353096_tx_packet[h+1] = (hamming_encoded_byte & 0xFF00) >> 8;

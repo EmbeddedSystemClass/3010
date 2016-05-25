@@ -160,8 +160,8 @@ void s4353096_TaskRadio (void) {
               }
               radio_vars.s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
               s4353096_radio_fsmprocessing();
-              s4353096_radio_setrxaddress(radio_vars.s4353096_rx_addr_rover);
-              s4353096_radio_setchan(radio_vars.s4353096_chan_rover);
+              s4353096_radio_setrxaddress(radio_vars.s4353096_rx_addr_orb);
+              s4353096_radio_setchan(radio_vars.s4353096_chan_orb);
               //xSemaphoreGive(s4353096_SemaphoreRecieveRovers);
             //}
             break;
@@ -174,15 +174,15 @@ void s4353096_TaskRadio (void) {
             /*After wait state*/
             if (s4353096_radio_getrxstatus() == 1) { //Checks if packet has been recieved
               /*Prints recieved packet to console*/
-              //s4353096_radio_getRAEpacket(radio_vars.s4353096_rx_buffer);
+              s4353096_radio_getRAEpacket(radio_vars.s4353096_rx_buffer);
               /*Print the raw packet*/
                 debug_printf("\nRaw Packet Recieved: \n");
 
                 /*Increment through raw packet and print each byte*/
-                /*for(int j = 0; j < 32; j++) {
+                for(int j = 0; j < 32; j++) {
                   debug_printf("%x-", radio_vars.s4353096_rx_buffer[j]);
                 }
-                debug_printf("\n");*/
+                debug_printf("\n");
             }
             break;
 
@@ -229,8 +229,8 @@ extern void s4353096_radio_sendpacket(char	chan,	unsigned char *addr,
 /*Print out values*/
 extern void s4353096_radio_getRAEpacket(unsigned char *rxpacket) {
   uint16_t crc_output; //Calculated CRC of the Recieved Packet
-  uint8_t hamming_decoded_bytes[10];
-  uint16_t payload[5];
+  int hamming_decoded_bytes[10];
+  int payload[5];
   uint16_t crc_recieved; //CRC recieved in the packet
   int current_x;
   int current_y;
@@ -274,7 +274,7 @@ extern void s4353096_radio_getRAEpacket(unsigned char *rxpacket) {
 
     /*Change order of bytes to MSB*/
     if ((l % 2) == 1) {
-      payload[l/2] = (hamming_decoded_bytes[l] << 8) ^ hamming_decoded_bytes[l-1];
+      payload[l/2] = (hamming_decoded_bytes[l] << 8) | hamming_decoded_bytes[l-1];
     }
     l++;
   }
@@ -294,7 +294,7 @@ extern void s4353096_radio_getRAEpacket(unsigned char *rxpacket) {
   velocity_y_decimal = velocity_y_decimal - velocity_y*1000;
 
   /*Print out the Marker Id, Marker Width and height, Marker Coordinates*/
-  debug_printf("\n\nMarker ID: %hd\nX Coordinate: %hd\nY Coordinate: %hd\nWidth of marker: %hd\nHeight of marker: %hd\n", payload[0], payload[1],payload[2],payload[3],payload[4]);
+  debug_printf("\n\nMarker ID: %d\nX Coordinate: %d\nY Coordinate: %hd\nWidth of marker: %hd\nHeight of marker: %hd\n", payload[0], payload[1],payload[2],payload[3],payload[4]);
   /*Set current time and position so that the next calculation uses these values*/
   previous_recieved_time = current_recieved_time;
   previous_y = current_y;
@@ -316,6 +316,7 @@ extern void s4353096_radio_init(void) {
   /*Set radio FSM sate to IDLE*/
   radio_fsm_setstate(RADIO_FSM_IDLE_STATE);
   radio_vars.s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
+  radio_vars.s4353096_radio_fsmcurrentstate = ORB_RECIEVE;
 }
 
 /*Processes the current state*/

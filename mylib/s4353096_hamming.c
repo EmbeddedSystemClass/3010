@@ -173,6 +173,7 @@ extern uint8_t hamming_byte_decoder(uint8_t lower, uint8_t upper) {
 			} else {
 				/*2 bit error*/
 				debug_printf("2 Bit error\n");
+				
 			}
 		} else if (pr != p0) {
 			/*If there is a parity error*/

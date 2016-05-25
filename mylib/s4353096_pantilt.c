@@ -27,7 +27,7 @@
 #include "semphr.h"
 #include "FreeRTOS_CLI.h"
 
-//#include "s4353096_sysmon.h"
+#include "s4353096_sysmon.h"
 #include "s4353096_pantilt.h"
 //#include "s4353096_cli.h"
 /* Private typedef */
@@ -169,7 +169,7 @@ extern void s4353096_TaskPanTilt(void) {
 	memset(cInputString, 0, sizeof(cInputString));
 	pcOutputString = FreeRTOS_CLIGetOutputBuffer();
 	for (;;) {
-    //S4353096_LA_CHAN0_SET();      //Set LA Channel 0
+    S4353096_LA_CHAN0_SET();      //Set LA Channel 0
     /*Do Stuff Here, this is the loop*/
     /* Receive character */
     cRxedChar = debug_getc();
@@ -281,35 +281,19 @@ extern void s4353096_TaskPanTilt(void) {
           if (s4353096_QueueBox != NULL) {	/* Check if queue exists */
             /* Check for item received - block atmost for 10 ticks */
             if (xQueueReceive(s4353096_QueueBox, &Recieve_PT, 10 )) {
-              servo_control.set_angle_tilt = Recieve_PT.set_angle_tilt;
-              s4353096_pantilt_angle_write(0, servo_control.set_angle_tilt);
-              vTaskDelay(300);
               servo_control.set_angle_pan = Recieve_PT.set_angle_pan;
               s4353096_pantilt_angle_write(1, servo_control.set_angle_pan);
               vTaskDelay(300);
+              servo_control.set_angle_tilt = Recieve_PT.set_angle_tilt;
+              s4353096_pantilt_angle_write(0, servo_control.set_angle_tilt);
+              vTaskDelay(300);
               if (xQueueReceive(s4353096_QueueBox, &Recieve_PT, 10 )) {
-                servo_control.set_angle_tilt = Recieve_PT.set_angle_tilt;
-                s4353096_pantilt_angle_write(0, servo_control.set_angle_tilt);
-                vTaskDelay(300);
                 servo_control.set_angle_pan = Recieve_PT.set_angle_pan;
                 s4353096_pantilt_angle_write(1, servo_control.set_angle_pan);
                 vTaskDelay(300);
-                if (xQueueReceive(s4353096_QueueBox, &Recieve_PT, 10 )) {
-                  servo_control.set_angle_tilt = Recieve_PT.set_angle_tilt;
-                  s4353096_pantilt_angle_write(0, servo_control.set_angle_tilt);
-                  vTaskDelay(300);
-                  servo_control.set_angle_pan = Recieve_PT.set_angle_pan;
-                  s4353096_pantilt_angle_write(1, servo_control.set_angle_pan);
-                  vTaskDelay(300);
-                }
-                if (xQueueReceive(s4353096_QueueBox, &Recieve_PT, 10 )) {
-                  servo_control.set_angle_tilt = Recieve_PT.set_angle_tilt;
-                  s4353096_pantilt_angle_write(0, servo_control.set_angle_tilt);
-                  vTaskDelay(300);
-                  servo_control.set_angle_pan = Recieve_PT.set_angle_pan;
-                  s4353096_pantilt_angle_write(1, servo_control.set_angle_pan);
-                  vTaskDelay(300);
-                }
+                servo_control.set_angle_tilt = Recieve_PT.set_angle_tilt;
+                s4353096_pantilt_angle_write(0, servo_control.set_angle_tilt);
+                vTaskDelay(300);
               }
             }
           }
@@ -351,13 +335,13 @@ extern void s4353096_TaskPanTilt(void) {
     }
     /*Normal Things Here*/
     //vTaskDelayUntil( &xLastWakeTime1, xFrequency1 );                //Extra Task Delay of 3ms
-    //S4353096_LA_CHAN0_CLR();
+    S4353096_LA_CHAN0_CLR();
     vTaskDelay(1);                																	// Mandatory Delay
   }
 }
 
 extern void s4353096_TaskBox(void) {
-	//S4353096_LA_CHAN1_CLR();
+	S4353096_LA_CHAN1_CLR();
   struct PanTilt MakeBox;
   int current_angle_pan;
   int current_angle_tilt;
@@ -376,29 +360,15 @@ extern void s4353096_TaskBox(void) {
         HAL_GPIO_WritePin(LASER_GPIO_PORT, LASER_PIN, 1);
         current_angle_pan = servo_control.set_angle_pan;
         current_angle_tilt = servo_control.set_angle_tilt;
-        MakeBox.set_angle_pan = current_angle_pan + 26;
-        MakeBox.set_angle_tilt = current_angle_tilt - 24;
-        if (s4353096_QueueBox != NULL) {	/* Check if queue exists */
-  				if( xQueueSendToBack(s4353096_QueueBox, ( void * ) &MakeBox, ( portTickType ) 10 ) != pdPASS ) {
-  					debug_printf("Failed to post the message, after 10 ticks.\n\r");
-  				}
-  			}
-        MakeBox.set_angle_pan = current_angle_pan - 26 ;
-        MakeBox.set_angle_tilt = current_angle_tilt + 25;
+        MakeBox.set_angle_pan = current_angle_pan + 25;
+        MakeBox.set_angle_tilt = current_angle_tilt - 18;
         if (s4353096_QueueBox != NULL) {	/* Check if queue exists */
   				if( xQueueSendToBack(s4353096_QueueBox, ( void * ) &MakeBox, ( portTickType ) 10 ) != pdPASS ) {
   					debug_printf("Failed to post the message, after 10 ticks.\n\r");
   				}
   			}
         MakeBox.set_angle_pan = current_angle_pan;
-        MakeBox.set_angle_tilt = current_angle_tilt - 24;
-        if (s4353096_QueueBox != NULL) {	/* Check if queue exists */
-          if( xQueueSendToBack(s4353096_QueueBox, ( void * ) &MakeBox, ( portTickType ) 10 ) != pdPASS ) {
-            debug_printf("Failed to post the message, after 10 ticks.\n\r");
-          }
-        }
-        MakeBox.set_angle_pan = current_angle_pan;
-        MakeBox.set_angle_tilt = current_angle_tilt - 24;
+        MakeBox.set_angle_tilt = current_angle_tilt;
         if (s4353096_QueueBox != NULL) {	/* Check if queue exists */
   				if( xQueueSendToBack(s4353096_QueueBox, ( void * ) &MakeBox, ( portTickType ) 10 ) != pdPASS ) {
   					debug_printf("Failed to post the message, after 10 ticks.\n\r");
@@ -408,6 +378,6 @@ extern void s4353096_TaskBox(void) {
     }
 	}
   vTaskDelayUntil( &xLastWakeTime1, xFrequency1 );                //Extra Task Delay of 3ms
-  //S4353096_LA_CHAN1_CLR();
+  S4353096_LA_CHAN1_CLR();
   vTaskDelay(1);
 }

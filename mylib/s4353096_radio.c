@@ -59,20 +59,21 @@ static SPI_HandleTypeDef SpiHandle;
 
 /*The main function for the Radio Task*/
 void s4353096_TaskRadio (void) {
-  unsigned char orb_addr[] = {0x31, 0x34, 0x22, 0x11, 0x00};
-  unsigned char rover_addr[] = {0x46, 0x33, 0x22, 0x11, 0x00};
+  unsigned char orb_addr[] = {0x07, 0x35, 0x22, 0x11, 0x00};
+  unsigned char rover_addr[] = {0x48, 0x33, 0x22, 0x11, 0x00};
   memcpy(radio_vars.s4353096_rx_addr_orb, orb_addr, sizeof(orb_addr));
   memcpy(radio_vars.s4353096_rx_addr_rover, rover_addr, sizeof(rover_addr));
   memcpy(radio_vars.s4353096_tx_addr, rover_addr, sizeof(rover_addr));
   radio_vars.s4353096_chan_rover = 48;
-  radio_vars.s4353096_chan_orb = 43;
+  radio_vars.s4353096_chan_orb = 50;
   radio_vars.next_sequence = 0x00;
   radio_vars.passkey = 0x00;
+  //debug_printf("\nrover addr: %x\n", rover_addr);
   int p = 0;
   s4353096_radio_setchan(radio_vars.s4353096_chan_rover);
 	s4353096_radio_settxaddress(radio_vars.s4353096_tx_addr);
   /*Set ORB Recieve Addr*/
-	s4353096_radio_setrxaddress(radio_vars.s4353096_rx_addr_orb);
+	s4353096_radio_setrxaddress(radio_vars.s4353096_rx_addr_rover);
   /*Set Rover Recieve Addr*/
   //s4353096_radio_setrxaddress(radio_vars.s4353096_rx_addr_rover, NRF24L01P_RX_ADDR_P1);
   /*Main loop for Radio Task*/
@@ -92,9 +93,9 @@ void s4353096_TaskRadio (void) {
             debug_printf("In Recieve\n");
             radio_vars.s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
             s4353096_radio_fsmprocessing();
-            s4353096_radio_setrxaddress(radio_vars.s4353096_rx_addr_rover);
-            s4353096_radio_settxaddress(radio_vars.s4353096_tx_addr);
-            s4353096_radio_setchan(radio_vars.s4353096_chan_rover);
+            //s4353096_radio_setrxaddress(radio_vars.s4353096_rx_addr_rover);
+            //s4353096_radio_settxaddress(radio_vars.s4353096_tx_addr);
+            //s4353096_radio_setchan(radio_vars.s4353096_chan_rover);
             /*Transmit the Packet*/
             radio_vars.s4353096_radio_fsmcurrentstate = S4353096_TX_STATE;
             /*Set Transmit Packet as Rover Packet*/
@@ -110,7 +111,6 @@ void s4353096_TaskRadio (void) {
               s4353096_radio_setfsmrx();
   		        s4353096_radio_fsmprocessing();
               s4353096_radio_fsmprocessing();
-              debug_printf("In Loop\n");
               if (s4353096_radio_getrxstatus() == 1) {
                 memcpy(radio_side_communication.s4353096_rx_buffer, radio_vars.s4353096_rx_buffer, sizeof(radio_vars.s4353096_rx_buffer));
                 if (s4353096_QueueRoverRecieve != NULL) {	/* Check if queue exists */
@@ -124,10 +124,29 @@ void s4353096_TaskRadio (void) {
             radio_vars.s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
             s4353096_radio_fsmprocessing();
             debug_printf("Got Here\n");
-            s4353096_radio_setchan(radio_vars.s4353096_chan_orb);
-            s4353096_radio_setrxaddress(radio_vars.s4353096_rx_addr_orb);
-        } /*else {
-          s4353096_radio_setfsmrx();
+            //s4353096_radio_setchan(radio_vars.s4353096_chan_orb);
+            //s4353096_radio_setrxaddress(radio_vars.s4353096_rx_addr_orb);
+        } else if(xSemaphoreTake(s4353096_SemaphoreTracking, 10 ) == pdTRUE ) {
+          while(s4353096_radio_getrxstatus() == 0) {
+            /*Loop until a packet has been recieved*/
+            p++;
+            s4353096_radio_setfsmrx();
+            s4353096_radio_fsmprocessing();
+            s4353096_radio_fsmprocessing();
+            if (s4353096_radio_getrxstatus() == 1) {
+              memset(radio_side_communication.s4353096_rx_buffer, 0x00, 32);
+              memcpy(radio_side_communication.s4353096_rx_buffer, radio_vars.s4353096_rx_buffer, sizeof(radio_vars.s4353096_rx_buffer));
+              if (s4353096_QueueRoverRecieve != NULL) {	/* Check if queue exists */
+                /*Send the recieved packet to a Queue*/
+                if( xQueueSendToBack(s4353096_QueueRoverRecieve, ( void * ) &radio_side_communication, ( portTickType ) 10 ) != pdPASS ) {
+                  debug_printf("BFailed to post the message, after 10 ticks.\n\r");
+                }
+              }
+            }
+          }
+          radio_vars.s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
+          s4353096_radio_fsmprocessing();
+          /*s4353096_radio_setfsmrx();
 		      s4353096_radio_fsmprocessing();
           s4353096_radio_fsmprocessing();
 
@@ -145,8 +164,11 @@ void s4353096_TaskRadio (void) {
 
 		      } else {
 
-		      }
-        }*/
+		      }*/
+        /*Else recieve orb data*/
+        } else {
+
+        }
       }
       }
     }

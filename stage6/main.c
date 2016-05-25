@@ -22,7 +22,7 @@
 #include "semphr.h"
 #include "FreeRTOS_CLI.h"
 
-#include "s4353096_sysmon.h"
+//#include "s4353096_sysmon.h"
 #include "s4353096_pantilt.h"
 #include "s4353096_cli.h"
 /* Private typedef -----------------------------------------------------------*/
@@ -68,7 +68,7 @@ void Hardware_init( void ) {
 	BRD_LEDInit();				//Initialise Blue LED
 	BRD_LEDOff();				//Turn off Blue LED
 	s4353096_pantilt_init();
-  s4353096_sysmon_init();
+  //s4353096_sysmon_init();
 	__LASER_GPIO_CLK();
 	//Set up Pin behaviour
 	GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP; //Output Mode

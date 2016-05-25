@@ -147,6 +147,7 @@ extern void send_rover_packet (uint8_t *payload, uint8_t packet_type) {
   crc_calculated = crc_calculation(rover_communication.s4353096_tx_packet);
   rover_communication.s4353096_tx_packet[30] = (crc_calculated & 0xFF00) >> 8;
   rover_communication.s4353096_tx_packet[31] = (crc_calculated & 0x00FF);
+  radio_vars.orb_rover_fsmcurrentstate = ROVER_TRANSCIEVE;
   debug_printf("\nRAW TRANSMIT: ");
   for (int y = 0; y < 32; y++) {
     debug_printf("%x-", rover_communication.s4353096_tx_packet[y]);
@@ -157,6 +158,8 @@ extern void send_rover_packet (uint8_t *payload, uint8_t packet_type) {
 
     if( xQueueSendToBack(s4353096_QueueRoverTransmit, ( void * ) &rover_communication, ( portTickType ) 10 ) != pdPASS ) {
       debug_printf("AFailed to post the message, after 10 ticks.\n\r");
+    } else {
+      radio_vars.orb_rover_fsmcurrentstate = ROVER_TRANSCIEVE;
     }
   }
 }

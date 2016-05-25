@@ -100,10 +100,12 @@ extern BaseType_t prvRecieveRovers(char *pcWriteBuffer, size_t xWriteBufferLen, 
 
 		if (strcmp(pcWriteBuffer,"on") == 0) {
 	    /*Give Semaphore*/
-	    xSemaphoreGive(s4353096_SemaphoreRecieveRovers);
+	    //xSemaphoreGive(s4353096_SemaphoreRecieveRovers);
+			radio_vars.orb_rover_fsmcurrentstate = ROVERS_RECIEVE;
 	  } else if (strcmp(pcWriteBuffer,"off") == 0) {
 	    /*Give Semaphore*/
-	    xSemaphoreTake(s4353096_SemaphoreRecieveRovers, 1);
+	    //xSemaphoreTake(s4353096_SemaphoreRecieveRovers, 1);
+			radio_vars.orb_rover_fsmcurrentstate = ORB_RECIEVE;
 	  } else {
 
 		}

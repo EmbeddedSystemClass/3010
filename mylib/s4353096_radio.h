@@ -55,10 +55,15 @@
  #include "semphr.h"
  /* Private typedef -----------------------------------------------------------*/
  /* Private define ------------------------------------------------------------*/
+ /*Radio fsm*/
  #define S4353096_IDLE_STATE 0
  #define S4353096_RX_STATE 1
  #define S4353096_TX_STATE 2
  #define S4353096_WAITING_STATE 3
+ /*Orb Rover fsm*/
+ #define ORB_RECIEVE 0
+ #define ROVER_TRANSCIEVE 1
+ #define ROVERS_RECIEVE 2
  /* Task Priorities ------------------------------------------------------------*/
  #define mainTASKRADIO_PRIORITY					( tskIDLE_PRIORITY + 1 )
  /* Task Stack Allocations -----------------------------------------------------*/
@@ -76,6 +81,7 @@
    unsigned char s4353096_chan_orb; //= 43;
    unsigned char next_sequence; //= 0x00;
    unsigned char passkey; //= 0x00;
+   int orb_rover_fsmcurrentstate;
 };
 struct Packet {
   unsigned char s4353096_rx_buffer[32];

@@ -51,12 +51,21 @@ extern BaseType_t prvSendMotor(char *pcWriteBuffer, size_t xWriteBufferLen, cons
 extern BaseType_t prvRFChanSet(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvGetTime(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvForward(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+extern BaseType_t prvReverse(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+extern BaseType_t prvAngle(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvRecieveRovers(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvDisplayCalibrate(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvORBCalibrate(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvDebugSetRoverPosition(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+extern BaseType_t prvCalibrateMarkerId(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 void CLI_Task(void);
 /*CLI Command Definitions*/
+CLI_Command_Definition_t xCalibrateMarkerId = {	/* Structure that defines the "crc" command line command. */
+	"mkid",
+	"mkid: assign the id of rover or marker\n",
+	prvCalibrateMarkerId,
+	2
+};
 CLI_Command_Definition_t xDebugSetRoverPosition = {	/* Structure that defines the "crc" command line command. */
 	"roverpos",
 	"roverpos: Set the current position of the rover i.e [x][y]\n",
@@ -80,6 +89,18 @@ CLI_Command_Definition_t xRecieveRovers = {	/* Structure that defines the "crc" 
 	"recieverovers",
 	"recieverovers: Move the rover forward a specified distance in mm\n",
 	prvRecieveRovers,
+	1
+};
+CLI_Command_Definition_t xAngle = {	/* Structure that defines the "crc" command line command. */
+	"angle",
+	"angle: Change the orientation angle of the rover\n",
+	prvAngle,
+	1
+};
+CLI_Command_Definition_t xReverse = {	/* Structure that defines the "crc" command line command. */
+	"reverse",
+	"reverse: Move the rover backward a specified distance in mm\n",
+	prvReverse,
 	1
 };
 CLI_Command_Definition_t xForward = {	/* Structure that defines the "crc" command line command. */

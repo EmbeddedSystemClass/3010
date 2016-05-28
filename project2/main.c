@@ -92,6 +92,9 @@ int main (void) {
 	FreeRTOS_CLIRegisterCommand(&xDisplayCalibrate);
 	FreeRTOS_CLIRegisterCommand(&xORBCalibrate );
 	FreeRTOS_CLIRegisterCommand(&xDebugSetRoverPosition);
+	FreeRTOS_CLIRegisterCommand(&xCalibrateMarkerId);
+	FreeRTOS_CLIRegisterCommand(&xAngle);
+	FreeRTOS_CLIRegisterCommand(&xReverse);
 	/* Start the scheduler.
 
 	NOTE : Tasks run in system mode and the scheduler runs in Supervisor mode.

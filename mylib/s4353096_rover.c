@@ -74,6 +74,7 @@ extern void s4353096_TaskRadioProcessing(void) {
 extern void recieve_rover_packet (uint8_t *recieved_packet) {
 int l = 0;
 uint8_t hamming_decoded_bytes[10];
+uint8_t payload[10];
 /*Print the raw Packet*/
 debug_printf("\n\nRecieved from Rover: ");
 for (int k = 0; k < 32; k++) {
@@ -84,23 +85,26 @@ debug_printf("\n");
 
 /*Hamming Decode Payload*/
 
-/*for(int p = 10; p < 30; p+=2) {
+for(int p = 10; p < 30; p+=2) {
   hamming_decoded_bytes[l] = hamming_byte_decoder(recieved_packet[p+1], recieved_packet[p+2]);
-  debug_printf("%d\n", p);*//*Change order of bytes to MSB*/
-  /*if ((l % 2) == 1) {
+  debug_printf("%d\n", p);/*Change order of bytes to MSB*/
+  if ((l % 2) == 1) {
     payload[l/2] = (hamming_decoded_bytes[l] << 8) ^ hamming_decoded_bytes[l-1];
-  }*/
-  //l++;
-//}
+  }
+  l++;
+}
 //debug_printf("Sequence: %d\n", recieved_packet[9]);
-/*if (recieved_packet[0] == 0x30) {
+if (recieved_packet[0] == 0x30) {
   radio_vars.passkey = hamming_decoded_bytes[0];
+}
+if (recieved_packet[0] == 0x31) {
+  debug_printf("Line sensor Value: %x", payload[0]);
 }
 debug_printf("Decoded Hamming\n\n");
 for (int n = 0; n < 10; n++) {
   debug_printf("%x --%d\n", hamming_decoded_bytes[n], n);
 }
-debug_printf("\n\n");*/
+debug_printf("\n\n");
 /*Make sure we were the intended recipient*/
 
 
@@ -149,10 +153,10 @@ extern void send_rover_packet (uint8_t *payload, uint8_t packet_type) {
   rover_communication.s4353096_tx_packet[31] = (crc_calculated & 0x00FF);
   radio_vars.orb_rover_fsmcurrentstate = ROVER_TRANSCIEVE;
   debug_printf("\nRAW TRANSMIT: ");
-  /*for (int y = 0; y < 32; y++) {
+  for (int y = 0; y < 32; y++) {
     debug_printf("%x-", rover_communication.s4353096_tx_packet[y]);
   }
-  debug_printf("\n");*/
+  debug_printf("\n");
   /*Place the transmit packet in a Queue to the radio task*/
   if (s4353096_QueueRoverTransmit != NULL) {	/* Check if queue exists */
 

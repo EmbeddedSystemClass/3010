@@ -177,15 +177,15 @@ void s4353096_TaskRadio (void) {
             /*After wait state*/
             if (s4353096_radio_getrxstatus() == 1) { //Checks if packet has been recieved
               /*Prints recieved packet to console*/
-              //s4353096_radio_getRAEpacket(radio_vars.s4353096_rx_buffer);
+              s4353096_radio_getRAEpacket(radio_vars.s4353096_rx_buffer);
               /*Print the raw packet*/
                 //debug_printf("\nRaw Packet Recieved: \n");
 
                 /*Increment through raw packet and print each byte*/
-                for(int j = 0; j < 32; j++) {
+                /*for(int j = 0; j < 32; j++) {
                   debug_printf("%x-", radio_vars.s4353096_rx_buffer[j]);
                 }
-                debug_printf("\n");
+                debug_printf("\n");*/
             }
             break;
 
@@ -242,7 +242,7 @@ extern void s4353096_radio_getRAEpacket(unsigned char *rxpacket) {
   int velocity_x_decimal;
   int velocity_y_decimal;
   int l = 0;
-  debug_printf("RECV:");
+  //debug_printf("RECV:");
   /*Print the recieved Type*/
   //debug_printf("\nType: %x", rxpacket[0]);
 
@@ -263,7 +263,7 @@ extern void s4353096_radio_getRAEpacket(unsigned char *rxpacket) {
   /*Warning, CRC is currently in LSB*/
   crc_output = crc_calculation(rxpacket); //Calculate the crc of the 30byte packet
   /*Print out the calculated CRC*/
-  debug_printf("\nCalculated CRC: %x\n", crc_output);
+  //debug_printf("\nCalculated CRC: %x\n", crc_output);
   crc_recieved = (rxpacket[31]) ^ (rxpacket[30] << 8);
 
   /*Compare the Calculated CRC to the Recieved CRC*/
@@ -285,7 +285,10 @@ extern void s4353096_radio_getRAEpacket(unsigned char *rxpacket) {
   /*Calculate the Velocity*/
   current_x = payload[1];
   current_y = payload[2];
-
+  if(payload[0] == rover.rover_id) {
+    rover.rover_current_x = current_x;
+    rover.rover_current_y = current_y;
+  }
   /*Calculate X Velocity*/
   velocity_x_decimal = ((current_x - previous_x)*1000)/((current_recieved_time - previous_recieved_time)/1000);
   velocity_x = velocity_x_decimal/1000;
@@ -297,7 +300,7 @@ extern void s4353096_radio_getRAEpacket(unsigned char *rxpacket) {
   velocity_y_decimal = velocity_y_decimal - velocity_y*1000;
 
   /*Print out the Marker Id, Marker Width and height, Marker Coordinates*/
-  debug_printf("\n\nMarker ID: %d\nX Coordinate: %d\nY Coordinate: %hd\nWidth of marker: %hd\nHeight of marker: %hd\n", payload[0], payload[1],payload[2],payload[3],payload[4]);
+  //debug_printf("\n\nMarker ID: %d\nX Coordinate: %d\nY Coordinate: %hd\nWidth of marker: %hd\nHeight of marker: %hd\n", payload[0], payload[1],payload[2],payload[3],payload[4]);
   /*Set current time and position so that the next calculation uses these values*/
   previous_recieved_time = current_recieved_time;
   previous_y = current_y;

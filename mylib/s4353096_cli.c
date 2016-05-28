@@ -70,6 +70,34 @@ struct PanTilt SendPosition;
 	/* Only return pdTRUE, if more strings need to be printed */
 /*	return pdFALSE;
 }*/
+extern BaseType_t prvCalibrateMarkerId(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+	long lParam_len;
+	const char *cCmd_string1;
+	const char *cCmd_string2;
+	int value;
+
+	cCmd_string1 = FreeRTOS_CLIGetParameter(pcCommandString, 2, &lParam_len);
+	if(atoi(cCmd_string1) != 0) {
+		value = atoi(cCmd_string1);
+	} else {
+		value = 0;
+	}
+	/* Get parameters from command string */
+	cCmd_string2 = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
+	/* Write command echo output string to write buffer. */
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
+	strncat( pcWriteBuffer, cCmd_string2, lParam_len);
+	if (strcmp(pcWriteBuffer,"rover") == 0) {
+			rover.rover_id = value;
+	} else if (strcmp(pcWriteBuffer,"marker") == 0) {
+			rover.marker_id = value;
+	} else {
+		debug_printf("\nInvalid parameters\n");
+	}
+	/* Return pdFALSE, as there are no more strings to return */
+	/* Only return pdTRUE, if more strings need to be printed */
+	return pdFALSE;
+}
 extern BaseType_t prvDebugSetRoverPosition(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 
 	long lParam_len;
@@ -190,6 +218,65 @@ extern BaseType_t prvRecieveRovers(char *pcWriteBuffer, size_t xWriteBufferLen, 
 		/* Return pdFALSE, as there are no more strings to return */
 		/* Only return pdTRUE, if more strings need to be printed */
 		return pdFALSE;
+}
+extern BaseType_t prvAngle(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+	long lParam_len;
+	const char *cCmd_string;
+	int angle;
+	uint8_t motor_payload;
+	/* Get parameters from command string */
+	cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
+	sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+	debug_printf("%s", cCmd_string);
+	if(atoi(cCmd_string) != 0) {
+		angle = atoi(cCmd_string);
+	} else {
+		angle = 0;
+	}
+	speed_duration_calculation(angle);
+
+	/*Negative/anticlockwise angle*/
+	debug_printf("\n%c\n",pcWriteBuffer[0]);
+	if(pcWriteBuffer[0] == '-') {
+		Calibrate.motor_payload[2] = (Calibrate.motor_payload[2] << 4) | (FORWARDRIGHT ^ (BACKWARDLEFT));
+	} else {
+		/*Clockwise angle*/
+		Calibrate.motor_payload[2] = (Calibrate.motor_payload[2] << 4) | (BACKWARDRIGHT ^ (FORWARDLEFT));
+	}
+	debug_printf("%d,", Calibrate.motor_payload[0]);
+	debug_printf("%d,", Calibrate.motor_payload[1]);
+	debug_printf("%x", Calibrate.motor_payload[2]);
+	send_rover_packet(Calibrate.motor_payload, 0x32);
+	/*Perform Transmit Forward here*/
+
+	/* Return pdFALSE, as there are no more strings to return */
+	/* Only return pdTRUE, if more strings need to be printed */
+	return pdFALSE;
+}
+extern BaseType_t prvReverse(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+	long lParam_len;
+	const char *cCmd_string;
+	int distance;
+	uint8_t motor_payload;
+	/* Get parameters from command string */
+	cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
+	debug_printf("%s", cCmd_string);
+	if(atoi(cCmd_string) != 0) {
+		distance = atoi(cCmd_string);
+	} else {
+		distance = 0;
+	}
+	speed_duration_calculation(distance);
+	Calibrate.motor_payload[2] = (Calibrate.motor_payload[2] << 4) | (FORWARDRIGHT ^ (FORWARDLEFT));
+	debug_printf("%d,", Calibrate.motor_payload[0]);
+	debug_printf("%d,", Calibrate.motor_payload[1]);
+	debug_printf("%x", Calibrate.motor_payload[2]);
+	send_rover_packet(Calibrate.motor_payload, 0x32);
+	/*Perform Transmit Forward here*/
+
+	/* Return pdFALSE, as there are no more strings to return */
+	/* Only return pdTRUE, if more strings need to be printed */
+	return pdFALSE;
 }
 extern BaseType_t prvForward(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 	long lParam_len;
@@ -320,8 +407,6 @@ extern BaseType_t prvRFChanSet(char *pcWriteBuffer, size_t xWriteBufferLen, cons
 	} else {
 		debug_printf("\nInvalid parameters\n");
 	}
-	rover_init();
-	debug_printf("\n%x  %x\n", radio_vars.s4353096_rx_addr_rover, radio_vars.s4353096_tx_addr);
 
 
 	/* Return pdFALSE, as there are no more strings to return */

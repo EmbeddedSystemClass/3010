@@ -51,6 +51,7 @@ unsigned char ROVER53ADDR[] = {0x53, 0x33, 0x22, 0x11, 0x00};
 #define ROVER51CHAN 51
 #define ROVER52CHAN 52
 #define ROVER53CHAN 53
+
 #define FORWARDLEFT 0x04
 #define BACKWARDLEFT 0x08
 #define FORWARDRIGHT 0x01
@@ -76,6 +77,8 @@ struct Rover {
 
   int marker_current_x;
   int marker_current_y;
+  int rover_id;
+  int marker_id;
 };
 struct Rovers {
   unsigned char ROVER46ADDR[5];

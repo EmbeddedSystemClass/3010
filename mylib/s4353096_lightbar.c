@@ -137,9 +137,9 @@ extern void s4353096_lightbar_init(void) {
 		GPIO_InitStructure.Pin = LED_9_PIN;
 		HAL_GPIO_Init(LED_9_GPIO_PORT, &GPIO_InitStructure);
 		/*Create TaskLightBar*/
-		xTaskCreate( (void *) &s4353096_TaskLightBar, (const signed char *) "s4353096_TaskLightBar", mainLA_CHAN2TASK3_STACK_SIZE, NULL,  mainLA_CHAN2TASK3_PRIORITY, NULL );
+		//xTaskCreate( (void *) &s4353096_TaskLightBar, (const signed char *) "s4353096_TaskLightBar", mainLA_CHAN2TASK3_STACK_SIZE, NULL,  mainLA_CHAN2TASK3_PRIORITY, NULL );
 		/*Create QueueLightBar*/
-		s4353096_QueueLightBar = xQueueCreate(10, sizeof(Recieve));
+		//s4353096_QueueLightBar = xQueueCreate(10, sizeof(Recieve));
 }
 void s4353096_TaskLightBar(void) {
   S4353096_LA_CHAN2_CLR();        //Clear LA Channel 0

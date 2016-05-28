@@ -29,6 +29,7 @@
 #include "s4353096_radio.h"
 #include "s4353096_rover.h"
 #include "s4353096_pantilt.h"
+#include "s4353096_lightbar.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -118,6 +119,7 @@ void Hardware_init( void ) {
 	BRD_LEDOff();				//Turn off Blue LED
 	s4353096_sysmon_init();
 	rover_init();
+	s4353096_lightbar_init();
 	s4353096_accelerometer_init();
 	s4353096_radio_init();
 	calibration_velocity_init();

@@ -32,6 +32,7 @@
 #include "s4353096_radio.h"
 #include "s4353096_hamming.h"
 #include "s4353096_pantilt.h"
+#include "s4353096_lightbar.h"
 struct Packet rover_communication;
 
 extern void s4353096_TaskRadioProcessing(void) {
@@ -99,12 +100,13 @@ if (recieved_packet[0] == 0x30) {
 }
 if (recieved_packet[0] == 0x31) {
   debug_printf("Line sensor Value: %x", payload[0]);
+  s4353096_lightbar_write(((0x00 << 8)^ payload[0]));
 }
-debug_printf("Decoded Hamming\n\n");
+/*debug_printf("Decoded Hamming\n\n");
 for (int n = 0; n < 10; n++) {
   debug_printf("%x --%d\n", hamming_decoded_bytes[n], n);
 }
-debug_printf("\n\n");
+debug_printf("\n\n");*/
 /*Make sure we were the intended recipient*/
 
 

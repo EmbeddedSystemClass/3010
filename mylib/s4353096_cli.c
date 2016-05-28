@@ -44,24 +44,6 @@
 /* Private function prototypes -----------------------------------------------*/
 //struct Tasks TaskValues;
 struct PanTilt SendPosition;
-#define ROVER46CHAN 46
-unsigned char ROVER46ADDR[] = {0x46, 0x33, 0x22, 0x11, 0x00};
-#define ROVER47CHAN 47
-unsigned char ROVER47ADDR[] = {0x47, 0x33, 0x22, 0x11, 0x00};
-#define ROVER48CHAN 48
-unsigned char ROVER48ADDR[] = {0x48, 0x33, 0x22, 0x11, 0x00};
-#define ROVER49CHAN 49
-unsigned char ROVER49ADDR[] = {0x49, 0x33, 0x22, 0x11, 0x00};
-#define ROVER51CHAN 51
-unsigned char ROVER51ADDR[] = {0x51, 0x33, 0x22, 0x11, 0x00};
-#define ROVER52CHAN 52
-unsigned char ROVER52ADDR[] = {0x52, 0x33, 0x22, 0x11, 0x00};
-#define ROVER53CHAN 53
-unsigned char ROVER53ADDR[] = {0x53, 0x33, 0x22, 0x11, 0x00};
-#define FORWARDLEFT 0x04
-#define BACKWARDLEFT 0x08
-#define FORWARDRIGHT 0x01
-#define BACKWARDRIGHT 0x02
 
 /*extern BaseType_t prvForward(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 	long lParam_len;
@@ -88,6 +70,102 @@ unsigned char ROVER53ADDR[] = {0x53, 0x33, 0x22, 0x11, 0x00};
 	/* Only return pdTRUE, if more strings need to be printed */
 /*	return pdFALSE;
 }*/
+extern BaseType_t prvDebugSetRoverPosition(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+
+	long lParam_len;
+	const char *cCmd_string1;
+	const char *cCmd_string2;
+	int rover_x;
+	int rover_y;
+
+	cCmd_string1 = FreeRTOS_CLIGetParameter(pcCommandString, 2, &lParam_len);
+	//debug_printf("\nStr 1: %s\n", cCmd_string1);
+	if(atoi(cCmd_string1) != 0) {
+		rover_y = atoi(cCmd_string1);
+	} else {
+		rover_y = 0;
+	}
+	//debug_printf("X: %d\n", rover_x);
+	/* Get parameters from command string */
+	cCmd_string2 = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
+	//debug_printf("Str 2: %s\n", cCmd_string2);
+	/* Write command echo output string to write buffer. */
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
+	strncat( pcWriteBuffer, cCmd_string2, lParam_len);
+	//debug_printf("PcWrite: %s\n", pcWriteBuffer);
+	if (atoi(pcWriteBuffer) != 0) {
+		rover_x = atoi(pcWriteBuffer);
+	} else {
+		rover_x = 0;
+	}
+	//debug_printf("Y: %d\n", rover_y);
+	rover.rover_current_x = rover_x;
+	rover.rover_current_y = rover_y;
+	//calculate_rover_display_pos();
+	/* Return pdFALSE, as there are no more strings to return */
+	/* Only return pdTRUE, if more strings need to be printed */
+	return pdFALSE;
+}
+
+extern BaseType_t prvORBCalibrate(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+		long lParam_len;
+		const char *cCmd_string;
+
+		/* Get parameters from command string */
+		cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
+
+		/* Write command echo output string to write buffer. */
+		sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+
+		if (strcmp(pcWriteBuffer,"tc") == 0) {
+	    /*Grab current marker location and set it as top corner of orb*/
+			/* [x/y][min\max]*/
+			servo_control.orb_c[0][0] = rover.marker_current_x;
+			servo_control.orb_c[1][0] = rover.marker_current_y;
+	  } else if (strcmp(pcWriteBuffer,"bc") == 0) {
+	    /*Grab current marker location and set it as the bottom corner of display*/
+			servo_control.orb_c[0][1] = rover.marker_current_x;
+			servo_control.orb_c[1][1] = rover.marker_current_y;
+		} else {
+			//Invalid command
+		}
+		calculate_display_ratios();
+		/* Return pdFALSE, as there are no more strings to return */
+		/* Only return pdTRUE, if more strings need to be printed */
+		return pdFALSE;
+}
+
+extern BaseType_t prvDisplayCalibrate(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+		long lParam_len;
+		const char *cCmd_string;
+
+		/* Get parameters from command string */
+		cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
+
+		/* Write command echo output string to write buffer. */
+		sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+
+		if (strcmp(pcWriteBuffer,"tc") == 0) {
+	    /*Grab current pan tilt values and set them as the top corner of display*/
+			/* [pan/tilt][min\max]*/
+			servo_control.display_c[0][0] = servo_control.set_angle_pan;
+			servo_control.display_c[1][0] = servo_control.set_angle_tilt;
+	  } else if (strcmp(pcWriteBuffer,"bc") == 0) {
+	    /*Grab current pan tilt values and set them as the bottom corner of display*/
+			servo_control.display_c[0][1] = servo_control.set_angle_pan;
+			servo_control.display_c[1][1] = servo_control.set_angle_tilt;
+		} else if (strcmp(pcWriteBuffer,"on") == 0) {
+			xSemaphoreGive(s4353096_SemaphoreCalibrate);
+		} else if (strcmp(pcWriteBuffer,"off") == 0) {
+			xSemaphoreTake(s4353096_SemaphoreCalibrate, 1);
+	  } else {
+			//Invalid command
+		}
+		calculate_display_ratios();
+		/* Return pdFALSE, as there are no more strings to return */
+		/* Only return pdTRUE, if more strings need to be printed */
+		return pdFALSE;
+}
 extern BaseType_t prvRecieveRovers(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 		long lParam_len;
 		const char *cCmd_string;
@@ -160,45 +238,50 @@ extern BaseType_t prvRFChanSet(char *pcWriteBuffer, size_t xWriteBufferLen, cons
 	if (strcmp(pcWriteBuffer,"rover") == 0) {
 		switch(value) {
 			case 46:
-				memcpy(radio_vars.s4353096_rx_addr_rover, ROVER46ADDR, sizeof(ROVER46ADDR));
-				memcpy(radio_vars.s4353096_tx_addr, ROVER46ADDR, sizeof(ROVER46ADDR));
+				memcpy(radio_vars.s4353096_rx_addr_rover, rover_coms.ROVER46ADDR, sizeof(rover_coms.ROVER46ADDR));
+				memcpy(radio_vars.s4353096_tx_addr, rover_coms.ROVER46ADDR, sizeof(rover_coms.ROVER46ADDR));
 				radio_vars.s4353096_chan_rover = ROVER46CHAN;
+				debug_printf("\nIn 46 ROV:  %x\n", rover_coms.ROVER46ADDR[0]);
+				debug_printf("\nIn 46: ");
+				for (int i = 0; i < 5; i++) {
+					debug_printf("%x-", radio_vars.s4353096_tx_addr[i]);
+				}
 				break;
 			case 47:
-				memcpy(radio_vars.s4353096_rx_addr_rover, ROVER47ADDR, sizeof(ROVER47ADDR));
-				memcpy(radio_vars.s4353096_tx_addr, ROVER47ADDR, sizeof(ROVER47ADDR));
+				memcpy(radio_vars.s4353096_rx_addr_rover, rover_coms.ROVER47ADDR, sizeof(rover_coms.ROVER47ADDR));
+				memcpy(radio_vars.s4353096_tx_addr, rover_coms.ROVER47ADDR, sizeof(rover_coms.ROVER47ADDR));
 				radio_vars.s4353096_chan_rover = ROVER47CHAN;
 				break;
 			case 48:
-				memcpy(radio_vars.s4353096_rx_addr_rover, ROVER48ADDR, sizeof(ROVER48ADDR));
-				memcpy(radio_vars.s4353096_tx_addr, ROVER48ADDR, sizeof(ROVER48ADDR));
+				memcpy(radio_vars.s4353096_rx_addr_rover, rover_coms.ROVER48ADDR, sizeof(rover_coms.ROVER48ADDR));
+				memcpy(radio_vars.s4353096_tx_addr, rover_coms.ROVER48ADDR, sizeof(rover_coms.ROVER48ADDR));
 				radio_vars.s4353096_chan_rover = ROVER48CHAN;
 				break;
 			case 49:
-				memcpy(radio_vars.s4353096_rx_addr_rover, ROVER49ADDR, sizeof(ROVER49ADDR));
-				memcpy(radio_vars.s4353096_tx_addr, ROVER49ADDR, sizeof(ROVER49ADDR));
+				memcpy(radio_vars.s4353096_rx_addr_rover, rover_coms.ROVER49ADDR, sizeof(rover_coms.ROVER49ADDR));
+				memcpy(radio_vars.s4353096_tx_addr, rover_coms.ROVER49ADDR, sizeof(rover_coms.ROVER49ADDR));
 				radio_vars.s4353096_chan_rover = ROVER49CHAN;
 				break;
 			case 51:
-				memcpy(radio_vars.s4353096_rx_addr_rover, ROVER51ADDR, sizeof(ROVER51ADDR));
-				memcpy(radio_vars.s4353096_tx_addr, ROVER51ADDR, sizeof(ROVER51ADDR));
+				memcpy(radio_vars.s4353096_rx_addr_rover, rover_coms.ROVER51ADDR, sizeof(rover_coms.ROVER51ADDR));
+				memcpy(radio_vars.s4353096_tx_addr, rover_coms.ROVER51ADDR, sizeof(rover_coms.ROVER51ADDR));
 				radio_vars.s4353096_chan_rover = ROVER51CHAN;
 				break;
 			case 52:
-				memcpy(radio_vars.s4353096_rx_addr_rover, ROVER52ADDR, sizeof(ROVER52ADDR));
-				memcpy(radio_vars.s4353096_tx_addr, ROVER52ADDR, sizeof(ROVER52ADDR));
+				memcpy(radio_vars.s4353096_rx_addr_rover, rover_coms.ROVER52ADDR, sizeof(rover_coms.ROVER52ADDR));
+				memcpy(radio_vars.s4353096_tx_addr, rover_coms.ROVER52ADDR, sizeof(rover_coms.ROVER52ADDR));
 				radio_vars.s4353096_chan_rover = ROVER52CHAN;
 				break;
 			case 53:
-				memcpy(radio_vars.s4353096_rx_addr_rover, ROVER53ADDR, sizeof(ROVER53ADDR));
-				memcpy(radio_vars.s4353096_tx_addr, ROVER53ADDR, sizeof(ROVER53ADDR));
+				memcpy(radio_vars.s4353096_rx_addr_rover, rover_coms.ROVER53ADDR, sizeof(rover_coms.ROVER53ADDR));
+				memcpy(radio_vars.s4353096_tx_addr, rover_coms.ROVER53ADDR, sizeof(rover_coms.ROVER53ADDR));
 				radio_vars.s4353096_chan_rover = ROVER53CHAN;
 				break;
 			default:
 				debug_printf("\nInvalid Rover ID\n");
 				break;
 		}
-	} else if (strcmp(pcWriteBuffer,"ORB") == 0) {
+	} else if (strcmp(pcWriteBuffer,"orb") == 0) {
 			debug_printf("In ORB\n");
 			switch(value) {
 				case 1:
@@ -237,7 +320,8 @@ extern BaseType_t prvRFChanSet(char *pcWriteBuffer, size_t xWriteBufferLen, cons
 	} else {
 		debug_printf("\nInvalid parameters\n");
 	}
-
+	rover_init();
+	debug_printf("\n%x  %x\n", radio_vars.s4353096_rx_addr_rover, radio_vars.s4353096_tx_addr);
 
 
 	/* Return pdFALSE, as there are no more strings to return */
@@ -330,9 +414,9 @@ extern BaseType_t prvPanCommand(char *pcWriteBuffer, size_t xWriteBufferLen, con
   } else {
 
     /*Check if value is a valid integer and if it is send it to the queue*/
-    if ((atoi(pcWriteBuffer) != 0) || (pcWriteBuffer[0] == '0')) {
+    if ((atof(pcWriteBuffer) != 0) || (pcWriteBuffer[0] == '0')) {
       /*Valid integer, send to queue*/
-      SendPosition.set_angle_pan = atoi(pcWriteBuffer);
+      SendPosition.set_angle_pan = atof(pcWriteBuffer);
 
       if (s4353096_QueuePan != NULL) {	/* Check if queue exists */
 
@@ -370,9 +454,9 @@ extern BaseType_t prvTiltCommand(char *pcWriteBuffer, size_t xWriteBufferLen, co
   } else {
 
     /*Check if value is a valid integer and if it is send it to the queue*/
-    if ((atoi(pcWriteBuffer) != 0) || (pcWriteBuffer[0] == '0')) {
+    if ((atof(pcWriteBuffer) != 0) || (pcWriteBuffer[0] == '0')) {
       /*Valid integer, send to queue*/
-      SendPosition.set_angle_tilt = atoi(pcWriteBuffer);
+      SendPosition.set_angle_tilt = atof(pcWriteBuffer);
 
       if (s4353096_QueueTilt != NULL) {	/* Check if queue exists */
 

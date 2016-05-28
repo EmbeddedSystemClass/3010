@@ -31,7 +31,7 @@
 #include "s4353096_rover.h"
 #include "s4353096_radio.h"
 #include "s4353096_hamming.h"
-
+#include "s4353096_pantilt.h"
 struct Packet rover_communication;
 
 extern void s4353096_TaskRadioProcessing(void) {
@@ -149,10 +149,10 @@ extern void send_rover_packet (uint8_t *payload, uint8_t packet_type) {
   rover_communication.s4353096_tx_packet[31] = (crc_calculated & 0x00FF);
   radio_vars.orb_rover_fsmcurrentstate = ROVER_TRANSCIEVE;
   debug_printf("\nRAW TRANSMIT: ");
-  for (int y = 0; y < 32; y++) {
+  /*for (int y = 0; y < 32; y++) {
     debug_printf("%x-", rover_communication.s4353096_tx_packet[y]);
   }
-  debug_printf("\n");
+  debug_printf("\n");*/
   /*Place the transmit packet in a Queue to the radio task*/
   if (s4353096_QueueRoverTransmit != NULL) {	/* Check if queue exists */
 
@@ -169,6 +169,34 @@ extern void s4353096_TaskRover(void) {
   for(;;){
     /*if Motor Forward or backward*/
   }
+}
+extern void rover_init(void) {
+  unsigned char r46[] = {0x46, 0x33, 0x22, 0x11, 0x00};
+  unsigned char r47[] = {0x47, 0x33, 0x22, 0x11, 0x00};
+  unsigned char r48[] = {0x48, 0x33, 0x22, 0x11, 0x00};
+  unsigned char r49[] = {0x49, 0x33, 0x22, 0x11, 0x00};
+  unsigned char r51[] = {0x51, 0x33, 0x22, 0x11, 0x00};
+  unsigned char r52[] = {0x52, 0x33, 0x22, 0x11, 0x00};
+  unsigned char r53[] = {0x53, 0x33, 0x22, 0x11, 0x00};
+  memcpy(rover_coms.ROVER46ADDR, r46, sizeof(r46));
+  memcpy(rover_coms.ROVER47ADDR, r47, sizeof(r47));
+  memcpy(rover_coms.ROVER48ADDR, r48, sizeof(r48));
+  memcpy(rover_coms.ROVER49ADDR, r49, sizeof(r49));
+  memcpy(rover_coms.ROVER51ADDR, r51, sizeof(r51));
+  memcpy(rover_coms.ROVER52ADDR, r52, sizeof(r52));
+  memcpy(rover_coms.ROVER53ADDR, r53, sizeof(r53));
+  servo_control.orb_c[0][0] = 0;
+  servo_control.orb_c[1][0] = 0;
+  servo_control.orb_c[0][1] = 284;
+  servo_control.orb_c[1][1] = 192;
+  servo_control.display_c[0][0] = 20;
+  servo_control.display_c[1][0] = 44;
+  servo_control.display_c[0][1] = -22;
+  servo_control.display_c[1][1] = 63;
+  rover.rover_current_x = 0;
+  rover.rover_current_y = 0;
+  debug_printf("\n%x\n",rover_coms.ROVER46ADDR[0]);
+  calculate_display_ratios();
 }
 /*Initialise velocity_values*/
 extern void calibration_velocity_init(void) {

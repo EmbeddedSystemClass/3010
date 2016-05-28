@@ -52,11 +52,30 @@ extern BaseType_t prvRFChanSet(char *pcWriteBuffer, size_t xWriteBufferLen, cons
 extern BaseType_t prvGetTime(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvForward(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvRecieveRovers(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+extern BaseType_t prvDisplayCalibrate(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+extern BaseType_t prvORBCalibrate(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+extern BaseType_t prvDebugSetRoverPosition(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 void CLI_Task(void);
-
-
-
 /*CLI Command Definitions*/
+CLI_Command_Definition_t xDebugSetRoverPosition = {	/* Structure that defines the "crc" command line command. */
+	"roverpos",
+	"roverpos: Set the current position of the rover i.e [x][y]\n",
+	prvDebugSetRoverPosition,
+	2
+};
+
+CLI_Command_Definition_t xORBCalibrate = {	/* Structure that defines the "crc" command line command. */
+	"orbcal",
+	"orbcal: Set the upper left and lower right corner of the orb using ""tc"" and ""bc""\n",
+	prvDisplayCalibrate,
+	1
+};
+CLI_Command_Definition_t xDisplayCalibrate = {	/* Structure that defines the "crc" command line command. */
+	"dspcal",
+	"dspcal: Set the upper left and lower right corner of the display using ""tc"" and ""bc""\n",
+	prvDisplayCalibrate,
+	1
+};
 CLI_Command_Definition_t xRecieveRovers = {	/* Structure that defines the "crc" command line command. */
 	"recieverovers",
 	"recieverovers: Move the rover forward a specified distance in mm\n",

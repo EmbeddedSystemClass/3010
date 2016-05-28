@@ -44,6 +44,17 @@ unsigned char ROVER52ADDR[] = {0x52, 0x33, 0x22, 0x11, 0x00};
 #define ROVER53CHAN 53
 unsigned char ROVER53ADDR[] = {0x53, 0x33, 0x22, 0x11, 0x00};
 #endif*/
+#define ROVER46CHAN 46
+#define ROVER47CHAN 47
+#define ROVER48CHAN 48
+#define ROVER49CHAN 49
+#define ROVER51CHAN 51
+#define ROVER52CHAN 52
+#define ROVER53CHAN 53
+#define FORWARDLEFT 0x04
+#define BACKWARDLEFT 0x08
+#define FORWARDRIGHT 0x01
+#define BACKWARDRIGHT 0x02
 
 struct Rover {
   int velocity[10];
@@ -59,8 +70,25 @@ struct Rover {
   uint8_t motor_payload[10];
   int closest_speed;
   int closest_duration;
+
+  int rover_current_x;
+  int rover_current_y;
+
+  int marker_current_x;
+  int marker_current_y;
+};
+struct Rovers {
+  unsigned char ROVER46ADDR[5];
+  unsigned char ROVER47ADDR[5];
+  unsigned char ROVER48ADDR[5];
+  unsigned char ROVER49ADDR[5];
+  unsigned char ROVER51ADDR[5];
+  unsigned char ROVER52ADDR[5];
+  unsigned char ROVER53ADDR[5];
 };
 struct Rover Calibrate;
+struct Rover rover;
+struct Rovers rover_coms;
 SemaphoreHandle_t s4353096_SemaphoreGetPassKey;
 SemaphoreHandle_t s4353096_SemaphoreGetSensor;
 SemaphoreHandle_t s4353096_SemaphoreSendMotor;
@@ -68,6 +96,7 @@ SemaphoreHandle_t s4353096_SemaphoreRecieveRovers;
 QueueHandle_t s4353096_QueueRoverTransmit;
 QueueHandle_t s4353096_QueueRoverRecieve;
 
+extern void rover_init(void);
 extern void recieve_rover_packet (uint8_t *recieved_packet);
 extern void send_rover_packet (uint8_t *payload, uint8_t packet_type);
 extern void s4353096_TaskRadioProcessing(void);

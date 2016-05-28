@@ -21,17 +21,28 @@
 struct PanTilt {
 	int write_angles;
 	int read_angles;
-  int set_angle_pan;
-  int set_angle_tilt;
+  float set_angle_pan;
+  float set_angle_tilt;
 	int laser_state;
+	float box_height_angle;
+	float box_width_angle;
+	/*Co-ordinates of the paper corners, associates 0 as pan and 1 as tilt*/
+	/*Only need top right and bottom left corners to calibrate system as these give the maximum and minumum x,y values*/
+	/*Make 0 element top corner and 1 element bottom corner*/
+	/*Display Corners, stores angles for pan and tilt for those corners*/
+	float display_c[2][2];
+	/*ORB Corners, store the x and y values for those corners*/
+	float orb_c[2][2];
+	float ratio_pan;
+	float ratio_tilt;
 };
+struct PanTilt servo_control;
 /* Task Priorities ------------------------------------------------------------*/
 #define mainTASKPANTILT_PRIORITY					( tskIDLE_PRIORITY + 2 )
 #define mainTASKBOX_PRIORITY							(	tskIDLE_PRIORITY + 3 )
 /* Task Stack Allocations -----------------------------------------------------*/
 #define mainTASKPANTILT_STACK_SIZE		( configMINIMAL_STACK_SIZE * 3 )
 #define mainTASKBOX_STACK_SIZE				( configMINIMAL_STACK_SIZE * 2 )
-
 QueueHandle_t s4353096_QueuePan;
 QueueHandle_t s4353096_QueueTilt;
 QueueHandle_t s4353096_QueueBox; //Used to start box draw
@@ -41,6 +52,7 @@ SemaphoreHandle_t s4353096_SemaphorePanRight;	//Used to pan right 5degrees
 SemaphoreHandle_t s4353096_SemaphoreTiltUp;		//Used to tilt up 5degrees
 SemaphoreHandle_t s4353096_SemaphoreTiltDown;	//Used to tilt down 5degrees
 SemaphoreHandle_t s4353096_SemaphoreBox; //Used to start box draw
+SemaphoreHandle_t s4353096_SemaphoreCalibrate; //Used to stop the pan/tilt constantly updating
  #define PWM_PAN_TIM TIM2
  #define PWM_PAN_PIN BRD_D2_PIN
  #define PWM_PAN_GPIO_PORT BRD_D2_GPIO_PORT
@@ -65,8 +77,10 @@ SemaphoreHandle_t s4353096_SemaphoreBox; //Used to start box draw
  #define LASER_GPIO_PORT BRD_D0_GPIO_PORT
  #define __LASER_GPIO_CLK() __BRD_D0_GPIO_CLK()
 
+extern void calculate_display_ratios(void);
+extern void calculate_rover_display_pos(void);
  extern void s4353096_pantilt_init(void);
- extern void s4353096_pantilt_angle_write(int type, int angle);
+ extern void s4353096_pantilt_angle_write(int type, float angle);
 extern void s4353096_terminal_angle_check (void);
 extern void s4353096_TaskPanTilt(void);
 extern void s4353096_TaskBox(void);

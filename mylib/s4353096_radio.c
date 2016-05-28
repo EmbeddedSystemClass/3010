@@ -59,13 +59,13 @@ static SPI_HandleTypeDef SpiHandle;
 
 /*The main function for the Radio Task*/
 void s4353096_TaskRadio (void) {
-  unsigned char orb_addr[] = {0x07, 0x35, 0x22, 0x11, 0x00};
+  unsigned char orb_addr[] = {0x31, 0x34, 0x22, 0x11, 0x00};
   unsigned char rover_addr[] = {0x48, 0x33, 0x22, 0x11, 0x00};
   memcpy(radio_vars.s4353096_rx_addr_orb, orb_addr, sizeof(orb_addr));
   memcpy(radio_vars.s4353096_rx_addr_rover, rover_addr, sizeof(rover_addr));
   memcpy(radio_vars.s4353096_tx_addr, rover_addr, sizeof(rover_addr));
   radio_vars.s4353096_chan_rover = 48;
-  radio_vars.s4353096_chan_orb = 50;
+  radio_vars.s4353096_chan_orb = 43;
   radio_vars.next_sequence = 0x00;
   radio_vars.passkey = 0x00;
   //debug_printf("\nrover addr: %x\n", rover_addr);
@@ -95,6 +95,9 @@ void s4353096_TaskRadio (void) {
                 debug_printf("In Recieve\n");
                 radio_vars.s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
                 s4353096_radio_fsmprocessing();
+                for (int i = 0; i < 5; i++) {
+        					debug_printf("%x-", radio_vars.s4353096_tx_addr[i]);
+        				}
                 s4353096_radio_setrxaddress(radio_vars.s4353096_rx_addr_rover);
                 s4353096_radio_settxaddress(radio_vars.s4353096_tx_addr);
                 s4353096_radio_setchan(radio_vars.s4353096_chan_rover);
@@ -174,9 +177,9 @@ void s4353096_TaskRadio (void) {
             /*After wait state*/
             if (s4353096_radio_getrxstatus() == 1) { //Checks if packet has been recieved
               /*Prints recieved packet to console*/
-              s4353096_radio_getRAEpacket(radio_vars.s4353096_rx_buffer);
+              //s4353096_radio_getRAEpacket(radio_vars.s4353096_rx_buffer);
               /*Print the raw packet*/
-                debug_printf("\nRaw Packet Recieved: \n");
+                //debug_printf("\nRaw Packet Recieved: \n");
 
                 /*Increment through raw packet and print each byte*/
                 for(int j = 0; j < 32; j++) {
@@ -241,20 +244,20 @@ extern void s4353096_radio_getRAEpacket(unsigned char *rxpacket) {
   int l = 0;
   debug_printf("RECV:");
   /*Print the recieved Type*/
-  debug_printf("\nType: %x", rxpacket[0]);
+  //debug_printf("\nType: %x", rxpacket[0]);
 
   /*Increment through and print the Destination address*/
-  debug_printf("\nTo Address: ");
+  /*debug_printf("\nTo Address: ");
   for (int j = 4; j >= 1; j--) {
     debug_printf("%x", rxpacket[j]);
-  }
+  }*/
   /*Increment through and print the Transmission address*/
-  debug_printf("\nFrom Address: ");
-  for (int j = 8; j >= 5; j--) {
+  //debug_printf("\nFrom Address: ");
+  /*for (int j = 8; j >= 5; j--) {
     debug_printf("%x", rxpacket[j]);
-  }
+  }*/
   /*Print the recieved Type Sequence*/
-  debug_printf("\nSequence: %x", rxpacket[9]);
+  //debug_printf("\nSequence: %x", rxpacket[9]);
 
   /*CRC*/
   /*Warning, CRC is currently in LSB*/
@@ -300,9 +303,9 @@ extern void s4353096_radio_getRAEpacket(unsigned char *rxpacket) {
   previous_y = current_y;
   previous_x = current_x;
   /*Print the Velocity of X*/
-  debug_printf("\nVelocity in X: %d.%03d pixels per millisecond\n", velocity_x, velocity_x_decimal);
+  //debug_printf("\nVelocity in X: %d.%03d pixels per millisecond\n", velocity_x, velocity_x_decimal);
   /*Print the Velocity of Y*/
-  debug_printf("\nVelocity in Y: %d.%03d pixels per millisecond\n", velocity_y, velocity_y_decimal);
+  //debug_printf("\nVelocity in Y: %d.%03d pixels per millisecond\n", velocity_y, velocity_y_decimal);
   /*Set FSM back to IDLE STATE and process this new fsm state*/
   radio_vars.s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
   s4353096_radio_fsmprocessing();

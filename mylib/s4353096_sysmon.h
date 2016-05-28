@@ -70,6 +70,8 @@ TaskHandle_t xHandleCLI;
 TaskHandle_t xHandleAccelerometer;
 TaskHandle_t xHandleRadio;
 TaskHandle_t xHandleRadioProcessing;
+TaskHandle_t xHandleBox;
+TaskHandle_t xHandlePanTilt;
 struct Tasks TaskValues;
 void s4353096_sysmon_init(void);
 extern void GetTopList( void );

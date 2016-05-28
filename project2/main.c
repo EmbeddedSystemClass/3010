@@ -28,6 +28,7 @@
 #include "s4353096_hamming.h"
 #include "s4353096_radio.h"
 #include "s4353096_rover.h"
+#include "s4353096_pantilt.h"
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -49,6 +50,14 @@ int main (void) {
 	s4353096_SemaphoreSendMotor = xSemaphoreCreateBinary();
 	s4353096_SemaphoreGetTime = xSemaphoreCreateBinary();
 	s4353096_SemaphoreRecieveRovers = xSemaphoreCreateBinary();
+	s4353096_SemaphoreLaser = xSemaphoreCreateBinary();
+	s4353096_SemaphorePanLeft = xSemaphoreCreateBinary();
+	s4353096_SemaphorePanRight = xSemaphoreCreateBinary();
+	s4353096_SemaphoreTiltUp = xSemaphoreCreateBinary();
+	s4353096_SemaphoreTiltDown = xSemaphoreCreateBinary();
+	s4353096_SemaphoreBox = xSemaphoreCreateBinary();
+	s4353096_SemaphoreCalibrate = xSemaphoreCreateBinary();
+
 	s4353096_QueueRoverTransmit = xQueueCreate(10, sizeof(radio_side_communication));
 	s4353096_QueueRoverRecieve = xQueueCreate(10, sizeof(radio_side_communication));
 
@@ -76,6 +85,13 @@ int main (void) {
 	FreeRTOS_CLIRegisterCommand(&xGetTime);
 	FreeRTOS_CLIRegisterCommand(&xForward);
 	FreeRTOS_CLIRegisterCommand(&xRecieveRovers);
+	FreeRTOS_CLIRegisterCommand(&xLaser);
+	FreeRTOS_CLIRegisterCommand(&xPan);
+	FreeRTOS_CLIRegisterCommand(&xTilt);
+	FreeRTOS_CLIRegisterCommand(&xBox);
+	FreeRTOS_CLIRegisterCommand(&xDisplayCalibrate);
+	FreeRTOS_CLIRegisterCommand(&xORBCalibrate );
+	FreeRTOS_CLIRegisterCommand(&xDebugSetRoverPosition);
 	/* Start the scheduler.
 
 	NOTE : Tasks run in system mode and the scheduler runs in Supervisor mode.
@@ -98,9 +114,20 @@ void Hardware_init( void ) {
 	BRD_LEDInit();				//Initialise Blue LED
 	BRD_LEDOff();				//Turn off Blue LED
 	s4353096_sysmon_init();
+	rover_init();
 	s4353096_accelerometer_init();
 	s4353096_radio_init();
 	calibration_velocity_init();
+	s4353096_pantilt_init();
+	__LASER_GPIO_CLK();
+	//Set up Pin behaviour
+	GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP; //Output Mode
+	GPIO_InitStructure.Pull = GPIO_PULLUP; //Pull up resistor
+	GPIO_InitStructure.Speed = GPIO_SPEED_FAST; //Pun latency
+	/*GPIO Pins D0-D9 are configured to the above specifications in the space
+	bellow*/
+	GPIO_InitStructure.Pin = LASER_PIN;
+	HAL_GPIO_Init(LASER_GPIO_PORT, &GPIO_InitStructure);
 	BRD_LEDToggle();
   portENABLE_INTERRUPTS();	//Disable interrupts
 }

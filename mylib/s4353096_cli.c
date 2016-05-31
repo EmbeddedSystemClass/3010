@@ -696,6 +696,8 @@ extern BaseType_t prvGetSensor(char *pcWriteBuffer, size_t xWriteBufferLen, cons
 	if (s4353096_SemaphoreGetSensor != NULL) {	/* Check if semaphore exists */
 		xSemaphoreGive(s4353096_SemaphoreGetSensor);		/* Give PB Semaphore from ISR*/
 	}
+	get_system_time();
+	debug_printf("Current Time: %d.%02d\n", TaskValues.system_time, 		TaskValues.system_time_decimal);
 	/* Return pdFALSE, as there are no more strings to return */
 	/* Only return pdTRUE, if more strings need to be printed */
 	return pdFALSE;

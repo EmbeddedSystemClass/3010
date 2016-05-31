@@ -125,7 +125,6 @@ void s4353096_TaskRadio (void) {
           }
         }
         switch(radio_vars.orb_rover_fsmcurrentstate) {
-          //case ROVER_TRANSCIEVE:
           case ROVERS_RECIEVE:
               s4353096_radio_setrxaddress(radio_vars.s4353096_rx_addr_rover);
               s4353096_radio_setchan(radio_vars.s4353096_chan_rover);

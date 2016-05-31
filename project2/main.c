@@ -102,6 +102,7 @@ int main (void) {
 	FreeRTOS_CLIRegisterCommand(&xTestDistance);
 	FreeRTOS_CLIRegisterCommand(&xDistance);
 	FreeRTOS_CLIRegisterCommand(&xAccControl);
+	FreeRTOS_CLIRegisterCommand(&xFollower);
 	/* Start the scheduler.
 
 	NOTE : Tasks run in system mode and the scheduler runs in Supervisor mode.

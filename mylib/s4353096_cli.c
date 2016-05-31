@@ -43,6 +43,7 @@
 /* Private function prototypes -----------------------------------------------*/
 struct PanTilt SendPosition;
 
+/*Toggles on and off the follower task*/
 extern BaseType_t prvFollower(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 	long lParam_len;
 	const char *cCmd_string;

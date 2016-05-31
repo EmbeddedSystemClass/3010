@@ -62,8 +62,15 @@ extern BaseType_t prvCalibrationRover(char *pcWriteBuffer, size_t xWriteBufferLe
 extern BaseType_t prvTestDistance(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvDistance(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvAccelerometerControl(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+extern BaseType_t prvFollower(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 void CLI_Task(void);
 /*CLI Command Definitions*/
+CLI_Command_Definition_t xFollower = {	/* Structure that defines the "rovacc" command line command. */
+	"follower",
+	"follower: Toggle the Rover Follower on and off\n",
+	prvAccelerometerControl,
+	1
+};
 CLI_Command_Definition_t xAccControl = {	/* Structure that defines the "rovacc" command line command. */
 	"rovacc",
 	"rovacc: Toggle the Accelerometer Rover control on and off\n",

@@ -38,6 +38,7 @@ struct Accelerometer {
 };
 SemaphoreHandle_t s4353096_SemaphoreAccRaw;		//Used to Specify Acc output
 SemaphoreHandle_t s4353096_SemaphoreAccPl;		//Used to control laser
+SemaphoreHandle_t s4353096_SemaphoreAccControl; //Used to control Rover movements
 /* Task Priorities ------------------------------------------------------------*/
 #define mainTASKACC_PRIORITY					( tskIDLE_PRIORITY + 2 )
 /* Task Stack Allocations -----------------------------------------------------*/
@@ -49,3 +50,4 @@ extern void s4353096_TaskAccelerometer(void);
 extern void s4353096_accelerometer_init(void);
 extern uint8_t s4353096_read_acc_register(int reg);
 extern void s4353096_write_acc_register(uint8_t reg, uint8_t value);
+void accelerometer_control(void);

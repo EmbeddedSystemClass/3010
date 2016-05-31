@@ -69,7 +69,7 @@ SemaphoreHandle_t s4353096_SemaphoreGetTime;
 TaskHandle_t xHandleCLI;
 TaskHandle_t xHandleAccelerometer;
 TaskHandle_t xHandleRadio;
-TaskHandle_t xHandleRadioProcessing;
+TaskHandle_t xHandleRover;
 TaskHandle_t xHandleBox;
 TaskHandle_t xHandlePanTilt;
 struct Tasks TaskValues;

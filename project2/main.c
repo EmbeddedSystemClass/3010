@@ -1,9 +1,9 @@
 /**
   ******************************************************************************
-  * @file    milestone/main.c
+  * @file    project2/main.c
   * @author  Steffen Mitchell
   * @date    04022015
-  * @brief   Main file for milestone.
+  * @brief   Main file for project 2.
   ******************************************************************************
   *
   */
@@ -58,7 +58,7 @@ int main (void) {
 	s4353096_SemaphoreTiltDown = xSemaphoreCreateBinary();
 	s4353096_SemaphoreBox = xSemaphoreCreateBinary();
 	s4353096_SemaphoreCalibrate = xSemaphoreCreateBinary();
-
+	s4353096_SemaphoreAccControl = xSemaphoreCreateBinary();
 	s4353096_QueueRoverTransmit = xQueueCreate(10, sizeof(radio_side_communication));
 	s4353096_QueueRoverRecieve = xQueueCreate(10, sizeof(radio_side_communication));
 
@@ -66,7 +66,7 @@ int main (void) {
 	xTaskCreate( (void *) &s4353096_TaskAccelerometer, (const signed char *) "s4353096_TaskAccelerometer", mainTASKACC_STACK_SIZE, NULL,  mainTASKACC_PRIORITY, &xHandleAccelerometer);
 	xTaskCreate( (void *) &CLI_Task, (const signed char *) "CLI_Task", mainTASKCLI_STACK_SIZE, NULL,  mainTASKCLI_PRIORITY +3, &xHandleCLI);
 	xTaskCreate( (void *) &s4353096_TaskRadio, (const signed char *) "s4353096_TaskRadio", mainTASKRADIO_STACK_SIZE, NULL,  mainTASKRADIO_PRIORITY + 3, &xHandleRadio);
-	xTaskCreate( (void *) &s4353096_TaskRadioProcessing, (const signed char *) "s4353096_TaskRadioProcessing", mainTASKRADIO_STACK_SIZE, NULL,  mainTASKRADIO_PRIORITY + 3, &xHandleRadioProcessing);
+	xTaskCreate( (void *) &s4353096_TaskRover, (const signed char *) "s4353096_TaskRadioProcessing", mainTASKRADIO_STACK_SIZE, NULL,  mainTASKRADIO_PRIORITY + 3, &xHandleRover);
 	/*Assign the task handles to their respective string values in an array*/
 	SetNameHandle();
 
@@ -99,6 +99,7 @@ int main (void) {
 	FreeRTOS_CLIRegisterCommand(&xCalibrationRover);
 	FreeRTOS_CLIRegisterCommand(&xTestDistance);
 	FreeRTOS_CLIRegisterCommand(&xDistance);
+	FreeRTOS_CLIRegisterCommand(&xAccControl);
 	/* Start the scheduler.
 
 	NOTE : Tasks run in system mode and the scheduler runs in Supervisor mode.
@@ -128,6 +129,8 @@ void Hardware_init( void ) {
 	calibration_velocity_init();
 	s4353096_pantilt_init();
 	__LASER_GPIO_CLK();
+
+	/*Initialise the Laser Pin*/
 	//Set up Pin behaviour
 	GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP; //Output Mode
 	GPIO_InitStructure.Pull = GPIO_PULLUP; //Pull up resistor

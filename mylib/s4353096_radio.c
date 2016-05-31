@@ -243,28 +243,29 @@ extern void s4353096_radio_getRAEpacket(unsigned char *rxpacket) {
   int velocity_x_decimal;
   int velocity_y_decimal;
   int l = 0;
-  //debug_printf("RECV:");
+  #ifdef DEBUGRADIO
+  debug_printf("RECV:");
   /*Print the recieved Type*/
-  //debug_printf("\nType: %x", rxpacket[0]);
+  debug_printf("\nType: %x", rxpacket[0]);
 
   /*Increment through and print the Destination address*/
-  /*debug_printf("\nTo Address: ");
+  debug_printf("\nTo Address: ");
   for (int j = 4; j >= 1; j--) {
     debug_printf("%x", rxpacket[j]);
-  }*/
-  /*Increment through and print the Transmission address*/
-  //debug_printf("\nFrom Address: ");
-  /*for (int j = 8; j >= 5; j--) {
-    debug_printf("%x", rxpacket[j]);
-  }*/
-  /*Print the recieved Type Sequence*/
-  //debug_printf("\nSequence: %x", rxpacket[9]);
+  }
 
+  /*Increment through and print the Transmission address*/
+  debug_printf("\nFrom Address: ");
+  for (int j = 8; j >= 5; j--) {
+    debug_printf("%x", rxpacket[j]);
+  }
+  /*Print the recieved Type Sequence*/
+  debug_printf("\nSequence: %x", rxpacket[9]);
+  #endif
   /*CRC*/
   /*Warning, CRC is currently in LSB*/
   crc_output = crc_calculation(rxpacket); //Calculate the crc of the 30byte packet
   /*Print out the calculated CRC*/
-  //debug_printf("\nCalculated CRC: %x\n", crc_output);
   crc_recieved = (rxpacket[31]) ^ (rxpacket[30] << 8);
 
   /*Compare the Calculated CRC to the Recieved CRC*/
@@ -306,10 +307,6 @@ extern void s4353096_radio_getRAEpacket(unsigned char *rxpacket) {
   previous_recieved_time = current_recieved_time;
   previous_y = current_y;
   previous_x = current_x;
-  /*Print the Velocity of X*/
-  //debug_printf("\nVelocity in X: %d.%03d pixels per millisecond\n", velocity_x, velocity_x_decimal);
-  /*Print the Velocity of Y*/
-  //debug_printf("\nVelocity in Y: %d.%03d pixels per millisecond\n", velocity_y, velocity_y_decimal);
   /*Set FSM back to IDLE STATE and process this new fsm state*/
   radio_vars.s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
   s4353096_radio_fsmprocessing();

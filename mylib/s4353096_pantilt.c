@@ -32,7 +32,6 @@
 #include "s4353096_sysmon.h"
 #include "s4353096_pantilt.h"
 #include "s4353096_rover.h"
-//#include "s4353096_cli.h"
 /* Private typedef */
 GPIO_InitTypeDef  GPIO_InitStructure;
 TIM_OC_InitTypeDef PWMConfig;
@@ -40,6 +39,7 @@ TIM_HandleTypeDef TIM_Init;
 static uint16_t PrescalerValue = 0;
 struct PanTilt *pantilt;
 struct PanTilt servo_control;
+
 /*Initialise pantilt GPIO, Timer, PWM */
 extern void s4353096_pantilt_init(void) {
   /* Enable the PWM Pin Clocks */
@@ -101,10 +101,12 @@ extern void s4353096_pantilt_init(void) {
   xTaskCreate( (void *) &s4353096_TaskPanTilt, (const signed char *) "s4353096_TaskPanTilt", mainTASKPANTILT_STACK_SIZE, NULL,  mainTASKPANTILT_PRIORITY+2, &xHandlePanTilt );
   xTaskCreate( (void *) &s4353096_TaskBox, (const signed char *) "s4353096_TaskBox", mainTASKBOX_STACK_SIZE, NULL,  mainTASKBOX_PRIORITY+2, &xHandleBox );
 }
+
 /*Sets the angle of pan or tilt through pwm with type 1 = pan and type 0 = tilt*/
 extern void s4353096_pantilt_angle_write(int type, float angle) {
   float pwm_pulse_period_percentage;
   float pwm_multiplier = 4.723 * (angle/85.000);
+
   /*If negative*/
   if ((angle < 0) && (angle > -77)) {
     pwm_pulse_period_percentage = (7.25 - (-1*pwm_multiplier));
@@ -115,6 +117,7 @@ extern void s4353096_pantilt_angle_write(int type, float angle) {
   } else {
 
   }
+
   /*Type 1 == Pan */
   if (type == 1) {
     TIM_Init.Instance = PWM_PAN_TIM;
@@ -129,29 +132,26 @@ extern void s4353096_pantilt_angle_write(int type, float angle) {
 
   }
 }
-/*Checks the angle to see if the setting value has passed the allowed value*/
-/*extern void s4353096_terminal_angle_check (void) {
-  switch (pantilt->set_angle_pan) {
-    case 77:
-      pantilt->set_angle_pan = 76;
-      break;
-    case -77:
-      pantilt->set_angle_pan = -76;
-      break;
-    default:
-      break;
-  }
-  switch (pantilt->set_angle_tilt) {
-    case 77:
-      pantilt->set_angle_tilt = 76;
-      break;
-    case -77:
-      pantilt->set_angle_tilt = -76;
-      break;
-    default:
-      break;
-  }
-}*/
+
+/*Calculates the ratio for converting between ORB Co-ords and Display Pan/Tilt angles*/
+extern void calculate_display_ratios(void) {
+  int ratio_p;
+  int ratio_tilt;
+  servo_control.ratio_pan = fabsf(servo_control.display_c[0][1] - servo_control.display_c[0][0])/fabsf(servo_control.orb_c[0][1] - servo_control.orb_c[0][0]);
+  servo_control.ratio_tilt = fabsf(servo_control.display_c[1][1] - servo_control.display_c[1][0])/fabsf(servo_control.orb_c[1][1] - servo_control.orb_c[1][0]);
+  ratio_p = servo_control.ratio_pan;
+  ratio_tilt = servo_control.ratio_tilt;
+  debug_printf("\nPanR: %d, TiltR %d");
+}
+/*Calculates the pan and tilt angles for the current rover position*/
+extern void calculate_rover_display_pos(void) {
+  servo_control.set_angle_pan = (-1*rover.rover_current_x*servo_control.ratio_pan) + servo_control.display_c[0][0];
+  servo_control.set_angle_tilt = (rover.rover_current_y*servo_control.ratio_tilt) + servo_control.display_c[1][0];
+  s4353096_pantilt_angle_write(1, servo_control.set_angle_pan);
+  s4353096_pantilt_angle_write(0, servo_control.set_angle_tilt);
+}
+
+
 extern void s4353096_TaskPanTilt(void) {
   struct PanTilt Recieve_PT;
 	servo_control.set_angle_pan = 0;
@@ -165,6 +165,8 @@ extern void s4353096_TaskPanTilt(void) {
 	/* Initialise pointer to CLI output buffer. */
 	memset(cInputString, 0, sizeof(cInputString));
 	pcOutputString = FreeRTOS_CLIGetOutputBuffer();
+
+  /*Main loop for Task PanTilt*/
   for (;;) {
     if (s4353096_SemaphoreLaser != NULL) {	/* Check if semaphore exists */
       /* See if we can obtain the PB semaphore. If the semaphore is not available
@@ -249,6 +251,7 @@ extern void s4353096_TaskPanTilt(void) {
     }
     if (s4353096_QueueBox != NULL) {	/* Check if queue exists */
       /* Check for item received - block atmost for 10 ticks */
+
       if (xQueueReceive(s4353096_QueueBox, &Recieve_PT, 10 )) {
         servo_control.set_angle_tilt = Recieve_PT.set_angle_tilt;
         s4353096_pantilt_angle_write(0, servo_control.set_angle_tilt);
@@ -256,6 +259,7 @@ extern void s4353096_TaskPanTilt(void) {
         servo_control.set_angle_pan = Recieve_PT.set_angle_pan;
         s4353096_pantilt_angle_write(1, servo_control.set_angle_pan);
         vTaskDelay(4000);
+
         if (xQueueReceive(s4353096_QueueBox, &Recieve_PT, 10 )) {
           servo_control.set_angle_tilt = Recieve_PT.set_angle_tilt;
           s4353096_pantilt_angle_write(0, servo_control.set_angle_tilt);
@@ -263,6 +267,7 @@ extern void s4353096_TaskPanTilt(void) {
           servo_control.set_angle_pan = Recieve_PT.set_angle_pan;
           s4353096_pantilt_angle_write(1, servo_control.set_angle_pan);
           vTaskDelay(4000);
+
           if (xQueueReceive(s4353096_QueueBox, &Recieve_PT, 10 )) {
             servo_control.set_angle_tilt = Recieve_PT.set_angle_tilt;
             s4353096_pantilt_angle_write(0, servo_control.set_angle_tilt);
@@ -270,6 +275,7 @@ extern void s4353096_TaskPanTilt(void) {
             servo_control.set_angle_pan = Recieve_PT.set_angle_pan;
             s4353096_pantilt_angle_write(1, servo_control.set_angle_pan);
             vTaskDelay(4000);
+
             if (xQueueReceive(s4353096_QueueBox, &Recieve_PT, 10 )) {
               servo_control.set_angle_tilt = Recieve_PT.set_angle_tilt;
               s4353096_pantilt_angle_write(0, servo_control.set_angle_tilt);
@@ -298,6 +304,7 @@ extern void s4353096_TaskPanTilt(void) {
   }
 }
 
+/*Task to draw a box*/
 extern void s4353096_TaskBox(void) {
 	S4353096_LA_CHAN1_CLR();
   struct PanTilt MakeBox;
@@ -306,6 +313,8 @@ extern void s4353096_TaskBox(void) {
   TickType_t xLastWakeTime1;
   const TickType_t xFrequency1 = 50 / portTICK_PERIOD_MS;; //1000 represents 1 second delay
   xLastWakeTime1 = xTaskGetTickCount();
+
+  /*Main loop for task box*/
 	for (;;) {
 		S4353096_LA_CHAN1_SET();      //Set LA Channel 0
     if (s4353096_SemaphoreBox != NULL) {	/* Check if semaphore exists */
@@ -352,22 +361,4 @@ extern void s4353096_TaskBox(void) {
   vTaskDelayUntil( &xLastWakeTime1, xFrequency1 );                //Extra Task Delay of 3ms
   S4353096_LA_CHAN1_CLR();
   vTaskDelay(1);
-}
-
-/*Calculates the ratio for converting between ORB Co-ords and Display Pan/Tilt angles*/
-extern void calculate_display_ratios(void) {
-  int ratio_p;
-  int ratio_tilt;
-  servo_control.ratio_pan = fabsf(servo_control.display_c[0][1] - servo_control.display_c[0][0])/fabsf(servo_control.orb_c[0][1] - servo_control.orb_c[0][0]);
-  servo_control.ratio_tilt = fabsf(servo_control.display_c[1][1] - servo_control.display_c[1][0])/fabsf(servo_control.orb_c[1][1] - servo_control.orb_c[1][0]);
-  ratio_p = servo_control.ratio_pan;
-  ratio_tilt = servo_control.ratio_tilt;
-  debug_printf("\nPanR: %d, TiltR %d");
-}
-/*Calculates the pan and tilt angles for the current rover position*/
-extern void calculate_rover_display_pos(void) {
-  servo_control.set_angle_pan = (-1*rover.rover_current_x*servo_control.ratio_pan) + servo_control.display_c[0][0];
-  servo_control.set_angle_tilt = (rover.rover_current_y*servo_control.ratio_tilt) + servo_control.display_c[1][0];
-  s4353096_pantilt_angle_write(1, servo_control.set_angle_pan);
-  s4353096_pantilt_angle_write(0, servo_control.set_angle_tilt);
 }

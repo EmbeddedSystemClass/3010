@@ -26,8 +26,10 @@
 #include "board.h"
 #include "stm32f4xx_hal_conf.h"
 #include "debug_printf.h"
+#include "s4353096_rover.h"
 #include "s4353096_accelerometer.h"
 #include "s4353096_sysmon.h"
+
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -52,6 +54,8 @@ struct Accelerometer Acc_vals;
 
 /*The main function for the Accelerometer Task*/
 extern void s4353096_TaskAccelerometer(void) {
+
+    const TickType_t xDelayMove = 1100 / portTICK_PERIOD_MS;
     /*Main loop for Accelerometer Task*/
   	for(;;) {
 
@@ -60,7 +64,7 @@ extern void s4353096_TaskAccelerometer(void) {
 				/* See if we can obtain the PB semaphore. If the semaphore is not available
 							wait 10 ticks to see if it becomes free. */
 
-			  if( xSemaphoreTake( s4353096_SemaphoreAccRaw, 10 ) == pdTRUE ) {
+			  if( xSemaphoreTake( s4353096_SemaphoreAccRaw, 2 ) == pdTRUE ) {
           /*Read Raw 12-bit values from the X,Y & Z Registers*/
 					s4353096_readXYZ();
 					debug_printf("X: %hd ,  Y: %hd ,  Z: %hd \n", Acc_vals.x_coord, Acc_vals.y_coord, Acc_vals.z_coord);
@@ -71,15 +75,60 @@ extern void s4353096_TaskAccelerometer(void) {
 				/* See if we can obtain the PB semaphore. If the semaphore is not available
 							wait 10 ticks to see if it becomes free. */
 
-			  if( xSemaphoreTake( s4353096_SemaphoreAccPl, 10 ) == pdTRUE ) {
+			  if( xSemaphoreTake( s4353096_SemaphoreAccPl, 2 ) == pdTRUE ) {
           /*Read and print orientation of accelerometer*/
 					s4353096_readPLBF();
+          debug_printf("%c\n", rover.acc_direction);
         }
 			}
     	BRD_LEDToggle();	//Toggle LED on/off
 			vTaskDelay(10);
     	vTaskDelay(1);		//Delay for 1s (1000ms)
+
+      if (s4353096_SemaphoreAccControl != NULL) {	/* Check if semaphore exists */
+        /* See if we can obtain the PB semaphore. If the semaphore is not available
+              wait 10 ticks to see if it becomes free. */
+
+        if( xSemaphoreTake( s4353096_SemaphoreAccControl, 2 ) == pdTRUE ) {
+          /*Read Raw 12-bit values from the X,Y & Z Registers*/
+          xSemaphoreGive(s4353096_SemaphoreAccControl);
+          s4353096_readPLBF();
+          accelerometer_control();
+          vTaskDelay(xDelayMove);
+        }
+      }
 	}
+}
+
+void accelerometer_control(void) {
+  switch (rover.acc_direction) {
+    case '|':
+    direction_duration_calculation_send(40, 0);
+    Calibrate.motor_payload[2] = (Calibrate.motor_payload[2] << 4) | (FORWARDRIGHT ^ (FORWARDLEFT));
+    /*Perform Transmit Forward here*/
+    send_rover_packet(Calibrate.motor_payload, 0x32);
+      break;
+    /*Reverse*/
+    case '_':
+      direction_duration_calculation_send(40, 1);
+      Calibrate.motor_payload[2] = (Calibrate.motor_payload[2] << 4) | (BACKWARDRIGHT ^ (BACKWARDLEFT));
+      /*Perform Transmit Reverse here*/
+      send_rover_packet(Calibrate.motor_payload, 0x32);
+      break;
+    case '>':
+      angle_duration_calculation(30, 0);
+      Calibrate.motor_payload[2] = (Calibrate.motor_payload[2] << 4) | (FORWARDLEFT);
+      send_rover_packet(Calibrate.motor_payload, 0x32);
+      break;
+    case '<':
+      angle_duration_calculation(30, 1); //calculate the duration and speed to best achieve the specified angle*/
+      Calibrate.motor_payload[2] = (Calibrate.motor_payload[2] << 4) | (FORWARDRIGHT);
+      send_rover_packet(Calibrate.motor_payload, 0x32);
+      break;
+    default:
+      break;
+  }
+
 }
 /*Returns the read value of the given register*/
 extern uint8_t s4353096_read_acc_register(int reg) {
@@ -135,33 +184,22 @@ extern void s4353096_readPLBF (void) {
   /*Represents the value of land_port as a landscape/portrait orientation*/
   switch(Acc_vals.land_port) {
     case 0x00:
-      debug_printf("|");
+      rover.acc_direction = '|';
       break;
     case 0x01:
-      debug_printf("_");
+      rover.acc_direction = '_';
       break;
     case 0x02:
-      debug_printf(">");
+      rover.acc_direction = '>';
       break;
     case 0x03:
-      debug_printf("<");
-      break;
-    default:
-      break;
-  }
-
-  /*Represents the value of back_front as a front/back orientation*/
-  switch (Acc_vals.back_front) {
-    case 0x00:
-      debug_printf(" +\n");
-      break;
-    case 0x01:
-      debug_printf(" -\n");
+      rover.acc_direction = '<';
       break;
     default:
       break;
   }
 }
+
 /*Reads the raw values for X,Y,Z and assigns them to associated variables*/
 extern void s4353096_readXYZ (void) {
   /*Read X MSB & LSB Registers & combine bytes to form correct signed int value*/

@@ -1,6 +1,6 @@
 /**
  ******************************************************************************
- * @file mylib/s4353096_pantilt.c
+ * @file mylib/s4353096_orb.c
  * @author Steffen Mitchell - 43530960
  * @date 16032015
  * @brief Servo Pan and Tilt peripheral driver

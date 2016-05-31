@@ -1,17 +1,10 @@
 /**
  ******************************************************************************
- * @file mylib/s4353096_pantilt.c
+ * @file mylib/s4353096_rover.h
  * @author Steffen Mitchell - 43530960
- * @date 16032015
- * @brief Servo Pan and Tilt peripheral driver
+ * @date 15052016
+ * @brief Rover Communications driver
  * REFERENCE:
- ******************************************************************************
- * EXTERNAL FUNCTIONS
- ******************************************************************************
- * s4353096_pantilt_init() - Initialise servo (GPIO, PWM, Timer, etc)
- * s4353096_pantilt_angle(type, angle) - Write the pan or tilt servo to an angle
- * s4353096_terminal_angle_check () - Checks  angle setting values and adjusts
- * their values accordingly.
  ******************************************************************************
 */
 /* Includes */
@@ -28,22 +21,6 @@
 #include "FreeRTOS_CLI.h"
 #include <math.h>
 
-/*#ifdef ROVERDEFINES
-#define ROVER46CHAN 46
-unsigned char ROVER46ADDR[] = {0x46, 0x33, 0x22, 0x11, 0x00};
-#define ROVER47CHAN 47
-unsigned char ROVER47ADDR[] = {0x47, 0x33, 0x22, 0x11, 0x00};
-#define ROVER48CHAN 48
-unsigned char ROVER48ADDR[] = {0x48, 0x33, 0x22, 0x11, 0x00};
-#define ROVER49CHAN 49
-unsigned char ROVER49ADDR[] = {0x49, 0x33, 0x22, 0x11, 0x00};
-#define ROVER51CHAN 51
-unsigned char ROVER51ADDR[] = {0x51, 0x33, 0x22, 0x11, 0x00};
-#define ROVER52CHAN 52
-unsigned char ROVER52ADDR[] = {0x52, 0x33, 0x22, 0x11, 0x00};
-#define ROVER53CHAN 53
-unsigned char ROVER53ADDR[] = {0x53, 0x33, 0x22, 0x11, 0x00};
-#endif*/
 #define ROVER46CHAN 46
 #define ROVER47CHAN 47
 #define ROVER48CHAN 48
@@ -81,11 +58,15 @@ struct Rover {
   int marker_current_y;
   int rover_id;
   int marker_id;
-  int angle_multiplier;
+  int angle_clock_velocity;
+  int angle_aclock_velocity;
+  int angle_clock_speed;
+  int angle_aclock_speed;
   /*Forward/Backward | array for each speed | speed/velocity value*/
   int cal_velocity[2][10][2];
   float ratio_x;
   float ratio_y;
+  char acc_direction;
 };
 struct Rovers {
   unsigned char ROVER46ADDR[5];
@@ -109,12 +90,11 @@ QueueHandle_t s4353096_QueueRoverRecieve;
 extern void rover_init(void);
 extern void recieve_rover_packet (uint8_t *recieved_packet);
 extern void send_rover_packet (uint8_t *payload, uint8_t packet_type);
-extern void s4353096_TaskRadioProcessing(void);
+extern void s4353096_TaskRover(void);
 extern void calibration_velocity_init(void);
 extern void calibration_velocity_calculation(void);
 extern void calibration_velocity_other_calculation(int mode, int speed, int distance, int duration);
-extern void speed_duration_calculation(int distance);
 extern void direction_duration_calculation_send(int distance, int direction);
 extern void calculate_distance_ratios(void);
 extern void calculate_rover_distance_pos(void);
-extern void angle_duration_calculation(int angle);
+extern void angle_duration_calculation(int angle, int direction);

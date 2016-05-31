@@ -61,101 +61,122 @@ extern BaseType_t prvCalibrateMarkerId(char *pcWriteBuffer, size_t xWriteBufferL
 extern BaseType_t prvCalibrationRover(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvTestDistance(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvDistance(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+extern BaseType_t prvAccelerometerControl(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 void CLI_Task(void);
 /*CLI Command Definitions*/
-CLI_Command_Definition_t xDistance = {	/* Structure that defines the "crc" command line command. */
+CLI_Command_Definition_t xAccControl = {	/* Structure that defines the "rovacc" command line command. */
+	"rovacc",
+	"rovacc: Toggle the Accelerometer Rover control on and off\n",
+	prvAccelerometerControl,
+	1
+};
+
+CLI_Command_Definition_t xDistance = {	/* Structure that defines the "distance" command line command. */
 	"distance",
 	"distance: print the rover's distance from the starting edge\n",
 	prvDistance,
 	0
 };
-CLI_Command_Definition_t xTestDistance = {	/* Structure that defines the "crc" command line command. */
+
+CLI_Command_Definition_t xTestDistance = {	/* Structure that defines the "test" command line command. */
 	"test",
 	"test: assign the id of rover or marker\n",
 	prvTestDistance,
 	3
 };
-CLI_Command_Definition_t xCalibrationRover = {	/* Structure that defines the "crc" command line command. */
+
+CLI_Command_Definition_t xCalibrationRover = {	/* Structure that defines the "cal" command line command. */
 	"cal",
 	"cal: assign the id of rover or marker\n",
 	prvCalibrationRover,
 	4
 };
-CLI_Command_Definition_t xCalibrateMarkerId = {	/* Structure that defines the "crc" command line command. */
+
+CLI_Command_Definition_t xCalibrateMarkerId = {	/* Structure that defines the "mkid" command line command. */
 	"mkid",
 	"mkid: assign the id of rover or marker\n",
 	prvCalibrateMarkerId,
 	2
 };
-CLI_Command_Definition_t xDebugSetRoverPosition = {	/* Structure that defines the "crc" command line command. */
+
+CLI_Command_Definition_t xDebugSetRoverPosition = {	/* Structure that defines the "roverpos" command line command. */
 	"roverpos",
 	"roverpos: Set the current position of the rover i.e [x][y]\n",
 	prvDebugSetRoverPosition,
 	2
 };
 
-CLI_Command_Definition_t xORBCalibrate = {	/* Structure that defines the "crc" command line command. */
+CLI_Command_Definition_t xORBCalibrate = {	/* Structure that defines the "orbcal" command line command. */
 	"orbcal",
 	"orbcal: Set the upper left and lower right corner of the orb using ""tc"" and ""bc""\n",
 	prvDisplayCalibrate,
 	1
 };
-CLI_Command_Definition_t xDisplayCalibrate = {	/* Structure that defines the "crc" command line command. */
+
+CLI_Command_Definition_t xDisplayCalibrate = {	/* Structure that defines the "dspcal" command line command. */
 	"dspcal",
 	"dspcal: Set the upper left and lower right corner of the display using ""tc"" and ""bc""\n",
 	prvDisplayCalibrate,
 	1
 };
-CLI_Command_Definition_t xRecieveRovers = {	/* Structure that defines the "crc" command line command. */
+
+CLI_Command_Definition_t xRecieveRovers = {	/* Structure that defines the "recieverovers" command line command. */
 	"recieverovers",
 	"recieverovers: Move the rover forward a specified distance in mm\n",
 	prvRecieveRovers,
 	1
 };
-CLI_Command_Definition_t xAngle = {	/* Structure that defines the "crc" command line command. */
+
+CLI_Command_Definition_t xAngle = {	/* Structure that defines the "angle" command line command. */
 	"angle",
 	"angle: Change the orientation angle of the rover\n",
 	prvAngle,
 	1
 };
-CLI_Command_Definition_t xReverse = {	/* Structure that defines the "crc" command line command. */
+
+CLI_Command_Definition_t xReverse = {	/* Structure that defines the "reverse" command line command. */
 	"reverse",
 	"reverse: Move the rover backward a specified distance in mm\n",
 	prvReverse,
 	1
 };
-CLI_Command_Definition_t xForward = {	/* Structure that defines the "crc" command line command. */
+
+CLI_Command_Definition_t xForward = {	/* Structure that defines the "forward" command line command. */
 	"forward",
 	"forward: Move the rover forward a specified distance in mm\n",
 	prvForward,
 	1
 };
-CLI_Command_Definition_t xRFChanSet = {	/* Structure that defines the "crc" command line command. */
+
+CLI_Command_Definition_t xRFChanSet = {	/* Structure that defines the "rfchanset" command line command. */
 	"rfchanset",
 	"rfchanset: Set the ORB or Rover Channel & Addresses\r\n",
 	prvRFChanSet,
 	2
 };
-CLI_Command_Definition_t xGetTime = {	/* Structure that defines the "crc" command line command. */
+
+CLI_Command_Definition_t xGetTime = {	/* Structure that defines the "gettime" command line command. */
 	"gettime",
 	"gettime: 32-bit value (in hex) or an ASCII String\r\n",
 	prvGetTime,
 	0
 };
-CLI_Command_Definition_t xSendMotor = {	/* Structure that defines the "crc" command line command. */
+
+CLI_Command_Definition_t xSendMotor = {	/* Structure that defines the "sendmotor" command line command. */
 	"sendmotor",
 	"sendmotor: 32-bit value (in hex) or an ASCII String\r\n",
 	prvSendMotor,
 	0
 };
-CLI_Command_Definition_t xGetSensor = {	/* Structure that defines the "crc" command line command. */
+
+CLI_Command_Definition_t xGetSensor = {	/* Structure that defines the "getsensor" command line command. */
 	"getsensor",
 	"getsensor: 32-bit value (in hex) or an ASCII String\r\n",
 	prvGetSensor,
 	0
 };
 
-CLI_Command_Definition_t xGetPassKey = {	/* Structure that defines the "crc" command line command. */
+CLI_Command_Definition_t xGetPassKey = {	/* Structure that defines the "getpasskey" command line command. */
 	"getpasskey",
 	"getpasskey: 32-bit value (in hex) or an ASCII String\r\n",
 	prvGetPassKey,

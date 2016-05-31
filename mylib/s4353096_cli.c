@@ -2,7 +2,7 @@
   ******************************************************************************
   * @file    mylib/s4353096_cli.c
   * @author  Steffen Mitchell
-  * @date    9-May-2014
+  * @date    2-May-2016
   * @brief   FreeRTOS CLI program.Creates a task to implement the CLI and flash
   *			 the onboard Blue LED.
   *
@@ -29,7 +29,6 @@
 
 #include "FreeRTOS_CLI.h"
 
-//#include "s4353096_cli.h"
 #include "s4353096_pantilt.h"
 #include "s4353096_sysmon.h"
 #include "s4353096_accelerometer.h"
@@ -42,35 +41,32 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
-//struct Tasks TaskValues;
 struct PanTilt SendPosition;
 
-/*extern BaseType_t prvForward(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+extern BaseType_t prvAccelerometerControl(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 	long lParam_len;
 	const char *cCmd_string;
-	int distance;
-	uint8_t motor_payload;*/
-	/* Get parameters from command string */
-	/*cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
-	debug_printf("%s", cCmd_string);
-	if(atoi(cCmd_string) != 0) {
-		distance = atoi(cCmd_string);
-	} else {
-		distance = 0;
-	}
-	speed_duration_calculation(distance);
-	Calibrate.motor_payload[2] = (Calibrate.motor_payload[2] << 4) | (FORWARDRIGHT ^ (FORWARDLEFT));
-	debug_printf("%d,", Calibrate.motor_payload[0]);
-	debug_printf("%d,", Calibrate.motor_payload[1]);
-	debug_printf("%x", Calibrate.motor_payload[2]);
-	send_rover_packet(Calibrate.motor_payload, 0x32);*/
-	/*Perform Transmit Forward here*/
 
+	/* Get parameters from command string */
+	cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
+
+	/* Write command echo output string to write buffer. */
+	sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+
+	if (strcmp(pcWriteBuffer,"on") == 0) {
+		/*Give Semaphore*/
+		xSemaphoreGive(s4353096_SemaphoreAccControl);
+	} else if (strcmp(pcWriteBuffer,"off") == 0) {
+		/*Give Semaphore*/
+		xSemaphoreTake(s4353096_SemaphoreAccControl, 1);
+	} else {
+
+	}
 	/* Return pdFALSE, as there are no more strings to return */
 	/* Only return pdTRUE, if more strings need to be printed */
-/*	return pdFALSE;
-}*/
-
+	return pdFALSE;
+}
+/*Calculates and displays the distance of the rover from the starting edge*/
 extern BaseType_t prvDistance(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 		calculate_distance_ratios();
 		calculate_rover_distance_pos();
@@ -78,12 +74,13 @@ extern BaseType_t prvDistance(char *pcWriteBuffer, size_t xWriteBufferLen, const
 		/* Only return pdTRUE, if more strings need to be printed */
 		return pdFALSE;
 }
+
+/*Used to test the rovers speed at a fixed duration to calculate it's velocity*/
 extern BaseType_t prvTestDistance(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 	long lParam_len;
 	const char *cCmd_string1; //Mode selection
 	const char *cCmd_string2; //int speed value
-	const char *cCmd_string3; //expected distance int value
-	const char *cCmd_string4; //distance moved
+	const char *cCmd_string3; //duration
 	int speed;
 	int duration;
 	/* Get parameters from command string */
@@ -91,57 +88,70 @@ extern BaseType_t prvTestDistance(char *pcWriteBuffer, size_t xWriteBufferLen, c
 	/* Write command echo output string to write buffer. */
 	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 	strncat( pcWriteBuffer, cCmd_string3, lParam_len);
-	//debug_printf("PCWRITE 3: %s |  %s\n", pcWriteBuffer,cCmd_string3);
 
-	/*Grab the duration*/
+	/*Grab the duration from the input string*/
 	if (atoi(pcWriteBuffer) != 0) {
 			duration = atoi(pcWriteBuffer);
 	} else {
 			duration = 0;
 	}
-	/*Grab the speed value*/
 	/* Get parameters from command string */
 	cCmd_string2 = FreeRTOS_CLIGetParameter(pcCommandString, 2, &lParam_len);
-	/* Write command echo output string to write buffer. */
 	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 	strncat( pcWriteBuffer, cCmd_string2, lParam_len);
-	//debug_printf("PCWRITE 2: %s |  %s\n", pcWriteBuffer,cCmd_string2);
+
+	/*Grab the speed value from the input string*/
 	if (atoi(pcWriteBuffer) != 0) {
 			speed = atoi(pcWriteBuffer);
 	} else {
 			speed = 0;
 	}
+
 	/* Get parameters from command string */
 	cCmd_string1 = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
-	/* Write command echo output string to write buffer. */
 	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 	strncat( pcWriteBuffer, cCmd_string1, lParam_len);
-	//debug_printf("PCWRITE 1: %s |  %s\n", pcWriteBuffer,cCmd_string1);
+
+	/*Determine the mode set by the input string*/
 	if(strcmp(pcWriteBuffer, "forward") == 0) {
 		Calibrate.motor_payload[0] = (speed*Calibrate.motor_left_forward)/100;
 		Calibrate.motor_payload[1] = (speed*Calibrate.motor_right_forward)/100;
 		Calibrate.motor_payload[2] = (0x06 << 4) | (FORWARDRIGHT ^ (FORWARDLEFT)); //run for 3 seconds
 		send_rover_packet(Calibrate.motor_payload, 0x32);
+
 	} else if(strcmp(pcWriteBuffer, "reverse") == 0) {
 		Calibrate.motor_payload[0] = (speed*Calibrate.motor_left_reverse)/100;
 		Calibrate.motor_payload[1] = (speed*Calibrate.motor_right_reverse)/100;
 		Calibrate.motor_payload[2] = (0x06 << 4) | (BACKWARDRIGHT ^ (BACKWARDLEFT)); //run for 3 seconds
 		send_rover_packet(Calibrate.motor_payload, 0x32);
-	} else if(strcmp(pcWriteBuffer, "angle") == 0) {
+
+	} else if(strcmp(pcWriteBuffer, "angleaclock") == 0) {
+		Calibrate.motor_payload[0] = (speed*Calibrate.motor_left_reverse)/100;
+    Calibrate.motor_payload[1] = (speed*Calibrate.motor_right_forward)/100;
+    Calibrate.motor_payload[2] = (0x06 << 4) | (FORWARDRIGHT);
+		send_rover_packet(Calibrate.motor_payload, 0x32);
+
+	} else if(strcmp(pcWriteBuffer, "angleclock") == 0) {
+		Calibrate.motor_payload[0] = (speed*Calibrate.motor_left_forward);
+    Calibrate.motor_payload[1] = (speed*Calibrate.motor_right_reverse);
+    Calibrate.motor_payload[2] = (0x06 << 4) | (FORWARDLEFT);
+		send_rover_packet(Calibrate.motor_payload, 0x32);
 
 	} else {
-
+		debug_printf("Invalid mode\n");
 	}
 	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 	/* Return pdFALSE, as there are no more strings to return */
 	/* Only return pdTRUE, if more strings need to be printed */
 	return pdFALSE;
 }
+
+/*Used to calibrate the rover by inputing the speed, duration and distance moved so a velocity can be associated with that speed*/
 extern BaseType_t prvCalibrationRover(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 	long lParam_len;
 	const char *cCmd_string1; //Mode selection
 	const char *cCmd_string2; //int speed value
-	const char *cCmd_string3; //expected distance int value
+	const char *cCmd_string3; //duration set
 	const char *cCmd_string4; //distance moved
 	int speed;
 	int duration;
@@ -149,69 +159,87 @@ extern BaseType_t prvCalibrationRover(char *pcWriteBuffer, size_t xWriteBufferLe
 	int p1;
 	int p2;
 	int angle;
-	int expected_angle;
-	/*Grab distance moved*/
+
+	/* Get parameters from command string */
 	cCmd_string4 = FreeRTOS_CLIGetParameter(pcCommandString, 4, &lParam_len);
+
+	/*Grab distance moved from input string*/
 	if(atoi(cCmd_string4) != 0) {
 		distance = atoi(cCmd_string4);
 	} else {
 		distance = 0;
 	}
 	angle = distance;
-	/*Grab duration, whole value*/
+
 	/* Get parameters from command string */
 	cCmd_string3 = FreeRTOS_CLIGetParameter(pcCommandString, 3, &lParam_len);
-	/* Write command echo output string to write buffer. */
 	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 	strncat( pcWriteBuffer, cCmd_string3, lParam_len);
-	//debug_printf("PCWRITE 3: %s |  %s\n", pcWriteBuffer,cCmd_string3);
 
-	/*Grab the duration*/
+	/*Grab duration from input string*/
 	if (atoi(pcWriteBuffer) != 0) {
 			duration = atoi(pcWriteBuffer);
 	} else {
 			duration = 0;
 	}
 	p2 = duration;
-	expected_angle = duration;
-	/*Grab the speed value*/
+
 	/* Get parameters from command string */
 	cCmd_string2 = FreeRTOS_CLIGetParameter(pcCommandString, 2, &lParam_len);
-	/* Write command echo output string to write buffer. */
 	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 	strncat( pcWriteBuffer, cCmd_string2, lParam_len);
-	//debug_printf("PCWRITE 2: %s |  %s\n", pcWriteBuffer,cCmd_string2);
+
+	/*Grab the speed value from input string*/
 	if (atoi(pcWriteBuffer) != 0) {
 			speed = atoi(pcWriteBuffer);
 	} else {
 			speed = 0;
 	}
 	p1 = speed;
+
 	/* Get parameters from command string */
 	cCmd_string1 = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
 	/* Write command echo output string to write buffer. */
 	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 	strncat( pcWriteBuffer, cCmd_string1, lParam_len);
-	//debug_printf("PCWRITE 1: %s |  %s\n", pcWriteBuffer,cCmd_string1);
+
+	/*Check the mode set in the input string and perform the appropriate calibrations*/
 	if(strcmp(pcWriteBuffer, "forward") == 0) {
 		calibration_velocity_other_calculation(0, speed, distance, duration);
-	} else if(strcmp(pcWriteBuffer, "reverse") == 0) {
-		calibration_velocity_other_calculation(1, speed, distance, duration);
-	} else if(strcmp(pcWriteBuffer, "angle") == 0) {
-		Calibrate.angle_multiplier = expected_angle/angle;
-		debug_printf("\nang mul: %d\n", Calibrate.angle_multiplier);
-	} else if(strcmp(pcWriteBuffer, "motorspeed") == 0) {
-		Calibrate.motor_left_forward = p1;
-		Calibrate.motor_right_forward = p2;
-		debug_printf("\nL: %d R: %d\n", Calibrate.motor_left_forward, Calibrate.motor_right_forward);
-	} else {
 
+	} else if(strcmp(pcWriteBuffer, "reverse") == 0) {
+			calibration_velocity_other_calculation(1, speed, distance, duration);
+
+	} else if(strcmp(pcWriteBuffer, "angleclock") == 0) {
+			Calibrate.angle_clock_velocity = angle/duration;
+			Calibrate.angle_clock_speed = speed;
+			debug_printf("\nang mul: %d\n", Calibrate.angle_clock_velocity);
+
+	} else if(strcmp(pcWriteBuffer, "angleaclock") == 0) {
+			Calibrate.angle_aclock_velocity = angle/duration;
+			Calibrate.angle_aclock_speed = speed;
+			debug_printf("\nang velocity: %d\n", Calibrate.angle_aclock_velocity);
+
+	} else if(strcmp(pcWriteBuffer, "msforward") == 0) {
+			Calibrate.motor_left_forward = p1;
+			Calibrate.motor_right_forward = p2;
+			debug_printf("\nForward| L: %d R: %d\n", Calibrate.motor_left_forward, Calibrate.motor_right_forward);
+
+	} else if(strcmp(pcWriteBuffer, "msreverse") == 0) {
+			Calibrate.motor_left_reverse = p1;
+			Calibrate.motor_right_reverse = p2;
+			debug_printf("\nReverse| L: %d R: %d\n", Calibrate.motor_left_reverse, Calibrate.motor_right_reverse);
+
+	} else {
+		debug_printf("Invalid parameter\n");
 	}
 	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 	/* Return pdFALSE, as there are no more strings to return */
 	/* Only return pdTRUE, if more strings need to be printed */
 	return pdFALSE;
 }
+
+/*Calibrate the marker_id of the rover and the follower marker*/
 extern BaseType_t prvCalibrateMarkerId(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 	long lParam_len;
 	const char *cCmd_string1;
@@ -219,16 +247,20 @@ extern BaseType_t prvCalibrateMarkerId(char *pcWriteBuffer, size_t xWriteBufferL
 	int value;
 
 	cCmd_string1 = FreeRTOS_CLIGetParameter(pcCommandString, 2, &lParam_len);
+
+	/*Get the marker_id from the input string*/
 	if(atoi(cCmd_string1) != 0) {
 		value = atoi(cCmd_string1);
 	} else {
 		value = 0;
 	}
+
 	/* Get parameters from command string */
 	cCmd_string2 = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
-	/* Write command echo output string to write buffer. */
 	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 	strncat( pcWriteBuffer, cCmd_string2, lParam_len);
+
+	/*Set the acquired marker_id to the rover or the follower marker*/
 	if (strcmp(pcWriteBuffer,"rover") == 0) {
 			rover.rover_id = value;
 	} else if (strcmp(pcWriteBuffer,"marker") == 0) {
@@ -236,10 +268,14 @@ extern BaseType_t prvCalibrateMarkerId(char *pcWriteBuffer, size_t xWriteBufferL
 	} else {
 		debug_printf("\nInvalid parameters\n");
 	}
+
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 	/* Return pdFALSE, as there are no more strings to return */
 	/* Only return pdTRUE, if more strings need to be printed */
 	return pdFALSE;
 }
+
+/*A debug command used to set the rover's current x,y position for testing without a ORB tracking co-ords*/
 extern BaseType_t prvDebugSetRoverPosition(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 
 	long lParam_len;
@@ -249,34 +285,34 @@ extern BaseType_t prvDebugSetRoverPosition(char *pcWriteBuffer, size_t xWriteBuf
 	int rover_y;
 
 	cCmd_string1 = FreeRTOS_CLIGetParameter(pcCommandString, 2, &lParam_len);
-	//debug_printf("\nStr 1: %s\n", cCmd_string1);
+
+	/*Sets the 2nd Param as the rover's current y*/
 	if(atoi(cCmd_string1) != 0) {
 		rover_y = atoi(cCmd_string1);
 	} else {
 		rover_y = 0;
 	}
-	//debug_printf("X: %d\n", rover_x);
+
 	/* Get parameters from command string */
 	cCmd_string2 = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
-	//debug_printf("Str 2: %s\n", cCmd_string2);
-	/* Write command echo output string to write buffer. */
 	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 	strncat( pcWriteBuffer, cCmd_string2, lParam_len);
-	//debug_printf("PcWrite: %s\n", pcWriteBuffer);
+
+	/*Sets the 1st Param as the rover's current x*/
 	if (atoi(pcWriteBuffer) != 0) {
 		rover_x = atoi(pcWriteBuffer);
 	} else {
 		rover_x = 0;
 	}
-	//debug_printf("Y: %d\n", rover_y);
 	rover.rover_current_x = rover_x;
 	rover.rover_current_y = rover_y;
-	//calculate_rover_display_pos();
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 	/* Return pdFALSE, as there are no more strings to return */
 	/* Only return pdTRUE, if more strings need to be printed */
 	return pdFALSE;
 }
 
+/*Calibrates the ORB values for the top and bottom corners of the sandpit*/
 extern BaseType_t prvORBCalibrate(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 		long lParam_len;
 		const char *cCmd_string;
@@ -287,55 +323,71 @@ extern BaseType_t prvORBCalibrate(char *pcWriteBuffer, size_t xWriteBufferLen, c
 		/* Write command echo output string to write buffer. */
 		sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
 
+		/*Calibrates the ORB values for the top and bottom corners of the sandpit*/
 		if (strcmp(pcWriteBuffer,"tc") == 0) {
 	    /*Grab current marker location and set it as top corner of orb*/
-			/* [x/y][min\max]*/
+			/*Format: [x/y][min\max]*/
 			servo_control.orb_c[0][0] = rover.marker_current_x;
 			servo_control.orb_c[1][0] = rover.marker_current_y;
+
 	  } else if (strcmp(pcWriteBuffer,"bc") == 0) {
 	    /*Grab current marker location and set it as the bottom corner of display*/
+			/*Format: [x/y][min\max]*/
 			servo_control.orb_c[0][1] = rover.marker_current_x;
 			servo_control.orb_c[1][1] = rover.marker_current_y;
+
 		} else {
-			//Invalid command
+			debug_printf("\nInvalid parameters\n");
 		}
 		calculate_display_ratios();
+
+		memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 		/* Return pdFALSE, as there are no more strings to return */
 		/* Only return pdTRUE, if more strings need to be printed */
 		return pdFALSE;
 }
 
+/*Calibrate the Pan/Tilt values for the top and bottom corners of the display grid, also sets pan/tilt into display calibration mode*/
 extern BaseType_t prvDisplayCalibrate(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 		long lParam_len;
 		const char *cCmd_string;
-
 		/* Get parameters from command string */
 		cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
 
 		/* Write command echo output string to write buffer. */
 		sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
 
+		/*Calibrate the Pan/Tilt values for the top and bottom corners of the display grid*/
 		if (strcmp(pcWriteBuffer,"tc") == 0) {
 	    /*Grab current pan tilt values and set them as the top corner of display*/
-			/* [pan/tilt][min\max]*/
+			/*Format: [pan/tilt][min\max]*/
 			servo_control.display_c[0][0] = servo_control.set_angle_pan;
 			servo_control.display_c[1][0] = servo_control.set_angle_tilt;
 	  } else if (strcmp(pcWriteBuffer,"bc") == 0) {
 	    /*Grab current pan tilt values and set them as the bottom corner of display*/
+			/*Format: [pan/tilt][min\max]*/
 			servo_control.display_c[0][1] = servo_control.set_angle_pan;
 			servo_control.display_c[1][1] = servo_control.set_angle_tilt;
+
 		} else if (strcmp(pcWriteBuffer,"on") == 0) {
+			/*Set's the servo's into display calibration mode where pan and tilt can to move the servo and the ORB output is ignored*/
 			xSemaphoreGive(s4353096_SemaphoreCalibrate);
+
 		} else if (strcmp(pcWriteBuffer,"off") == 0) {
+			/*Turns off display calibration mode*/
 			xSemaphoreTake(s4353096_SemaphoreCalibrate, 1);
+
 	  } else {
-			//Invalid command
+			debug_printf("\nInvalid parameters\n");
 		}
 		calculate_display_ratios();
+		memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 		/* Return pdFALSE, as there are no more strings to return */
 		/* Only return pdTRUE, if more strings need to be printed */
 		return pdFALSE;
 }
+
+/*A debuging command that sets the radio to constantly recieve commands sent to and from the current set rover*/
 extern BaseType_t prvRecieveRovers(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 		long lParam_len;
 		const char *cCmd_string;
@@ -346,54 +398,62 @@ extern BaseType_t prvRecieveRovers(char *pcWriteBuffer, size_t xWriteBufferLen, 
 		/* Write command echo output string to write buffer. */
 		sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
 
+		/*Turns off and on Reception from rovers by setting the orb rover fsm state accordingly, default mode is to recieve from the orb*/
 		if (strcmp(pcWriteBuffer,"on") == 0) {
-	    /*Give Semaphore*/
-	    //xSemaphoreGive(s4353096_SemaphoreRecieveRovers);
 			radio_vars.orb_rover_fsmcurrentstate = ROVERS_RECIEVE;
-	  } else if (strcmp(pcWriteBuffer,"off") == 0) {
-	    /*Give Semaphore*/
-	    //xSemaphoreTake(s4353096_SemaphoreRecieveRovers, 1);
-			radio_vars.orb_rover_fsmcurrentstate = ORB_RECIEVE;
-	  } else {
 
+		} else if (strcmp(pcWriteBuffer,"off") == 0) {
+			radio_vars.orb_rover_fsmcurrentstate = ORB_RECIEVE;
+
+		} else {
+			debug_printf("\nInvalid parameters\n");
 		}
+		memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 		/* Return pdFALSE, as there are no more strings to return */
 		/* Only return pdTRUE, if more strings need to be printed */
 		return pdFALSE;
 }
+
+/*Move the rover to the input angle*/
 extern BaseType_t prvAngle(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 	long lParam_len;
 	const char *cCmd_string;
 	int angle;
-	uint8_t motor_payload;
+
 	/* Get parameters from command string */
 	cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
 	sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
 	debug_printf("%s", cCmd_string);
+
+	/*Grab the angle from the input string*/
 	if(atoi(cCmd_string) != 0) {
 		angle = atoi(cCmd_string);
 	} else {
 		angle = 0;
 	}
-	angle_duration_calculation(angle);
+
 	/*Negative/anticlockwise angle*/
-	debug_printf("\n%c\n",pcWriteBuffer[0]);
-	if(atoi <  0) {
-		Calibrate.motor_payload[2] = (Calibrate.motor_payload[2] << 4) | (FORWARDRIGHT ^ (BACKWARDLEFT));
+	/*Currently configured to only use one motor to turn, i.e no reversing*/
+	if(atoi(pcWriteBuffer) <  0) {
+		angle_duration_calculation(angle, 1); //calculate the duration and speed to best achieve the specified angle*/
+		Calibrate.motor_payload[2] = (Calibrate.motor_payload[2] << 4) | (FORWARDRIGHT);
+
 	} else {
 		/*Clockwise angle*/
-		Calibrate.motor_payload[2] = (Calibrate.motor_payload[2] << 4) | (BACKWARDRIGHT ^ (FORWARDLEFT));
+		angle_duration_calculation(angle, 0);
+		Calibrate.motor_payload[2] = (Calibrate.motor_payload[2] << 4) | (FORWARDLEFT);
 	}
-	debug_printf("%d,", Calibrate.motor_payload[0]);
-	debug_printf("%d,", Calibrate.motor_payload[1]);
-	debug_printf("%x", Calibrate.motor_payload[2]);
-	send_rover_packet(Calibrate.motor_payload, 0x32);
-	/*Perform Transmit Forward here*/
 
+	/*Transmit Angle Here*/
+	send_rover_packet(Calibrate.motor_payload, 0x32);
+
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 	/* Return pdFALSE, as there are no more strings to return */
 	/* Only return pdTRUE, if more strings need to be printed */
 	return pdFALSE;
 }
+
+/*Move the rover the given distance in mm in reverse*/
 extern BaseType_t prvReverse(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 	long lParam_len;
 	const char *cCmd_string;
@@ -402,23 +462,28 @@ extern BaseType_t prvReverse(char *pcWriteBuffer, size_t xWriteBufferLen, const 
 	/* Get parameters from command string */
 	cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
 	debug_printf("%s", cCmd_string);
+
+	/*Grab the distance from the input string*/
 	if(atoi(cCmd_string) != 0) {
 		distance = atoi(cCmd_string);
+
 	} else {
 		distance = 0;
 	}
+	/*Designs a motor payload to send to the rover to acheive the wanted distance*/
 	direction_duration_calculation_send(distance, 1);
 	Calibrate.motor_payload[2] = (Calibrate.motor_payload[2] << 4) | (BACKWARDRIGHT ^ (BACKWARDLEFT));
-	debug_printf("%d,", Calibrate.motor_payload[0]);
-	debug_printf("%d,", Calibrate.motor_payload[1]);
-	debug_printf("%x", Calibrate.motor_payload[2]);
-	send_rover_packet(Calibrate.motor_payload, 0x32);
-	/*Perform Transmit Forward here*/
 
+	/*Perform Transmit Reverse here*/
+	send_rover_packet(Calibrate.motor_payload, 0x32);
+
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 	/* Return pdFALSE, as there are no more strings to return */
 	/* Only return pdTRUE, if more strings need to be printed */
 	return pdFALSE;
 }
+
+/*Move the rover the given distance in mm forward*/
 extern BaseType_t prvForward(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 	long lParam_len;
 	const char *cCmd_string;
@@ -426,7 +491,8 @@ extern BaseType_t prvForward(char *pcWriteBuffer, size_t xWriteBufferLen, const 
 	uint8_t motor_payload;
 	/* Get parameters from command string */
 	cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
-	debug_printf("%s", cCmd_string);
+
+	/*Grab the distance from the input string*/
 	if(atoi(cCmd_string) != 0) {
 		distance = atoi(cCmd_string);
 	} else {
@@ -434,17 +500,16 @@ extern BaseType_t prvForward(char *pcWriteBuffer, size_t xWriteBufferLen, const 
 	}
 	direction_duration_calculation_send(distance, 0);
 	Calibrate.motor_payload[2] = (Calibrate.motor_payload[2] << 4) | (FORWARDRIGHT ^ (FORWARDLEFT));
-	debug_printf("%d,", Calibrate.motor_payload[0]);
-	debug_printf("%d,", Calibrate.motor_payload[1]);
-	debug_printf("%x", Calibrate.motor_payload[2]);
-	send_rover_packet(Calibrate.motor_payload, 0x32);
-	/*Perform Transmit Forward here*/
 
+	/*Perform Transmit Forward here*/
+	send_rover_packet(Calibrate.motor_payload, 0x32);
+
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 	/* Return pdFALSE, as there are no more strings to return */
 	/* Only return pdTRUE, if more strings need to be printed */
 	return pdFALSE;
 }
-
+/*Set the channel and addresses associated with given Rover's and orbs*/
 extern BaseType_t prvRFChanSet(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 
 	long lParam_len;
@@ -453,27 +518,26 @@ extern BaseType_t prvRFChanSet(char *pcWriteBuffer, size_t xWriteBufferLen, cons
 	int value;
 
 	cCmd_string1 = FreeRTOS_CLIGetParameter(pcCommandString, 2, &lParam_len);
+
+	/*Grab the ID of the Rover or ORB to set to*/
 	if(atoi(cCmd_string1) != 0) {
 		value = atoi(cCmd_string1);
 	} else {
 		value = 0;
 	}
+
 	/* Get parameters from command string */
 	cCmd_string2 = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
-	/* Write command echo output string to write buffer. */
 	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 	strncat( pcWriteBuffer, cCmd_string2, lParam_len);
+
+	/*Set the associated ID to the retrieved device from the input string, i.e the rover or the orb*/
 	if (strcmp(pcWriteBuffer,"rover") == 0) {
 		switch(value) {
 			case 46:
 				memcpy(radio_vars.s4353096_rx_addr_rover, rover_coms.ROVER46ADDR, sizeof(rover_coms.ROVER46ADDR));
 				memcpy(radio_vars.s4353096_tx_addr, rover_coms.ROVER46ADDR, sizeof(rover_coms.ROVER46ADDR));
 				radio_vars.s4353096_chan_rover = ROVER46CHAN;
-				debug_printf("\nIn 46 ROV:  %x\n", rover_coms.ROVER46ADDR[0]);
-				debug_printf("\nIn 46: ");
-				for (int i = 0; i < 5; i++) {
-					debug_printf("%x-", radio_vars.s4353096_tx_addr[i]);
-				}
 				break;
 			case 47:
 				memcpy(radio_vars.s4353096_rx_addr_rover, rover_coms.ROVER47ADDR, sizeof(rover_coms.ROVER47ADDR));
@@ -509,8 +573,8 @@ extern BaseType_t prvRFChanSet(char *pcWriteBuffer, size_t xWriteBufferLen, cons
 				debug_printf("\nInvalid Rover ID\n");
 				break;
 		}
+
 	} else if (strcmp(pcWriteBuffer,"orb") == 0) {
-			debug_printf("In ORB\n");
 			switch(value) {
 				case 1:
 					memcpy(radio_vars.s4353096_rx_addr_orb, ORB1ADDR, sizeof(ORB1ADDR));
@@ -549,23 +613,24 @@ extern BaseType_t prvRFChanSet(char *pcWriteBuffer, size_t xWriteBufferLen, cons
 		debug_printf("\nInvalid parameters\n");
 	}
 
-
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 	/* Return pdFALSE, as there are no more strings to return */
 	/* Only return pdTRUE, if more strings need to be printed */
 	return pdFALSE;
 }
 
+/*Get and print the current system time*/
 extern BaseType_t prvGetTime(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+
+	/*Get's the current system time and then prints it*/
 	get_system_time();
 	debug_printf("Current Time: %d.%02d\n", TaskValues.system_time, TaskValues.system_time_decimal);
-  /* Set the semaphore as available if the semaphore exists*/
-
-
 	/* Return pdFALSE, as there are no more strings to return */
 	/* Only return pdTRUE, if more strings need to be printed */
 	return pdFALSE;
 }
 
+/*Debug command, uses a raw packet specified in the Rover Task and sends this as a Motor Command to the Rover*/
 extern BaseType_t prvSendMotor(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 
   /* Set the semaphore as available if the semaphore exists*/
@@ -576,11 +641,11 @@ extern BaseType_t prvSendMotor(char *pcWriteBuffer, size_t xWriteBufferLen, cons
 	/* Only return pdTRUE, if more strings need to be printed */
 	return pdFALSE;
 }
+
+/*Begins the process to get the sensor values from the rover*/
 extern BaseType_t prvGetSensor(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 
   /* Set the semaphore as available if the semaphore exists*/
-	get_system_time();
-	debug_printf("Time: %d.%02d\n", TaskValues.system_time, TaskValues.system_time_decimal);
 	if (s4353096_SemaphoreGetSensor != NULL) {	/* Check if semaphore exists */
 		xSemaphoreGive(s4353096_SemaphoreGetSensor);		/* Give PB Semaphore from ISR*/
 	}
@@ -589,6 +654,7 @@ extern BaseType_t prvGetSensor(char *pcWriteBuffer, size_t xWriteBufferLen, cons
 	return pdFALSE;
 }
 
+/*Begins the process to get a passkey from the rover*/
 extern BaseType_t prvGetPassKey(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 
   /* Set the semaphore as available if the semaphore exists*/
@@ -599,6 +665,8 @@ extern BaseType_t prvGetPassKey(char *pcWriteBuffer, size_t xWriteBufferLen, con
 	/* Only return pdTRUE, if more strings need to be printed */
 	return pdFALSE;
 }
+
+/*Turns the Laser on or off*/
 extern BaseType_t prvLaserCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 
 	long lParam_len;
@@ -619,6 +687,7 @@ extern BaseType_t prvLaserCommand(char *pcWriteBuffer, size_t xWriteBufferLen, c
 	return pdFALSE;
 }
 
+/*Sets the pan servo to the given pan value*/
 extern BaseType_t prvPanCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 
 	long lParam_len;
@@ -654,11 +723,14 @@ extern BaseType_t prvPanCommand(char *pcWriteBuffer, size_t xWriteBufferLen, con
       /*Not a valid integer*/
     }
   }
+
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 	/* Return pdFALSE, as there are no more strings to return */
 	/* Only return pdTRUE, if more strings need to be printed */
 	return pdFALSE;
 }
 
+/*Sets the pan servo to the given pan value*/
 extern BaseType_t prvTiltCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 
 	long lParam_len;
@@ -694,10 +766,14 @@ extern BaseType_t prvTiltCommand(char *pcWriteBuffer, size_t xWriteBufferLen, co
       /*Not a valid integer*/
     }
 	}
+
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 	/* Return pdFALSE, as there are no more strings to return */
 	/* Only return pdTRUE, if more strings need to be printed */
 	return pdFALSE;
 }
+
+/*Returns the hamming encoded value of the given input*/
 extern BaseType_t prvHamenc(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 
 	long lParam_len;
@@ -740,10 +816,14 @@ extern BaseType_t prvHamenc(char *pcWriteBuffer, size_t xWriteBufferLen, const c
 			debug_printf("Encoded Value: 0x%x\n",encode_output);
 		}
 	}
+
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 	/* Return pdFALSE, as there are no more strings to return */
 	/* Only return pdTRUE, if more strings need to be printed */
 	return pdFALSE;
 }
+
+/*Returns the hamming decoded value of the given input*/
 extern BaseType_t prvHamdec(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 
 	long lParam_len;
@@ -793,10 +873,14 @@ extern BaseType_t prvHamdec(char *pcWriteBuffer, size_t xWriteBufferLen, const c
 			debug_printf("Invalid Parameter Given\n");
 		}
 	}
+
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 	/* Return pdFALSE, as there are no more strings to return */
 	/* Only return pdTRUE, if more strings need to be printed */
 	return pdFALSE;
 }
+
+/*Used to resume a task which is suspended*/
 extern BaseType_t prvResume(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 
 	long lParam_len;
@@ -823,10 +907,13 @@ extern BaseType_t prvResume(char *pcWriteBuffer, size_t xWriteBufferLen, const c
 		}
 	}
 
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 	/* Return pdFALSE, as there are no more strings to return */
 	/* Only return pdTRUE, if more strings need to be printed */
 	return pdFALSE;
 }
+
+/*Suspends a the given task*/
 extern BaseType_t prvSuspend(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 
 	long lParam_len;
@@ -853,11 +940,13 @@ extern BaseType_t prvSuspend(char *pcWriteBuffer, size_t xWriteBufferLen, const 
 		}
 	}
 
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
 	/* Return pdFALSE, as there are no more strings to return */
 	/* Only return pdTRUE, if more strings need to be printed */
 	return pdFALSE;
 }
 
+/*Used to initiate the laser to draw a box*/
 extern BaseType_t prvBoxCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 
 	/* Write command echo output string to write buffer. */
@@ -868,6 +957,8 @@ extern BaseType_t prvBoxCommand(char *pcWriteBuffer, size_t xWriteBufferLen, con
 	/* Only return pdTRUE, if more strings need to be printed */
 	return pdFALSE;
 }
+
+/*Used to implement the top command which gives a list of tasks running and associated information on them*/
 extern BaseType_t prvTop(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 
 	sprintf((char *) pcWriteBuffer, "\n");
@@ -876,6 +967,8 @@ extern BaseType_t prvTop(char *pcWriteBuffer, size_t xWriteBufferLen, const char
 	/* Only return pdTRUE, if more strings need to be printed */
 	return pdFALSE;
 }
+
+/*Used to get the current accelerometer values*/
 extern BaseType_t prvAcc(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 
 	long lParam_len;
@@ -902,6 +995,7 @@ extern BaseType_t prvAcc(char *pcWriteBuffer, size_t xWriteBufferLen, const char
 	return pdFALSE;
 }
 
+/*Enables and disables radio communication*/
 extern BaseType_t prvTracking(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 		long lParam_len;
 		const char *cCmd_string;
@@ -925,6 +1019,8 @@ extern BaseType_t prvTracking(char *pcWriteBuffer, size_t xWriteBufferLen, const
 		/* Only return pdTRUE, if more strings need to be printed */
 		return pdFALSE;
 }
+
+/*Calculates the crc of a given input string*/
 extern BaseType_t prvCRC(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 
 	long lParam_len;
@@ -970,6 +1066,8 @@ extern BaseType_t prvCRC(char *pcWriteBuffer, size_t xWriteBufferLen, const char
 	/* Only return pdTRUE, if more strings need to be printed */
 	return pdFALSE;
 }
+
+/*CLI Task handles all console input and commands*/
 void CLI_Task(void) {
 	char cRxedChar;
 	char cInputString[100];

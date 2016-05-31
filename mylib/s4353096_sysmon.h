@@ -72,6 +72,7 @@ TaskHandle_t xHandleRadio;
 TaskHandle_t xHandleRover;
 TaskHandle_t xHandleBox;
 TaskHandle_t xHandlePanTilt;
+TaskHandle_t xHandleFollower;
 struct Tasks TaskValues;
 void s4353096_sysmon_init(void);
 extern void GetTopList( void );

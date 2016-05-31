@@ -59,6 +59,7 @@ int main (void) {
 	s4353096_SemaphoreBox = xSemaphoreCreateBinary();
 	s4353096_SemaphoreCalibrate = xSemaphoreCreateBinary();
 	s4353096_SemaphoreAccControl = xSemaphoreCreateBinary();
+	s4353096_SemaphoreFollower = xSemaphoreCreateBinary();
 	s4353096_QueueRoverTransmit = xQueueCreate(10, sizeof(radio_side_communication));
 	s4353096_QueueRoverRecieve = xQueueCreate(10, sizeof(radio_side_communication));
 
@@ -66,7 +67,8 @@ int main (void) {
 	xTaskCreate( (void *) &s4353096_TaskAccelerometer, (const signed char *) "s4353096_TaskAccelerometer", mainTASKACC_STACK_SIZE, NULL,  mainTASKACC_PRIORITY, &xHandleAccelerometer);
 	xTaskCreate( (void *) &CLI_Task, (const signed char *) "CLI_Task", mainTASKCLI_STACK_SIZE, NULL,  mainTASKCLI_PRIORITY +3, &xHandleCLI);
 	xTaskCreate( (void *) &s4353096_TaskRadio, (const signed char *) "s4353096_TaskRadio", mainTASKRADIO_STACK_SIZE, NULL,  mainTASKRADIO_PRIORITY + 3, &xHandleRadio);
-	xTaskCreate( (void *) &s4353096_TaskRover, (const signed char *) "s4353096_TaskRadioProcessing", mainTASKRADIO_STACK_SIZE, NULL,  mainTASKRADIO_PRIORITY + 3, &xHandleRover);
+	xTaskCreate( (void *) &s4353096_TaskRover, (const signed char *) "s4353096_TaskRover", mainTASKRADIO_STACK_SIZE, NULL,  mainTASKRADIO_PRIORITY + 3, &xHandleRover);
+	xTaskCreate( (void *) &FollowerTask, (const signed char *) "FollowerTask", mainTASKRADIO_STACK_SIZE, NULL,  mainTASKRADIO_PRIORITY + 3, &xHandleFollower);
 	/*Assign the task handles to their respective string values in an array*/
 	SetNameHandle();
 

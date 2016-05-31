@@ -280,16 +280,18 @@ extern void angle_duration_calculation(int angle, int direction) {
   /*If direction is clockwise, positive*/
   if (direction == 0) {
     duration = ((2*angle)/Calibrate.angle_clock_velocity);
-    Calibrate.motor_payload[0] = (Calibrate.angle_clock_speed*Calibrate.motor_left_reverse);
-    Calibrate.motor_payload[1] = (Calibrate.angle_clock_speed*Calibrate.motor_right_forward);
+    Calibrate.motor_payload[0] = (Calibrate.angle_clock_speed*Calibrate.motor_left_reverse)/100;
+    Calibrate.motor_payload[1] = (Calibrate.angle_clock_speed*Calibrate.motor_right_forward)/100;
     Calibrate.motor_payload[2] = duration;
+    Calibrate.closest_duration = duration;
 
   /*If direction is anticlockwise, negative*/
   } else if (direction == 1) {
     duration = ((2*angle)/Calibrate.angle_aclock_velocity);
-    Calibrate.motor_payload[0] = (Calibrate.angle_aclock_speed*Calibrate.motor_left_forward);
-    Calibrate.motor_payload[1] = (Calibrate.angle_aclock_speed*Calibrate.motor_right_reverse);
+    Calibrate.motor_payload[0] = (Calibrate.angle_aclock_speed*Calibrate.motor_left_forward)/100;
+    Calibrate.motor_payload[1] = (Calibrate.angle_aclock_speed*Calibrate.motor_right_reverse)/100;
     Calibrate.motor_payload[2] = duration;
+    Calibrate.closest_duration = duration;
   }
 }
 
@@ -299,6 +301,8 @@ extern void direction_duration_calculation_send(int distance, int direction) {
   int distance_difference;
   float calculated_distance;
   int number_of_speeds = 8;
+  int remaining_distance;
+  TickType_t xDelayMove;
   Calibrate.closest_difference = 1000; //Something large that will be imediatly changed on first item
   Calibrate.closest_distance = 0; //Initialise the closest distance
   /*Loop to increment speed*/
@@ -324,8 +328,20 @@ extern void direction_duration_calculation_send(int distance, int direction) {
     Calibrate.motor_payload[1] = (Calibrate.closest_speed*Calibrate.motor_right_reverse)/100;
 
   }
-  /*Duration*/
   Calibrate.motor_payload[2] = (Calibrate.closest_duration);
+  
+  /*Determines whether the process needs to be repeated to achieve the distance desired*/
+  remaining_distance = distance - Calibrate.closest_distance;
+  if (remaining_distance < 60) {
+    Calibrate.motor_payload[2] = (Calibrate.motor_payload[2] << 4) | (FORWARDRIGHT ^ (FORWARDLEFT));
+    /*Perform Transmit Forward here*/
+    send_rover_packet(Calibrate.motor_payload, 0x32);
+    xDelayMove = 7700 / portTICK_PERIOD_MS;
+    vTaskDelay(xDelayMove);
+    direction_duration_calculation_send(remaining_distance, 0);
+  } else {
+
+  }
   debug_printf("Closest D: %d, S: %d, Du: %d, Dif: %d\n", Calibrate.closest_distance, Calibrate.closest_speed, Calibrate.closest_duration/2, Calibrate.closest_difference);
 }
 
@@ -346,4 +362,101 @@ extern void calculate_rover_distance_pos(void) {
   current_x_mm = (rover.rover_current_x*rover.ratio_x);
   current_y_mm = (rover.rover_current_y*rover.ratio_y);
   debug_printf("\nDistance from starting edge: %d\n", current_x_mm);
+}
+/*Used to perform one follower_function*/
+extern void FollowerTask(void) {
+  int current_x;
+  int current_y;
+  int after_move_x;
+  int after_move_y;
+  int marker_x;
+  int marker_y;
+  float rover_orientation_angle;
+  float marker_angle;
+  int angle_change;
+  int distance_to_marker;
+  int change_y;
+  int change_x;
+  TickType_t xDelayMove;
+
+  /*Main Loop for the follower task*/
+  for (;;) {
+    if (s4353096_SemaphoreFollower != NULL) {
+      if( xSemaphoreTake(s4353096_SemaphoreFollower, 3 ) == pdTRUE ) {
+        xSemaphoreGive(s4353096_SemaphoreFollower);
+        xDelayMove = 1100 / portTICK_PERIOD_MS;
+        current_x = rover.rover_current_x;
+        current_y = rover.rover_current_y;
+        direction_duration_calculation_send(40, 0);
+        Calibrate.motor_payload[2] = (Calibrate.motor_payload[2] << 4) | (FORWARDRIGHT ^ (FORWARDLEFT));
+        /*Move forward 1 second*/
+        send_rover_packet(Calibrate.motor_payload, 0x32);
+        vTaskDelay(xDelayMove);
+        after_move_x = rover.rover_current_x;
+        after_move_y = rover.rover_current_y;
+        /*Work out rover's orientation angle*/
+        rover_orientation_angle = angle_calculation(current_x, current_y, after_move_x, after_move_y);
+        /*Work out angle of the marker from the rover*/
+        marker_x = rover.marker_current_x;
+        marker_y = rover.marker_current_y;
+        marker_angle = angle_calculation(current_x, current_y, marker_x, marker_y);
+        /*Work out required angle change to face marker*/
+        angle_change = marker_angle - rover_orientation_angle;
+        /*Turn to angle, can try to implement half of angle turn to cautomaticaly calibrate the angle*/
+        if (angle_change < 0) {
+          angle_duration_calculation(angle_change, 1);
+          Calibrate.motor_payload[2] = (Calibrate.motor_payload[2] << 4) | (FORWARDRIGHT);
+        } else {
+          angle_duration_calculation(angle_change, 0);
+          Calibrate.motor_payload[2] = (Calibrate.motor_payload[2] << 4) | (FORWARDLEFT);
+        }
+        send_rover_packet(Calibrate.motor_payload, 0x32);
+        xDelayMove = ((500*Calibrate.closest_duration)+100) / portTICK_PERIOD_MS;
+        vTaskDelay(xDelayMove);
+        change_x = marker_x - rover.rover_current_x;
+        change_y = marker_y - rover.rover_current_y;
+        /*Calculate the approximate distance to the target*/
+        distance_to_marker = sqrt(((change_x*change_x) + (change_y*change_y)));
+        /*Move forward to the target*/
+        direction_duration_calculation_send(distance_to_marker, 0);
+        Calibrate.motor_payload[2] = (Calibrate.motor_payload[2] << 4) | (FORWARDRIGHT ^ (FORWARDLEFT));
+        send_rover_packet(Calibrate.motor_payload, 0x32);
+        xDelayMove = ((500*Calibrate.closest_duration)+100) / portTICK_PERIOD_MS;
+        vTaskDelay(xDelayMove);
+      }
+    }
+  }
+  vTaskDelay(400);
+}
+
+/*Calculates the angle between to points based on the x_y axis where top hald is +180 and bottom half is -180*/
+extern float angle_calculation(int center_x, int center_y, int point_x, int point_y) {
+  float change_y;
+  float change_x;
+  float val = 180.0 / PI;
+  float theta;
+  float target_angle;
+  change_y = point_y - center_y;
+  change_x = point_x - center_x;
+  theta = atan2f(change_y, change_x);
+  if (center_x < point_x) {
+    if (center_y < point_y) {
+      target_angle = theta;
+    } else if (center_y > point_y) {
+      target_angle = -1*theta;
+    } else {
+      target_angle = 0;
+    }
+  } else if (center_x > point_x) {
+    if (center_y < point_y) {
+      target_angle = 180 - theta;
+    } else if (center_y > point_y) {
+      target_angle = -180 + theta;
+    } else {
+      target_angle = 0;
+    }
+  } else {
+    target_angle = 0;
+  }
+  return target_angle;
 }

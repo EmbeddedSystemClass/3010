@@ -55,7 +55,7 @@
 #include <string.h>
 static SPI_HandleTypeDef SpiHandle;
 
-/*Initialises Relevent GPIO/SPI Ports and sets both FSM states to IDLE*/
+
 
 /*The main function for the Radio Task*/
 void s4353096_TaskRadio (void) {
@@ -68,14 +68,10 @@ void s4353096_TaskRadio (void) {
   radio_vars.s4353096_chan_orb = 43;
   radio_vars.next_sequence = 0x00;
   radio_vars.passkey = 0x00;
-  //debug_printf("\nrover addr: %x\n", rover_addr);
   int p = 0;
   s4353096_radio_setchan(radio_vars.s4353096_chan_orb);
 	s4353096_radio_settxaddress(radio_vars.s4353096_tx_addr);
-  /*Set ORB Recieve Addr*/
 	s4353096_radio_setrxaddress(radio_vars.s4353096_rx_addr_orb);
-  /*Set Rover Recieve Addr*/
-  //s4353096_radio_setrxaddress(radio_vars.s4353096_rx_addr_rover, NRF24L01P_RX_ADDR_P1);
   /*Main loop for Radio Task*/
   for(;;) {
     p = 0;
@@ -92,12 +88,8 @@ void s4353096_TaskRadio (void) {
             if (s4353096_QueueRoverTransmit != NULL) {	/* Check if queue exists */
                     /* Check for item received - block atmost for 10 ticks */
               if (xQueueReceive(s4353096_QueueRoverTransmit, &radio_side_communication, 10 )) {
-                debug_printf("In Recieve\n");
                 radio_vars.s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
                 s4353096_radio_fsmprocessing();
-                for (int i = 0; i < 5; i++) {
-        					debug_printf("%x-", radio_vars.s4353096_tx_addr[i]);
-        				}
                 s4353096_radio_setrxaddress(radio_vars.s4353096_rx_addr_rover);
                 s4353096_radio_settxaddress(radio_vars.s4353096_tx_addr);
                 s4353096_radio_setchan(radio_vars.s4353096_chan_rover);
@@ -106,9 +98,8 @@ void s4353096_TaskRadio (void) {
                 /*Set Transmit Packet as Rover Packet*/
                 memcpy(radio_vars.s4353096_tx_packet, radio_side_communication.s4353096_tx_packet, sizeof(radio_side_communication.s4353096_tx_packet));
                 s4353096_radio_fsmprocessing();
-                /*radio_vars.s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
-                s4353096_radio_fsmprocessing();*/
-                debug_printf("Before loop Recieve\n");
+                debug_printf("Waiting for Recieve\n");
+
                 /*Wait for packet from rover*/
                 while(s4353096_radio_getrxstatus() == 0 && (p < 80000)) {
                   /*Loop until a packet has been recieved*/
@@ -129,7 +120,7 @@ void s4353096_TaskRadio (void) {
                 }
                 radio_vars.s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
                 s4353096_radio_fsmprocessing();
-                debug_printf("Got Here\n");
+                debug_printf("Finished Recieve\n");
                 s4353096_radio_setchan(radio_vars.s4353096_chan_orb);
                 s4353096_radio_setrxaddress(radio_vars.s4353096_rx_addr_orb);
                 vTaskDelay(500);
@@ -138,16 +129,16 @@ void s4353096_TaskRadio (void) {
             radio_vars.orb_rover_fsmcurrentstate = ORB_RECIEVE;
             break;
           case ROVERS_RECIEVE:
-            //if(xSemaphoreTake(s4353096_SemaphoreRecieveRovers, 10 ) == pdTRUE ) {
               s4353096_radio_setrxaddress(radio_vars.s4353096_rx_addr_rover);
               s4353096_radio_setchan(radio_vars.s4353096_chan_rover);
+
+              /*Loop until a packet has been recieved*/
               while(s4353096_radio_getrxstatus() == 0) {
                 /*Loop until a packet has been recieved*/
                 p++;
                 s4353096_radio_setfsmrx();
                 s4353096_radio_fsmprocessing();
                 /*In Wait state here*/
-                //vTaskDelay(50);
                 s4353096_radio_fsmprocessing();
                 /*After wait state here*/
                 if (s4353096_radio_getrxstatus() == 1) {
@@ -165,8 +156,6 @@ void s4353096_TaskRadio (void) {
               s4353096_radio_fsmprocessing();
               s4353096_radio_setrxaddress(radio_vars.s4353096_rx_addr_orb);
               s4353096_radio_setchan(radio_vars.s4353096_chan_orb);
-              //xSemaphoreGive(s4353096_SemaphoreRecieveRovers);
-            //}
             break;
           case ORB_RECIEVE:
             vTaskDelay(100);
@@ -179,14 +168,6 @@ void s4353096_TaskRadio (void) {
             if (s4353096_radio_getrxstatus() == 1) { //Checks if packet has been recieved
               /*Prints recieved packet to console*/
               s4353096_radio_getRAEpacket(radio_vars.s4353096_rx_buffer);
-              /*Print the raw packet*/
-                //debug_printf("\nRaw Packet Recieved: \n");
-
-                /*Increment through raw packet and print each byte*/
-                /*for(int j = 0; j < 32; j++) {
-                  debug_printf("%x-", radio_vars.s4353096_rx_buffer[j]);
-                }
-                debug_printf("\n");*/
             }
             break;
 
@@ -290,6 +271,9 @@ extern void s4353096_radio_getRAEpacket(unsigned char *rxpacket) {
   if(payload[0] == rover.rover_id) {
     rover.rover_current_x = current_x;
     rover.rover_current_y = current_y;
+  } else if (payload[0] == rover.marker_id) {
+    rover.marker_current_x = current_x;
+    rover.marker_current_y = current_y;
   }
   /*Calculate X Velocity*/
   velocity_x_decimal = ((current_x - previous_x)*1000)/((current_recieved_time - previous_recieved_time)/1000);

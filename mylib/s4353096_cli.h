@@ -80,14 +80,14 @@ CLI_Command_Definition_t xDistance = {	/* Structure that defines the "distance" 
 
 CLI_Command_Definition_t xTestDistance = {	/* Structure that defines the "test" command line command. */
 	"test",
-	"test: assign the id of rover or marker\n",
+	"test: <direction> <speed> <duration> Used to test the speeds at a constant duration for calibration purposes\n",
 	prvTestDistance,
 	3
 };
 
 CLI_Command_Definition_t xCalibrationRover = {	/* Structure that defines the "cal" command line command. */
 	"cal",
-	"cal: assign the id of rover or marker\n",
+	"cal: <mode> |<speed> <duration> <distance/angle>| or <left motor> <right motor> <DC> Calibrate rover movement\n",
 	prvCalibrationRover,
 	4
 };

@@ -43,6 +43,30 @@
 /* Private function prototypes -----------------------------------------------*/
 struct PanTilt SendPosition;
 
+extern BaseType_t prvFollower(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+	long lParam_len;
+	const char *cCmd_string;
+
+	/* Get parameters from command string */
+	cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
+
+	/* Write command echo output string to write buffer. */
+	sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+
+	if (strcmp(pcWriteBuffer,"on") == 0) {
+		/*Give Semaphore*/
+		xSemaphoreGive(s4353096_SemaphoreFollower);
+	} else if (strcmp(pcWriteBuffer,"off") == 0) {
+		/*Give Semaphore*/
+		xSemaphoreTake(s4353096_SemaphoreFollower, 1);
+	} else {
+
+	}
+	/* Return pdFALSE, as there are no more strings to return */
+	/* Only return pdTRUE, if more strings need to be printed */
+	return pdFALSE;
+}
+
 extern BaseType_t prvAccelerometerControl(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 	long lParam_len;
 	const char *cCmd_string;

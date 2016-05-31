@@ -67,7 +67,7 @@
  /* Task Priorities ------------------------------------------------------------*/
  #define mainTASKRADIO_PRIORITY					( tskIDLE_PRIORITY + 1 )
  /* Task Stack Allocations -----------------------------------------------------*/
- #define mainTASKRADIO_STACK_SIZE		( configMINIMAL_STACK_SIZE * 6 )
+ #define mainTASKRADIO_STACK_SIZE		( configMINIMAL_STACK_SIZE * 7 )
  /*Global Variables for radio*/
  struct Radio {
    int s4353096_radio_fsmcurrentstate;
@@ -80,7 +80,7 @@
    unsigned char s4353096_chan_rover;
    unsigned char s4353096_chan_orb;
    unsigned char next_sequence;
-   unsigned char passkey; 
+   unsigned char passkey;
    int orb_rover_fsmcurrentstate;
 };
 struct Packet {

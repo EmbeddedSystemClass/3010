@@ -33,6 +33,7 @@
 #define BACKWARDLEFT 0x08
 #define FORWARDRIGHT 0x01
 #define BACKWARDRIGHT 0x02
+#define PI 3.14159265
 
 struct Rover {
   int velocity[10];
@@ -84,6 +85,7 @@ SemaphoreHandle_t s4353096_SemaphoreGetPassKey;
 SemaphoreHandle_t s4353096_SemaphoreGetSensor;
 SemaphoreHandle_t s4353096_SemaphoreSendMotor;
 SemaphoreHandle_t s4353096_SemaphoreRecieveRovers;
+SemaphoreHandle_t s4353096_SemaphoreFollower;
 QueueHandle_t s4353096_QueueRoverTransmit;
 QueueHandle_t s4353096_QueueRoverRecieve;
 
@@ -91,6 +93,7 @@ extern void rover_init(void);
 extern void recieve_rover_packet (uint8_t *recieved_packet);
 extern void send_rover_packet (uint8_t *payload, uint8_t packet_type);
 extern void s4353096_TaskRover(void);
+extern void FollowerTask(void);
 extern void calibration_velocity_init(void);
 extern void calibration_velocity_calculation(void);
 extern void calibration_velocity_other_calculation(int mode, int speed, int distance, int duration);
@@ -98,3 +101,4 @@ extern void direction_duration_calculation_send(int distance, int direction);
 extern void calculate_distance_ratios(void);
 extern void calculate_rover_distance_pos(void);
 extern void angle_duration_calculation(int angle, int direction);
+extern float angle_calculation(int center_x, int center_y, int point_x, int point_y);

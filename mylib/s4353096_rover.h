@@ -51,7 +51,7 @@ struct Rover {
   uint8_t motor_payload[10];
   int closest_speed;
   int closest_duration;
-
+  int remaining_distance;
   int rover_current_x;
   int rover_current_y;
 
@@ -86,6 +86,7 @@ SemaphoreHandle_t s4353096_SemaphoreGetSensor;
 SemaphoreHandle_t s4353096_SemaphoreSendMotor;
 SemaphoreHandle_t s4353096_SemaphoreRecieveRovers;
 SemaphoreHandle_t s4353096_SemaphoreFollower;
+SemaphoreHandle_t s4353096_SemaphoreWaypoint;
 QueueHandle_t s4353096_QueueRoverTransmit;
 QueueHandle_t s4353096_QueueRoverRecieve;
 

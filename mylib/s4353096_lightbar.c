@@ -137,15 +137,14 @@ extern void s4353096_lightbar_init(void) {
 		GPIO_InitStructure.Pin = LED_9_PIN;
 		HAL_GPIO_Init(LED_9_GPIO_PORT, &GPIO_InitStructure);
 		/*Create TaskLightBar*/
-		//xTaskCreate( (void *) &s4353096_TaskLightBar, (const signed char *) "s4353096_TaskLightBar", mainLA_CHAN2TASK3_STACK_SIZE, NULL,  mainLA_CHAN2TASK3_PRIORITY, NULL );
+		xTaskCreate( (void *) &s4353096_TaskLightBar, (const signed char *) "s4353096_TaskLightBar", mainLA_CHAN2TASK3_STACK_SIZE, NULL,  mainLA_CHAN2TASK3_PRIORITY, NULL );
 		/*Create QueueLightBar*/
-		//s4353096_QueueLightBar = xQueueCreate(10, sizeof(Recieve));
+		s4353096_QueueLightBar = xQueueCreate(10, sizeof(Recieve));
 }
 void s4353096_TaskLightBar(void) {
-  S4353096_LA_CHAN2_CLR();        //Clear LA Channel 0
 	unsigned short lightbar_value = 0; //value used to store the binary lightbar segment values
-  for (;;) {
-    S4353096_LA_CHAN2_SET();      //Set LA Channel 0
+
+	for (;;) {  
     /*Do Stuff Here, this is the loop*/
 
 		if (s4353096_QueueLightBar != NULL) {	/* Check if queue exists */
@@ -160,11 +159,8 @@ void s4353096_TaskLightBar(void) {
 
 				}
 				s4353096_lightbar_write(lightbar_value);
-        /* Toggle LED */
-				BRD_LEDToggle();
       }
 		}
-    S4353096_LA_CHAN2_CLR();
-    vTaskDelay(1);                // Mandatory Delay
+    vTaskDelay(10000);                // Mandatory Delay
   }
 }

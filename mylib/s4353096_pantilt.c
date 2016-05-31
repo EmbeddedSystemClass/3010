@@ -141,7 +141,7 @@ extern void calculate_display_ratios(void) {
   servo_control.ratio_tilt = fabsf(servo_control.display_c[1][1] - servo_control.display_c[1][0])/fabsf(servo_control.orb_c[1][1] - servo_control.orb_c[1][0]);
   ratio_p = servo_control.ratio_pan;
   ratio_tilt = servo_control.ratio_tilt;
-  debug_printf("\nPanR: %d, TiltR %d");
+  debug_printf("\nPanR: %d, TiltR %d", servo_control.ratio_pan, servo_control.ratio_tilt );
 }
 /*Calculates the pan and tilt angles for the current rover position*/
 extern void calculate_rover_display_pos(void) {

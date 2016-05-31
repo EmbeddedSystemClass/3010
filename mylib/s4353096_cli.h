@@ -63,12 +63,19 @@ extern BaseType_t prvTestDistance(char *pcWriteBuffer, size_t xWriteBufferLen, c
 extern BaseType_t prvDistance(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvAccelerometerControl(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvFollower(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+extern BaseType_t prvWaypoint(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 void CLI_Task(void);
 /*CLI Command Definitions*/
+CLI_Command_Definition_t xWaypoint = {	/* Structure that defines the "rovacc" command line command. */
+	"waypoint",
+	"waypoint: <marker id> Sets waypoint for rover\n",
+	prvWaypoint,
+	1
+};
 CLI_Command_Definition_t xFollower = {	/* Structure that defines the "rovacc" command line command. */
 	"follower",
 	"follower: Toggle the Rover Follower on and off\n",
-	prvAccelerometerControl,
+	prvFollower,
 	1
 };
 CLI_Command_Definition_t xAccControl = {	/* Structure that defines the "rovacc" command line command. */

@@ -83,51 +83,49 @@ void s4353096_TaskRadio (void) {
         /* We were able to obtain the semaphore and can now access the shared resource. */
         /*Check the format of the input to hamenc*/
         xSemaphoreGive(s4353096_SemaphoreTracking);
-        switch(radio_vars.orb_rover_fsmcurrentstate) {
-          case ROVER_TRANSCIEVE:
-            if (s4353096_QueueRoverTransmit != NULL) {	/* Check if queue exists */
-                    /* Check for item received - block atmost for 10 ticks */
-              if (xQueueReceive(s4353096_QueueRoverTransmit, &radio_side_communication, 10 )) {
-                radio_vars.s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
-                s4353096_radio_fsmprocessing();
-                s4353096_radio_setrxaddress(radio_vars.s4353096_rx_addr_rover);
-                s4353096_radio_settxaddress(radio_vars.s4353096_tx_addr);
-                s4353096_radio_setchan(radio_vars.s4353096_chan_rover);
-                /*Transmit the Packet*/
-                radio_vars.s4353096_radio_fsmcurrentstate = S4353096_TX_STATE;
-                /*Set Transmit Packet as Rover Packet*/
-                memcpy(radio_vars.s4353096_tx_packet, radio_side_communication.s4353096_tx_packet, sizeof(radio_side_communication.s4353096_tx_packet));
-                s4353096_radio_fsmprocessing();
-                debug_printf("Waiting for Recieve\n");
+        if (s4353096_QueueRoverTransmit != NULL) {	/* Check if queue exists */
+                /* Check for item received - block atmost for 10 ticks */
+          if (xQueueReceive(s4353096_QueueRoverTransmit, &radio_side_communication, 10 )) {
+            radio_vars.s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
+            s4353096_radio_fsmprocessing();
+            s4353096_radio_setrxaddress(radio_vars.s4353096_rx_addr_rover);
+            s4353096_radio_settxaddress(radio_vars.s4353096_tx_addr);
+            s4353096_radio_setchan(radio_vars.s4353096_chan_rover);
+            /*Transmit the Packet*/
+            radio_vars.s4353096_radio_fsmcurrentstate = S4353096_TX_STATE;
+            /*Set Transmit Packet as Rover Packet*/
+            memcpy(radio_vars.s4353096_tx_packet, radio_side_communication.s4353096_tx_packet, sizeof(radio_side_communication.s4353096_tx_packet));
+            s4353096_radio_fsmprocessing();
+            debug_printf("Waiting for Recieve\n");
 
-                /*Wait for packet from rover*/
-                while(s4353096_radio_getrxstatus() == 0 && (p < 80000)) {
-                  /*Loop until a packet has been recieved*/
-                  p++;
-                  s4353096_radio_setfsmrx();
-                  s4353096_radio_fsmprocessing();
-                  //vTaskDelay(50);
-                  s4353096_radio_fsmprocessing();
-                  if (s4353096_radio_getrxstatus() == 1) {
-                    memcpy(radio_side_communication.s4353096_rx_buffer, radio_vars.s4353096_rx_buffer, sizeof(radio_vars.s4353096_rx_buffer));
-                    if (s4353096_QueueRoverRecieve != NULL) {	/* Check if queue exists */
-                      /*Send the recieved packet to a Queue*/
-                      if( xQueueSendToBack(s4353096_QueueRoverRecieve, ( void * ) &radio_side_communication, ( portTickType ) 10 ) != pdPASS ) {
-                        debug_printf("BFailed to post the message, after 10 ticks.\n\r");
-                      }
-                    }
+            /*Wait for packet from rover*/
+            while(s4353096_radio_getrxstatus() == 0 && (p < 80000)) {
+              /*Loop until a packet has been recieved*/
+              p++;
+              s4353096_radio_setfsmrx();
+              s4353096_radio_fsmprocessing();
+              //vTaskDelay(50);
+              s4353096_radio_fsmprocessing();
+              if (s4353096_radio_getrxstatus() == 1) {
+                memcpy(radio_side_communication.s4353096_rx_buffer, radio_vars.s4353096_rx_buffer, sizeof(radio_vars.s4353096_rx_buffer));
+                if (s4353096_QueueRoverRecieve != NULL) {	/* Check if queue exists */
+                  /*Send the recieved packet to a Queue*/
+                  if( xQueueSendToBack(s4353096_QueueRoverRecieve, ( void * ) &radio_side_communication, ( portTickType ) 10 ) != pdPASS ) {
+                    debug_printf("BFailed to post the message, after 10 ticks.\n\r");
                   }
                 }
-                radio_vars.s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
-                s4353096_radio_fsmprocessing();
-                debug_printf("Finished Recieve\n");
-                s4353096_radio_setchan(radio_vars.s4353096_chan_orb);
-                s4353096_radio_setrxaddress(radio_vars.s4353096_rx_addr_orb);
-                vTaskDelay(500);
               }
             }
-            radio_vars.orb_rover_fsmcurrentstate = ORB_RECIEVE;
-            break;
+            radio_vars.s4353096_radio_fsmcurrentstate = S4353096_IDLE_STATE;
+            s4353096_radio_fsmprocessing();
+            debug_printf("Finished Recieve\n");
+            s4353096_radio_setchan(radio_vars.s4353096_chan_orb);
+            s4353096_radio_setrxaddress(radio_vars.s4353096_rx_addr_orb);
+            vTaskDelay(500);
+          }
+        }
+        switch(radio_vars.orb_rover_fsmcurrentstate) {
+          //case ROVER_TRANSCIEVE:
           case ROVERS_RECIEVE:
               s4353096_radio_setrxaddress(radio_vars.s4353096_rx_addr_rover);
               s4353096_radio_setchan(radio_vars.s4353096_chan_rover);

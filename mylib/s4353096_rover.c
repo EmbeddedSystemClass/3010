@@ -152,7 +152,7 @@ extern void send_rover_packet (uint8_t *payload, uint8_t packet_type) {
   crc_calculated = crc_calculation(rover_communication.s4353096_tx_packet);
   rover_communication.s4353096_tx_packet[30] = (crc_calculated & 0xFF00) >> 8;
   rover_communication.s4353096_tx_packet[31] = (crc_calculated & 0x00FF);
-  radio_vars.orb_rover_fsmcurrentstate = ROVER_TRANSCIEVE;
+  //radio_vars.orb_rover_fsmcurrentstate = ROVER_TRANSCIEVE;
 
   /*Print the packet to be transmitted*/
   debug_printf("\nRAW TRANSMIT: ");
@@ -167,8 +167,9 @@ extern void send_rover_packet (uint8_t *payload, uint8_t packet_type) {
     if( xQueueSendToBack(s4353096_QueueRoverTransmit, ( void * ) &rover_communication, ( portTickType ) 10 ) != pdPASS ) {
       debug_printf("AFailed to post the message, after 10 ticks.\n\r");
     } else {
-      radio_vars.orb_rover_fsmcurrentstate = ROVER_TRANSCIEVE;
+      //radio_vars.orb_rover_fsmcurrentstate = ROVER_TRANSCIEVE;
     }
+  memset(Calibrate.motor_payload, '0', 10);
   }
 }
 
@@ -230,7 +231,7 @@ extern void calibration_velocity_init(void) {
   Calibrate.cal_velocity[1][7][0] = 85;
   /*Note Present code will only function correctly with one speed's velocity given as rovers are wildly unpredictable at different speeds
   in terms of wheter they travel straight or not*/
-  Calibrate.cal_velocity[0][0][1] = 0;  //speed 50
+  Calibrate.cal_velocity[0][0][1] = 40;  //speed 50
   Calibrate.cal_velocity[0][1][1] = 0;  //speed 55
   Calibrate.cal_velocity[0][2][1] = 0;  //speed 60
   Calibrate.cal_velocity[0][3][1] = 0;  //speed 65
@@ -250,6 +251,11 @@ extern void calibration_velocity_init(void) {
   Calibrate.motor_right_forward =100;
   Calibrate.motor_left_reverse = 100;
   Calibrate.motor_right_reverse =100;
+  Calibrate.angle_aclock_speed = 50;
+  Calibrate.angle_clock_speed = 50;
+  Calibrate.angle_clock_velocity = 30;
+  Calibrate.angle_aclock_velocity = 30;
+
 }
 
 /*Old velocity calculation function*/
@@ -302,7 +308,6 @@ extern void direction_duration_calculation_send(int distance, int direction) {
   float calculated_distance;
   int number_of_speeds = 8;
   int remaining_distance;
-  TickType_t xDelayMove;
   Calibrate.closest_difference = 1000; //Something large that will be imediatly changed on first item
   Calibrate.closest_distance = 0; //Initialise the closest distance
   /*Loop to increment speed*/
@@ -326,23 +331,12 @@ extern void direction_duration_calculation_send(int distance, int direction) {
   } else if (direction == 1) {
     Calibrate.motor_payload[0] = (Calibrate.closest_speed*Calibrate.motor_left_reverse)/100;
     Calibrate.motor_payload[1] = (Calibrate.closest_speed*Calibrate.motor_right_reverse)/100;
-
   }
   Calibrate.motor_payload[2] = (Calibrate.closest_duration);
-  
-  /*Determines whether the process needs to be repeated to achieve the distance desired*/
-  remaining_distance = distance - Calibrate.closest_distance;
-  if (remaining_distance < 60) {
-    Calibrate.motor_payload[2] = (Calibrate.motor_payload[2] << 4) | (FORWARDRIGHT ^ (FORWARDLEFT));
-    /*Perform Transmit Forward here*/
-    send_rover_packet(Calibrate.motor_payload, 0x32);
-    xDelayMove = 7700 / portTICK_PERIOD_MS;
-    vTaskDelay(xDelayMove);
-    direction_duration_calculation_send(remaining_distance, 0);
-  } else {
 
-  }
-  debug_printf("Closest D: %d, S: %d, Du: %d, Dif: %d\n", Calibrate.closest_distance, Calibrate.closest_speed, Calibrate.closest_duration/2, Calibrate.closest_difference);
+  /*Determines whether the process needs to be repeated to achieve the distance desired*/
+  Calibrate.remaining_distance = distance - Calibrate.closest_distance;
+  //debug_printf("Closest D: %d, S: %d, Du: %d, Dif: %d\n", Calibrate.closest_distance, Calibrate.closest_speed, Calibrate.closest_duration/2, Calibrate.closest_difference);
 }
 
 /*Calculates the ratio for converting between ORB Co-ords and Display Pan/Tilt angles*/
@@ -384,6 +378,9 @@ extern void FollowerTask(void) {
     if (s4353096_SemaphoreFollower != NULL) {
       if( xSemaphoreTake(s4353096_SemaphoreFollower, 3 ) == pdTRUE ) {
         xSemaphoreGive(s4353096_SemaphoreFollower);
+        if (xSemaphoreTake(s4353096_SemaphoreWaypoint, 3 ) == pdTRUE ) {
+          xSemaphoreTake(s4353096_SemaphoreFollower, 3 );
+        }
         xDelayMove = 1100 / portTICK_PERIOD_MS;
         current_x = rover.rover_current_x;
         current_y = rover.rover_current_y;

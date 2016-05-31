@@ -43,6 +43,27 @@
 /* Private function prototypes -----------------------------------------------*/
 struct PanTilt SendPosition;
 
+
+extern BaseType_t prvWaypoint(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+	long lParam_len;
+	const char *cCmd_string;
+
+	/* Get parameters from command string */
+	cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
+
+	/* Write command echo output string to write buffer. */
+	sprintf((char *) pcWriteBuffer, "%s", cCmd_string);
+	if (atoi(pcWriteBuffer) != 0) {
+			rover.marker_id = atoi(pcWriteBuffer);
+	} else {
+			rover.marker_id = 0;
+	}
+	/*Give Semaphore*/
+	xSemaphoreGive(s4353096_SemaphoreWaypoint);
+	/* Return pdFALSE, as there are no more strings to return */
+	/* Only return pdTRUE, if more strings need to be printed */
+	return pdFALSE;
+}
 /*Toggles on and off the follower task*/
 extern BaseType_t prvFollower(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 	long lParam_len;
@@ -83,7 +104,7 @@ extern BaseType_t prvAccelerometerControl(char *pcWriteBuffer, size_t xWriteBuff
 		xSemaphoreGive(s4353096_SemaphoreAccControl);
 	} else if (strcmp(pcWriteBuffer,"off") == 0) {
 		/*Give Semaphore*/
-		xSemaphoreTake(s4353096_SemaphoreAccControl, 1);
+		xSemaphoreTake(s4353096_SemaphoreAccControl, 10);
 	} else {
 
 	}
@@ -514,6 +535,7 @@ extern BaseType_t prvForward(char *pcWriteBuffer, size_t xWriteBufferLen, const 
 	const char *cCmd_string;
 	int distance;
 	uint8_t motor_payload;
+	TickType_t xDelayMove;
 	/* Get parameters from command string */
 	cCmd_string = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
 
@@ -523,9 +545,9 @@ extern BaseType_t prvForward(char *pcWriteBuffer, size_t xWriteBufferLen, const 
 	} else {
 		distance = 0;
 	}
+
 	direction_duration_calculation_send(distance, 0);
 	Calibrate.motor_payload[2] = (Calibrate.motor_payload[2] << 4) | (FORWARDRIGHT ^ (FORWARDLEFT));
-
 	/*Perform Transmit Forward here*/
 	send_rover_packet(Calibrate.motor_payload, 0x32);
 

@@ -15,3 +15,8 @@ Implemented functionality of get passkey and crude communication with rover to g
 Progress Shown
 Have Implemented Task 3 at this point by implementing a calibration where by the top and bottom corner of the sand pit can be set in orb values and the top and bottom corner of the display grid can be set in the same way for pan and tilt values. Fixed the crude rfchanset function and have started to go back and . Calibration is still not quite ready as it is set up for multiple speeds which makes it harder to calibrate left and right wheel speeds to follow a straight line as the relationships between speeds is not linear and therefore calibrating at one speed means that for other speeds, the rover doesn't travel straight. Implemented an additional FSM for the radio task to either recieve from ORB or communicate with a rover (Transmit and Recieve) or recieve packets for a rover (Recieve only);
 
+1 June 2016 "Last Commit"
+
+Progress Shown
+Implemented Follower, Waypoint, Distance and Accelerometer functions. Finalized Cli commands and readjusted calibration functions.
+

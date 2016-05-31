@@ -55,7 +55,7 @@ struct Accelerometer Acc_vals;
 /*The main function for the Accelerometer Task*/
 extern void s4353096_TaskAccelerometer(void) {
 
-    const TickType_t xDelayMove = 1100 / portTICK_PERIOD_MS;
+    const TickType_t xDelayMove = 3500 / portTICK_PERIOD_MS;
     /*Main loop for Accelerometer Task*/
   	for(;;) {
 
@@ -81,10 +81,6 @@ extern void s4353096_TaskAccelerometer(void) {
           debug_printf("%c\n", rover.acc_direction);
         }
 			}
-    	BRD_LEDToggle();	//Toggle LED on/off
-			vTaskDelay(10);
-    	vTaskDelay(1);		//Delay for 1s (1000ms)
-
       if (s4353096_SemaphoreAccControl != NULL) {	/* Check if semaphore exists */
         /* See if we can obtain the PB semaphore. If the semaphore is not available
               wait 10 ticks to see if it becomes free. */
@@ -97,32 +93,40 @@ extern void s4353096_TaskAccelerometer(void) {
           vTaskDelay(xDelayMove);
         }
       }
+      BRD_LEDToggle();	//Toggle LED on/off
+      vTaskDelay(10);
+      vTaskDelay(1);		//Delay for 1s (1000ms)
 	}
 }
 
 void accelerometer_control(void) {
+  TickType_t xDelayMove = 300 / portTICK_PERIOD_MS;
   switch (rover.acc_direction) {
     case '|':
     direction_duration_calculation_send(40, 0);
-    Calibrate.motor_payload[2] = (Calibrate.motor_payload[2] << 4) | (FORWARDRIGHT ^ (FORWARDLEFT));
+    vTaskDelay(xDelayMove);
+    Calibrate.motor_payload[2] = (0x02 << 4) | (FORWARDRIGHT ^ (FORWARDLEFT));
     /*Perform Transmit Forward here*/
     send_rover_packet(Calibrate.motor_payload, 0x32);
       break;
     /*Reverse*/
     case '_':
       direction_duration_calculation_send(40, 1);
-      Calibrate.motor_payload[2] = (Calibrate.motor_payload[2] << 4) | (BACKWARDRIGHT ^ (BACKWARDLEFT));
+      vTaskDelay(xDelayMove);
+      Calibrate.motor_payload[2] = (0x02 << 4) | (BACKWARDRIGHT ^ (BACKWARDLEFT));
       /*Perform Transmit Reverse here*/
       send_rover_packet(Calibrate.motor_payload, 0x32);
       break;
     case '>':
       angle_duration_calculation(30, 0);
-      Calibrate.motor_payload[2] = (Calibrate.motor_payload[2] << 4) | (FORWARDLEFT);
+      vTaskDelay(xDelayMove);
+      Calibrate.motor_payload[2] = (0x02 << 4) | (FORWARDLEFT);
       send_rover_packet(Calibrate.motor_payload, 0x32);
       break;
     case '<':
       angle_duration_calculation(30, 1); //calculate the duration and speed to best achieve the specified angle*/
-      Calibrate.motor_payload[2] = (Calibrate.motor_payload[2] << 4) | (FORWARDRIGHT);
+      vTaskDelay(xDelayMove);
+      Calibrate.motor_payload[2] = (0x02 << 4) | (FORWARDRIGHT);
       send_rover_packet(Calibrate.motor_payload, 0x32);
       break;
     default:

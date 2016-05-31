@@ -30,7 +30,7 @@ struct dualtimer_msg {
   unsigned char timer_value;
 };
 /* Task Priorities ------------------------------------------------------------*/
-#define mainLIGHTBARTASK_PRIORITY					( tskIDLE_PRIORITY + 2 )
+#define mainLIGHTBARTASK_PRIORITY					( tskIDLE_PRIORITY + 1)
 /* Task Stack Allocations -----------------------------------------------------*/
 #define mainLIGHTBARTASK_STACK_SIZE		( configMINIMAL_STACK_SIZE * 2 )
 /*The defines bellow define which pins the lightbar is plugged into

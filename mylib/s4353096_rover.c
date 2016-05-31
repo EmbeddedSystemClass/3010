@@ -207,15 +207,33 @@ extern void rover_init(void) {
 /*Initialise velocity_values*/
 extern void calibration_velocity_init(void) {
   Calibrate.velocity[0] = 0;//
-  Calibrate.velocity[1] = 96;//30;//
-  Calibrate.velocity[2] = 97;//50;
-  Calibrate.velocity[3] = 98;//75;
-  Calibrate.velocity[4] = 99;// 100;//100; //60
-  Calibrate.velocity[5] = 100;
-  Calibrate.velocity[6] = 101;
-  Calibrate.velocity[7] = 102;
-  Calibrate.velocity[8] = 103;
-  Calibrate.velocity[9] = 104;
+  Calibrate.velocity[1] = 0;//30;//
+  Calibrate.velocity[2] = 40;//50;
+  Calibrate.velocity[3] = 0;//75;
+  Calibrate.velocity[4] = 0;// 100;//100; //60
+  Calibrate.velocity[5] = 0;
+  Calibrate.velocity[6] = 0;
+  Calibrate.velocity[7] = 0;
+  Calibrate.velocity[8] = 0;
+  Calibrate.velocity[9] = 0;
+  Calibrate.cal_velocity[0][0][0] = 50;
+  Calibrate.cal_velocity[0][1][0] = 55;
+  Calibrate.cal_velocity[0][2][0] = 60;
+  Calibrate.cal_velocity[0][3][0] = 65;
+  Calibrate.cal_velocity[0][4][0] = 70;
+  Calibrate.cal_velocity[0][5][0] = 75;
+  Calibrate.cal_velocity[0][6][0] = 80;
+  Calibrate.cal_velocity[0][7][0] = 85;
+  Calibrate.cal_velocity[1][0][0] = 50;
+  Calibrate.cal_velocity[1][1][0] = 55;
+  Calibrate.cal_velocity[1][2][0] = 60;
+  Calibrate.cal_velocity[1][3][0] = 65;
+  Calibrate.cal_velocity[1][4][0] = 70;
+  Calibrate.cal_velocity[1][5][0] = 75;
+  Calibrate.cal_velocity[1][6][0] = 80;
+  Calibrate.cal_velocity[1][7][0] = 85;
+  Calibrate.motor_left_forward = 100;
+  Calibrate.motor_right_forward =100;
 }
 /*Largest speed is 80*/
 extern void calibration_velocity_calculation(void) {
@@ -224,6 +242,56 @@ extern void calibration_velocity_calculation(void) {
   Calibrate.velocity[velocity_element] = Calibrate.testing_distance/Calibrate.testing_duration;
 }
 
+extern void calibration_velocity_other_calculation(int mode, int speed, int distance, int duration) {
+  int velocity;
+  velocity = distance/duration;
+  for(int i = 0; i < 10; i++) {
+    if (Calibrate.cal_velocity[mode][i][0] == speed){
+      Calibrate.cal_velocity[mode][i][1] = velocity;
+      debug_printf("\nVelocity: %d, i = %d\n", velocity, i);
+    }
+  }
+}
+extern void angle_duration_calculation(int angle) {
+  Calibrate.motor_payload[0] = (Calibrate.motor_left_forward);
+  Calibrate.motor_payload[1] = (Calibrate.motor_right_forward);
+  Calibrate.motor_payload[2] = angle;
+
+}
+/*Direction 0 if forward, 1 if backward*/
+extern void direction_duration_calculation_send(int distance, int direction) {
+  int distance_difference;
+  float calculated_distance;
+  int number_of_speeds = 8;
+  Calibrate.closest_difference = 1000; //Something large that will be imediatly changed on first item
+  Calibrate.closest_distance = 0; //Initialise the closest distance
+  /*Loop to increment speed*/
+  for (int i = 0; i < number_of_speeds; i++){
+    /*Loop to increment duration from 0 - 7.5*/
+    for (int j = 0; j < 16; j++) {
+      calculated_distance = (0.5*j*Calibrate.cal_velocity[direction][i][1]);
+      distance_difference = abs(distance - calculated_distance);
+      if (distance_difference <= Calibrate.closest_difference) {
+        /*If the calculated distance better matches the desired distance*/
+        Calibrate.closest_speed = Calibrate.cal_velocity[direction][i][0]; //Calculates the value of speed for the associated velocity
+        Calibrate.closest_duration = j;
+        Calibrate.closest_difference = distance_difference;
+        Calibrate.closest_distance = calculated_distance;
+      }
+    }
+  }
+  if (direction == 0) {
+    Calibrate.motor_payload[0] = (Calibrate.closest_speed*Calibrate.motor_left_forward)/100;
+    Calibrate.motor_payload[1] = (Calibrate.closest_speed*Calibrate.motor_right_forward)/100;
+  } else if (direction == 1) {
+    Calibrate.motor_payload[0] = (Calibrate.closest_speed*Calibrate.motor_left_reverse)/100;
+    Calibrate.motor_payload[1] = (Calibrate.closest_speed*Calibrate.motor_right_reverse)/100;
+
+  }
+  /*Duration*/
+  Calibrate.motor_payload[2] = (Calibrate.closest_duration);
+
+}
 /*For determining the duration and speed required to best atain a given distance*/
 extern void speed_duration_calculation(int distance) {
   int distance_difference;
@@ -231,8 +299,6 @@ extern void speed_duration_calculation(int distance) {
   int number_of_speeds = 9;
   Calibrate.closest_difference = 1000; //Something large that will be imediatly changed on first item
   Calibrate.closest_distance = 0; //Initialise the closest distance
-  Calibrate.motor_left = 100;
-  Calibrate.motor_right = 100;
   /*Loop to increment speed*/
   for (int i = 0; i < number_of_speeds; i++){
     /*Loop to increment duration from 0 - 7.5*/
@@ -248,11 +314,30 @@ extern void speed_duration_calculation(int distance) {
       }
     }
   }
-  Calibrate.motor_payload[0] = (Calibrate.closest_speed*Calibrate.motor_left)/100;
-  Calibrate.motor_payload[1] = (Calibrate.closest_speed*Calibrate.motor_right)/100;
+  //Calibrate.motor_payload[0] = (Calibrate.closest_speed*Calibrate.motor_left)/100;
+  //Calibrate.motor_payload[1] = (Calibrate.closest_speed*Calibrate.motor_right)/100;
   /*Duration*/
   Calibrate.motor_payload[2] = (Calibrate.closest_duration);
   /*Direction*/
   /*Done in another function*/
   debug_printf("Closest D: %d, S: %d, Du: %d, Dif: %d\n", Calibrate.closest_distance, Calibrate.closest_speed, Calibrate.closest_duration/2, Calibrate.closest_difference);
+}
+
+/*Calculates the ratio for converting between ORB Co-ords and Display Pan/Tilt angles*/
+extern void calculate_distance_ratios(void) {
+  int ratio_x;
+  int ratio_y;
+  rover.ratio_x = fabsf(900 - 0)/fabsf(servo_control.orb_c[0][1] - servo_control.orb_c[0][0]);
+  rover.ratio_y = fabsf(600 - 0)/fabsf(servo_control.orb_c[1][1] - servo_control.orb_c[1][0]);
+  ratio_x = rover.ratio_x;
+  ratio_y = rover.ratio_y;
+  debug_printf("\nPanR: %d, TiltR %d", ratio_x, ratio_y);
+}
+/*Calculates the pan and tilt angles for the current rover position*/
+extern void calculate_rover_distance_pos(void) {
+  int current_x_mm;
+  int current_y_mm;
+  current_x_mm = (rover.rover_current_x*rover.ratio_x);
+  current_y_mm = (rover.rover_current_y*rover.ratio_y);
+  debug_printf("\nDistance from starting edge: %d\n", current_x_mm);
 }

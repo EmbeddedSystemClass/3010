@@ -63,8 +63,10 @@ struct Rover {
   float testing_duration; //Start with 1.5
   int testing_speed;
   int testing_distance; //so that division results in a float
-  int motor_left;
-  int motor_right;
+  int motor_left_forward;
+  int motor_right_forward;
+  int motor_left_reverse;
+  int motor_right_reverse;
   int battery_calibrate;
   int closest_distance;
   int closest_difference;
@@ -79,6 +81,11 @@ struct Rover {
   int marker_current_y;
   int rover_id;
   int marker_id;
+  int angle_multiplier;
+  /*Forward/Backward | array for each speed | speed/velocity value*/
+  int cal_velocity[2][10][2];
+  float ratio_x;
+  float ratio_y;
 };
 struct Rovers {
   unsigned char ROVER46ADDR[5];
@@ -105,4 +112,9 @@ extern void send_rover_packet (uint8_t *payload, uint8_t packet_type);
 extern void s4353096_TaskRadioProcessing(void);
 extern void calibration_velocity_init(void);
 extern void calibration_velocity_calculation(void);
+extern void calibration_velocity_other_calculation(int mode, int speed, int distance, int duration);
 extern void speed_duration_calculation(int distance);
+extern void direction_duration_calculation_send(int distance, int direction);
+extern void calculate_distance_ratios(void);
+extern void calculate_rover_distance_pos(void);
+extern void angle_duration_calculation(int angle);

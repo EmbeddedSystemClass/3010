@@ -58,8 +58,29 @@ extern BaseType_t prvDisplayCalibrate(char *pcWriteBuffer, size_t xWriteBufferLe
 extern BaseType_t prvORBCalibrate(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvDebugSetRoverPosition(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 extern BaseType_t prvCalibrateMarkerId(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+extern BaseType_t prvCalibrationRover(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+extern BaseType_t prvTestDistance(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+extern BaseType_t prvDistance(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 void CLI_Task(void);
 /*CLI Command Definitions*/
+CLI_Command_Definition_t xDistance = {	/* Structure that defines the "crc" command line command. */
+	"distance",
+	"distance: print the rover's distance from the starting edge\n",
+	prvDistance,
+	0
+};
+CLI_Command_Definition_t xTestDistance = {	/* Structure that defines the "crc" command line command. */
+	"test",
+	"test: assign the id of rover or marker\n",
+	prvTestDistance,
+	3
+};
+CLI_Command_Definition_t xCalibrationRover = {	/* Structure that defines the "crc" command line command. */
+	"cal",
+	"cal: assign the id of rover or marker\n",
+	prvCalibrationRover,
+	4
+};
 CLI_Command_Definition_t xCalibrateMarkerId = {	/* Structure that defines the "crc" command line command. */
 	"mkid",
 	"mkid: assign the id of rover or marker\n",

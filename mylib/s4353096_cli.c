@@ -70,6 +70,148 @@ struct PanTilt SendPosition;
 	/* Only return pdTRUE, if more strings need to be printed */
 /*	return pdFALSE;
 }*/
+
+extern BaseType_t prvDistance(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+		calculate_distance_ratios();
+		calculate_rover_distance_pos();
+		/* Return pdFALSE, as there are no more strings to return */
+		/* Only return pdTRUE, if more strings need to be printed */
+		return pdFALSE;
+}
+extern BaseType_t prvTestDistance(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+	long lParam_len;
+	const char *cCmd_string1; //Mode selection
+	const char *cCmd_string2; //int speed value
+	const char *cCmd_string3; //expected distance int value
+	const char *cCmd_string4; //distance moved
+	int speed;
+	int duration;
+	/* Get parameters from command string */
+	cCmd_string3 = FreeRTOS_CLIGetParameter(pcCommandString, 3, &lParam_len);
+	/* Write command echo output string to write buffer. */
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
+	strncat( pcWriteBuffer, cCmd_string3, lParam_len);
+	//debug_printf("PCWRITE 3: %s |  %s\n", pcWriteBuffer,cCmd_string3);
+
+	/*Grab the duration*/
+	if (atoi(pcWriteBuffer) != 0) {
+			duration = atoi(pcWriteBuffer);
+	} else {
+			duration = 0;
+	}
+	/*Grab the speed value*/
+	/* Get parameters from command string */
+	cCmd_string2 = FreeRTOS_CLIGetParameter(pcCommandString, 2, &lParam_len);
+	/* Write command echo output string to write buffer. */
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
+	strncat( pcWriteBuffer, cCmd_string2, lParam_len);
+	//debug_printf("PCWRITE 2: %s |  %s\n", pcWriteBuffer,cCmd_string2);
+	if (atoi(pcWriteBuffer) != 0) {
+			speed = atoi(pcWriteBuffer);
+	} else {
+			speed = 0;
+	}
+	/* Get parameters from command string */
+	cCmd_string1 = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
+	/* Write command echo output string to write buffer. */
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
+	strncat( pcWriteBuffer, cCmd_string1, lParam_len);
+	//debug_printf("PCWRITE 1: %s |  %s\n", pcWriteBuffer,cCmd_string1);
+	if(strcmp(pcWriteBuffer, "forward") == 0) {
+		Calibrate.motor_payload[0] = (speed*Calibrate.motor_left_forward)/100;
+		Calibrate.motor_payload[1] = (speed*Calibrate.motor_right_forward)/100;
+		Calibrate.motor_payload[2] = (0x06 << 4) | (FORWARDRIGHT ^ (FORWARDLEFT)); //run for 3 seconds
+		send_rover_packet(Calibrate.motor_payload, 0x32);
+	} else if(strcmp(pcWriteBuffer, "reverse") == 0) {
+		Calibrate.motor_payload[0] = (speed*Calibrate.motor_left_reverse)/100;
+		Calibrate.motor_payload[1] = (speed*Calibrate.motor_right_reverse)/100;
+		Calibrate.motor_payload[2] = (0x06 << 4) | (BACKWARDRIGHT ^ (BACKWARDLEFT)); //run for 3 seconds
+		send_rover_packet(Calibrate.motor_payload, 0x32);
+	} else if(strcmp(pcWriteBuffer, "angle") == 0) {
+
+	} else {
+
+	}
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
+	/* Return pdFALSE, as there are no more strings to return */
+	/* Only return pdTRUE, if more strings need to be printed */
+	return pdFALSE;
+}
+extern BaseType_t prvCalibrationRover(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+	long lParam_len;
+	const char *cCmd_string1; //Mode selection
+	const char *cCmd_string2; //int speed value
+	const char *cCmd_string3; //expected distance int value
+	const char *cCmd_string4; //distance moved
+	int speed;
+	int duration;
+	int distance;
+	int p1;
+	int p2;
+	int angle;
+	int expected_angle;
+	/*Grab distance moved*/
+	cCmd_string4 = FreeRTOS_CLIGetParameter(pcCommandString, 4, &lParam_len);
+	if(atoi(cCmd_string4) != 0) {
+		distance = atoi(cCmd_string4);
+	} else {
+		distance = 0;
+	}
+	angle = distance;
+	/*Grab duration, whole value*/
+	/* Get parameters from command string */
+	cCmd_string3 = FreeRTOS_CLIGetParameter(pcCommandString, 3, &lParam_len);
+	/* Write command echo output string to write buffer. */
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
+	strncat( pcWriteBuffer, cCmd_string3, lParam_len);
+	//debug_printf("PCWRITE 3: %s |  %s\n", pcWriteBuffer,cCmd_string3);
+
+	/*Grab the duration*/
+	if (atoi(pcWriteBuffer) != 0) {
+			duration = atoi(pcWriteBuffer);
+	} else {
+			duration = 0;
+	}
+	p2 = duration;
+	expected_angle = duration;
+	/*Grab the speed value*/
+	/* Get parameters from command string */
+	cCmd_string2 = FreeRTOS_CLIGetParameter(pcCommandString, 2, &lParam_len);
+	/* Write command echo output string to write buffer. */
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
+	strncat( pcWriteBuffer, cCmd_string2, lParam_len);
+	//debug_printf("PCWRITE 2: %s |  %s\n", pcWriteBuffer,cCmd_string2);
+	if (atoi(pcWriteBuffer) != 0) {
+			speed = atoi(pcWriteBuffer);
+	} else {
+			speed = 0;
+	}
+	p1 = speed;
+	/* Get parameters from command string */
+	cCmd_string1 = FreeRTOS_CLIGetParameter(pcCommandString, 1, &lParam_len);
+	/* Write command echo output string to write buffer. */
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
+	strncat( pcWriteBuffer, cCmd_string1, lParam_len);
+	//debug_printf("PCWRITE 1: %s |  %s\n", pcWriteBuffer,cCmd_string1);
+	if(strcmp(pcWriteBuffer, "forward") == 0) {
+		calibration_velocity_other_calculation(0, speed, distance, duration);
+	} else if(strcmp(pcWriteBuffer, "reverse") == 0) {
+		calibration_velocity_other_calculation(1, speed, distance, duration);
+	} else if(strcmp(pcWriteBuffer, "angle") == 0) {
+		Calibrate.angle_multiplier = expected_angle/angle;
+		debug_printf("\nang mul: %d\n", Calibrate.angle_multiplier);
+	} else if(strcmp(pcWriteBuffer, "motorspeed") == 0) {
+		Calibrate.motor_left_forward = p1;
+		Calibrate.motor_right_forward = p2;
+		debug_printf("\nL: %d R: %d\n", Calibrate.motor_left_forward, Calibrate.motor_right_forward);
+	} else {
+
+	}
+	memset(pcWriteBuffer, 0x00, xWriteBufferLen);
+	/* Return pdFALSE, as there are no more strings to return */
+	/* Only return pdTRUE, if more strings need to be printed */
+	return pdFALSE;
+}
 extern BaseType_t prvCalibrateMarkerId(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
 	long lParam_len;
 	const char *cCmd_string1;
@@ -233,11 +375,10 @@ extern BaseType_t prvAngle(char *pcWriteBuffer, size_t xWriteBufferLen, const ch
 	} else {
 		angle = 0;
 	}
-	speed_duration_calculation(angle);
-
+	angle_duration_calculation(angle);
 	/*Negative/anticlockwise angle*/
 	debug_printf("\n%c\n",pcWriteBuffer[0]);
-	if(pcWriteBuffer[0] == '-') {
+	if(atoi <  0) {
 		Calibrate.motor_payload[2] = (Calibrate.motor_payload[2] << 4) | (FORWARDRIGHT ^ (BACKWARDLEFT));
 	} else {
 		/*Clockwise angle*/
@@ -266,8 +407,8 @@ extern BaseType_t prvReverse(char *pcWriteBuffer, size_t xWriteBufferLen, const 
 	} else {
 		distance = 0;
 	}
-	speed_duration_calculation(distance);
-	Calibrate.motor_payload[2] = (Calibrate.motor_payload[2] << 4) | (FORWARDRIGHT ^ (FORWARDLEFT));
+	direction_duration_calculation_send(distance, 1);
+	Calibrate.motor_payload[2] = (Calibrate.motor_payload[2] << 4) | (BACKWARDRIGHT ^ (BACKWARDLEFT));
 	debug_printf("%d,", Calibrate.motor_payload[0]);
 	debug_printf("%d,", Calibrate.motor_payload[1]);
 	debug_printf("%x", Calibrate.motor_payload[2]);
@@ -291,7 +432,7 @@ extern BaseType_t prvForward(char *pcWriteBuffer, size_t xWriteBufferLen, const 
 	} else {
 		distance = 0;
 	}
-	speed_duration_calculation(distance);
+	direction_duration_calculation_send(distance, 0);
 	Calibrate.motor_payload[2] = (Calibrate.motor_payload[2] << 4) | (FORWARDRIGHT ^ (FORWARDLEFT));
 	debug_printf("%d,", Calibrate.motor_payload[0]);
 	debug_printf("%d,", Calibrate.motor_payload[1]);

@@ -169,6 +169,7 @@ void s4353096_TaskRadio (void) {
             //}
             break;
           case ORB_RECIEVE:
+            vTaskDelay(100);
             s4353096_radio_setfsmrx();
             s4353096_radio_fsmprocessing();
             /*Wait state here*/
